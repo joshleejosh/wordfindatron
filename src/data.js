@@ -15,7 +15,7 @@ function makeWordlist(clobw) {
         wordlist[i] = [];
     }
     var words = clobw.split('\n');
-    for (var i=0; i<words.length; i++) {
+    for (i=0; i<words.length; i++) {
         if (words[i])
             wordlist[words[i].length].push(words[i]);
     }
@@ -31,7 +31,7 @@ function load(view, callback) {
     } else {
         if (view) {
             // ajax requests
-            view.messageArea.text('Loading...')
+            view.messageArea.text('Loading...');
             d3.text('data/words7.txt', function(clobw) {
                 if (clobw) {
                     makeWordlist(clobw);
@@ -74,7 +74,7 @@ function load(view, callback) {
 function bailout(m, v) {
     console.log(m);
     if (v)
-        v.messageArea.text(m)
+        v.messageArea.text(m);
 }
 
 

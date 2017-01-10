@@ -2,22 +2,31 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-    <meta name="viewport" content="initial-scale=1.0">
+    <meta name="viewport" content="initial-scale=1.0, width=device-width">
     <title>WORDFINDATRON</title>
-    <!-- <link rel="shortcut icon" href="/favicon.gif">  -->
+    <link rel="shortcut icon" href="/favicon.gif">
     <link href="wordfindatron.css" rel="stylesheet" />
 </head>
 <body>
-    <p id="toolbar">
-        <a id="tbClear" href="#">clear</a>
-        <a id="tbNew" href="#">new</a>
-    </p>
-    <table id="wfgrid" cellpadding="0" cellspacing="0" summary="A word find puzzle">
+    <form id="toolbar">
+        <button type="button" id="tbClear">reset</button>
+        <button type="button" id="tbNew">new</button>
+        <br />
+        <label for="tbSize">Grid Size:</label>
+        <input type="number" id="tbSize" min="4" max="12" value="8" />
+        <br />
+        <label for="tbWords"># Words:</label>
+        <input type="number" id="tbWords" min="3" max="12" value="6" />
+    </form>
+
+    <table id="wfgrid" cellpadding="0" cellspacing="0" summary="A nice little word find puzzle">
         <tbody></tbody>
     </table>
+
     <ul id="wflist">
     </ul>
-    <p id="message"></p>
+
+    <p id="message">Loading...</p>
 </body>
 <script src="wordfindatron.js"></script>
 </html>

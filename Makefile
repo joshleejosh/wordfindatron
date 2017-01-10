@@ -1,15 +1,18 @@
-
-HEAD=wordfindatron
+BASENAME=wordfindatron
 SRC=src
-JS=$(HEAD).js
-CSS=$(HEAD).css
-SCSS=$(HEAD).scss
+JS=$(BASENAME).js
+CSS=$(BASENAME).css
+SCSS=$(BASENAME).scss
 HTML=index.html
-DATA=data/words7.txt data/blacklist.txt
+DATA=data
+
 DEBUG=--debug
-#UGLIFY=-g uglifyify
+UGLIFY=
+
 BROWSERIFY=node_modules/browserify/bin/cmd.js
 UNITTEST=node_modules/nodeunit/bin/nodeunit
+JSHINT=node_modules/jshint/bin/jshint
+RSYNC=rsync -azv
 
 build: $(JS) $(CSS)
 
@@ -19,14 +22,25 @@ $(JS): $(SRC)/*.js
 $(CSS): wordfindatron.scss
 	sass $(SCSS) $(CSS)
 
-dist: build
+dist: DEBUG=
+dist: UGLIFY=-g uglifyify
+dist: clean build
 	mkdir -p dist
-	cp $(HTML) $(JS) $(CSS) $(DATA) dist
+	cp -r $(DATA) dist
+	cp $(HTML) $(JS) $(CSS) dist
+
+# Must define DEPLOYPATH at command line, don't leave real paths floating around in the makefile
+deploy: dist
+	(test -z '$(DEPLOYPATH)' && echo 'Set DEPLOYPATH when calling deploy!') || (test '$(DEPLOYPATH)' && $(RSYNC) dist/ $(DEPLOYPATH)/$(BASENAME)/)
+	
+
+hint:
+	$(JSHINT) src
 
 test:
 	$(UNITTEST) tests
 
 clean:
-	rm -f dist/*
+	rm -rf dist/*
 	rm -f $(JS) $(CSS) $(CSS).map
 

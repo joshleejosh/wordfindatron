@@ -23,7 +23,7 @@ function wordFits(word, template) {
         if (wi >= word.length) // we made it to the end of the word, so it fits.
             return offset;
     }
-    return -1
+    return -1;
 }
 
 function findFittingWord (template) {
@@ -48,8 +48,9 @@ function findFittingWord (template) {
         }
     }
 
-    if (candidates.length == 0) {
+    if (candidates.length === 0) {
         console.log('findFittingWord: no candidates for ['+wordlen+']['+template+']');
+        return null;
     } else {
         //console.log(''+candidates.length+' candidates');
     }
@@ -58,7 +59,7 @@ function findFittingWord (template) {
     return pair;
 }
 
-function makePuzzle(size) {
+function makePuzzle(size, nwords) {
     if (size === undefined)
         size = 8;
     var answers = [];
@@ -67,28 +68,32 @@ function makePuzzle(size) {
     // Build array of slices to pick from.
     // But only do half the directions; we'll handle mirrors below, but we
     // don't want any reverse collisions while looking for slots.
-    var sa = []
+    var sa = [];
     for (var d=0; d<4; d++) {
         var a = 0, b = size;
-        if (d%2 == 1)
-            a = consts.MIN_WORDLEN - 1, b = (size*2) - consts.MIN_WORDLEN;
+        if (d%2 == 1) {
+            a = consts.MIN_WORDLEN - 1;
+            b = (size*2) - consts.MIN_WORDLEN;
+        }
         for (var s=a; s<b; s++)
             sa.push([d, s]);
     }
     d3.shuffle(sa);
 
-    var numWords = util.rndint(consts.MIN_WORDS, consts.MAX_WORDS);
-    for (var i=0; i<numWords; i++) {
+    var i = 0, failures = 0;
+    while (i<nwords && failures<consts.MAX_WORD_GEN_FAILURES) {
         var direction = sa[i][0], slicei = sa[i][1];
         // flip it?
-        if (util.rnd() < .5)
+        if (util.rnd() < 0.5)
             direction = (direction + 4) % 8;
 
         var sliceword = g.cutSlice(direction, slicei);
 
         var p = findFittingWord(sliceword);
-        if (!p)
+        if (!p) {
+            failures++;
             continue;
+        }
         var word = p[0];
         var offset = p[1];
         //console.log(direction + ',' + slicei + ',[' + sliceword + '],['+word+'],['+offset+']');
@@ -100,8 +105,9 @@ function makePuzzle(size) {
             slice:slicei,
             offset:offset,
         });
+        i++;
     }
-    console.log(g.toString());
+    //console.log(g.toString());
 
     var filled = g.copy();
     filled.fillJunk();

@@ -5,7 +5,9 @@ $cCellBgOff: $cBodyBg;
 $cCellTextOff: $cBodyText;
 $cCellBgOn: $cBodyText;
 $cCellTextOn: #eee;
-$tableWidth: 50vw;
+$cellWidth: 12mm;
+$cellFontSize: $cellWidth / 2;
+$wordlistFontSize: $cellFontSize * 1.333;
 
 body {
 	background-color: $cBodyBg;
@@ -14,10 +16,9 @@ body {
 
 #wfgrid {
 	margin: auto;
-	width: $tableWidth;
 	text-align: center;
 	td {
-		width: $tableWidth / 8;
+		width: $cellWidth;
 		position: relative;
 		padding: 0;
 		border: 0;
@@ -26,12 +27,13 @@ body {
 		-moz-user-select: none;     /* Firefox all */
 		-ms-user-select: none;      /* IE 10+ */
 		user-select: none;          /* Likely future */      
+
 		cursor: pointer;
 
 		.gc {
 			position: absolute;
-			font-size: $tableWidth / 16;
-			top: $tableWidth / 40;
+			font-size: $cellFontSize;
+			top: $cellWidth / 5;
 			bottom: 0;
 			left: 0;
 			right: 0;
@@ -71,7 +73,7 @@ body {
 	list-style: none;
 	margin: 0 1em;
 	padding: 0;
-	font-size: 2em;
+	font-size: $wordlistFontSize;
 	text-align: center;
 	background-color: transparent;
 	color: $cBodyText;

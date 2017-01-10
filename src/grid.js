@@ -5,7 +5,7 @@ const Grid = function(size) {
     this.grid = [];
     this.size = size;
     for (var r=0; r<this.size; r++) {
-        var row = []
+        var row = [];
         for (var c=0; c<this.size; c++)
             row.push(' ');
         this.grid.push(row);
@@ -19,20 +19,20 @@ const Grid = function(size) {
             for (var c=0; c<this.size && i<s.length; c++,i++)
                 this.grid[r][c] = s[i];
         return this;
-    }
+    };
 
     /*
      * Return the grid as a string, formatted into rows.
      */
     this.toString = function() {
-        rv = ''
+        rv = '';
         for (var r=0,i=0; r<this.size; r++) {
             for (var c=0; c<this.size; c++,i++)
                 rv += this.grid[r][c];
             rv += '\n';
         }
         return rv;
-    }
+    };
 
     /*
      * Make a copy of this grid.
@@ -45,7 +45,7 @@ const Grid = function(size) {
             }
         }
         return rv;
-    }
+    };
 
     /*
      * Return a string containing the characters pulled
@@ -61,7 +61,7 @@ const Grid = function(size) {
             y += dy;
         }
         return cut;
-    }
+    };
 
     this.fillSlice = function(di, si, offset, word) {
         var a = util.sliceParams(this.size, di, si);
@@ -79,14 +79,14 @@ const Grid = function(size) {
             x += dx;
             y += dy;
         }
-    }
+    };
 
     this.fillJunk = function() {
         for (var r=0; r<this.size; r++)
             for (var c=0; c<this.size; c++)
                 if (this.grid[r][c] == ' ')
                     this.grid[r][c] = consts.ALPHABET.charAt(util.rndint(0,25));
-    }
-}
+    };
+};
 
 module.exports = {Grid:Grid};

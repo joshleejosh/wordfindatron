@@ -1,8 +1,7 @@
 
 exports.ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 exports.TESTDATA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-exports.MIN_WORDS = 4;
-exports.MAX_WORDS = 6;
 exports.MIN_WORDLEN = 4;
 exports.MAX_WORDLEN = 7;
+exports.MAX_WORD_GEN_FAILURES = 10;
 

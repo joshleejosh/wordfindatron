@@ -13,7 +13,19 @@ function Cell(s, r, c) {
     this.column = c;
     this.id = function() {
         return cid(this.row, this.column);
-    }
+    };
+}
+
+function getGridSize() {
+    var d = d3.select('#tbSize');
+    var rv = parseInt(d.property('value'));
+    return rv;
+}
+
+function getNumWords() {
+    var d = d3.select('#tbWords');
+    var rv = parseInt(d.property('value'));
+    return rv;
 }
 
 function displayPuzzle(puzzle, cbNewPuzzle) {
@@ -21,11 +33,11 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
     d3.select('#message').text('');
     d3.selectAll('#wfgrid tr').remove();
     d3.selectAll('#wflist li').remove();
-    var body = d3.select('body')
+    var body = d3.select('body');
 
     var onClickLetter = function(d) {
         // toggle this cell.
-        d.state = (d.state == 0)?1:0;
+        d.state = (d.state === 0)?1:0;
 
         // reset all other cells' solution states.
         cells.each(function (d) { if (d.state > 1) d.state = 1; });
@@ -39,9 +51,10 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
             var dx = a[2], dy = a[3];
             var x = a[0] + dx * answer.offset;
             var y = a[1] + dy * answer.offset;
+            var cell;
             for (var j=0; j<answer.word.length; j++,x+=dx,y+=dy) {
-                var cell = d3.select('#'+cid(y,x)).data()[0];
-                if (cell.state == 0)
+                cell = d3.select('#'+cid(y,x)).data()[0];
+                if (cell.state === 0)
                     break;
             }
 
@@ -49,23 +62,23 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
             if (j == answer.word.length) {
                 x = a[0] + dx * answer.offset;
                 y = a[1] + dy * answer.offset;
-                for (var j=0; j<answer.word.length; j++,x+=dx,y+=dy) {
-                    var cell = d3.select('#'+cid(y,x)).data()[0];
+                for (j=0; j<answer.word.length; j++,x+=dx,y+=dy) {
+                    cell = d3.select('#'+cid(y,x)).data()[0];
                     cell.state = 2;
                 }
                 d3.select('#wflist_' + answer.word).classed('wfsolved', true);
             }
         }
         refreshGrid();
-    }
+    };
 
     var refreshGrid = function() {
         d3.selectAll('.cell')
-            .classed('cell0', function(d) { return (d.state == 0); })
+            .classed('cell0', function(d) { return (d.state === 0); })
             .classed('cell1', function(d) { return (d.state == 1); })
             .classed('cell2', function(d) { return (d.state == 2); })
         ;
-    }
+    };
 
     var tbody = body.select('#wfgrid tbody');
     var rows = tbody.selectAll('tr')
@@ -79,7 +92,7 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
             var c = 0;
             rv = row.map(function(s) {
                 return new Cell(s, r, c++);
-            })
+            });
             r++;
             return rv;
         })
@@ -105,7 +118,7 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
         .attr('id', function(d) { return 'wflist_' + d.word; })
         .classed('wflistword', true)
         .classed('wfsolved', false)
-        .text(function(d) { return d.word; });
+        .text(function(d) { return d.word; })
     ;
 
     // toolbar
@@ -118,7 +131,7 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
     ;
     body.select('#tbNew')
         .on('click', function(d) {
-            cbNewPuzzle();
+            cbNewPuzzle(getGridSize(), getNumWords());
         })
     ;
 
@@ -127,4 +140,7 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
 module.exports = {
     displayPuzzle:displayPuzzle,
     messageArea:d3.select('#message'),
+    getGridSize:getGridSize,
+    getNumWords:getNumWords,
 };
+

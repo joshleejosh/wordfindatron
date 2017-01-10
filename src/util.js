@@ -16,7 +16,7 @@ function range(start, end, step) {
         start = 0;
     }
 
-    if (step == 0) {
+    if (step === 0) {
         throw RangeError('0 step not allowed in range()');
     }
 
@@ -28,10 +28,10 @@ function range(start, end, step) {
 
     var rv=[];
     if (step > 0) {
-        for (var i=start; i<end; i+=step)
+        for (i=start; i<end; i+=step)
             rv.push(i);
     } else {
-        for (var i=start; i>end; i+=step)
+        for (i=start; i>end; i+=step)
             rv.push(i);
     }
     return rv;
@@ -53,7 +53,7 @@ function range(start, end, step) {
  */
 function sliceParams (sz, di, si) {
     var mg = sz - 1;
-    if ((sz <= 0) || (si < 0) || (di%2 == 0 && si > mg) || (di%2 == 1 && si > (sz*2-2)))
+    if ((sz <= 0) || (si < 0) || (di%2 === 0 && si > mg) || (di%2 == 1 && si > (sz*2-2)))
         throw RangeError('sliceParams: slice '+si+' out of range for grid size '+sz+'');
     return [[0                       , si                      ,  1,  0],
             [Math.max(0, si-mg)      , Math.max(0, mg-si)      ,  1,  1],
@@ -71,5 +71,5 @@ module.exports = {
     rndint:rndint,
     range:range,
     sliceParams:sliceParams,
-}
+};
 
