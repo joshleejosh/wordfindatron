@@ -1,4 +1,4 @@
-const d3 = require('d3');
+var d3 = require('d3');
 
 var wordlist, blacklist;
 
@@ -16,18 +16,22 @@ function makeWordlist(clobw) {
     }
     var words = clobw.split('\n');
     for (i=0; i<words.length; i++) {
-        if (words[i])
+        if (words[i]) {
             wordlist[words[i].length].push(words[i]);
+        }
+    }
+}
+
+function bailout(m, v) {
+    console.log(m);
+    if (v) {
+        v.messageArea.text(m);
     }
 }
 
 function load(view, callback) {
     if (wordlist && blacklist) {
-        var a = generateGrid();
-        if (view)
-            view.mktable(a[0], a[2]);
-        else
-            console.log(a[2].toString() + '\n' + a[0]);
+        callback();
     } else {
         if (view) {
             // ajax requests
@@ -49,19 +53,24 @@ function load(view, callback) {
             });
         } else {
             // local file loads
-            const fs = require('fs');
+            var fs = require('fs');
             console.log('Loading wordlist...');
             fs.readFile('data/words7.txt', 'utf8', function(err, clobw) {
-                if (err) throw err;
+                if (err) {
+                    throw err;
+                }
                 makeWordlist(clobw);
-                console.log('wordlistlengths: ');
+                console.log('wordlist lengths: ');
                 for (var i=0; i<20; i++) {
-                    if (wordlist[i].length > 0)
+                    if (wordlist[i].length > 0) {
                         console.log('\t', i, wordlist[i].length);
+                    }
                 }
                 console.log('Loading blacklist...');
                 fs.readFile('data/blacklist.txt', 'utf8', function(err, clobb) {
-                    if (err) throw err;
+                    if (err) {
+                        throw err;
+                    }
                     blacklist = clobb.split('\n');
                     console.log(''+blacklist.length+' words in blacklist.');
                     callback();
@@ -71,15 +80,9 @@ function load(view, callback) {
     }
 }
 
-function bailout(m, v) {
-    console.log(m);
-    if (v)
-        v.messageArea.text(m);
-}
-
 
 module.exports = {
     getWordlist:getWordlist,
     getBlacklist:getBlacklist,
-    load:load,
+    load:load
 };

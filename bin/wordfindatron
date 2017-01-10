@@ -1,0 +1,21 @@
+#!/usr/bin/env node
+
+var gridSize = 6;
+if (process.argv.length > 2) {
+    gridSize = parseInt(process.argv[2], 10);
+}
+var numWords = 5;
+if (process.argv.length > 3) {
+    numWords = parseInt(process.argv[3], 10);
+}
+
+var data = require('../src/data');
+var puzzle = require('../src/puzzle');
+
+data.load(null, function() {
+    var p = puzzle.makePuzzle(gridSize, numWords);
+    console.log(p[1].toString());
+    console.log(p[0].map(function (a) { return a.word; }).join(' '));
+    console.log(p[2].toString());
+})
+

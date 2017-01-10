@@ -1,4 +1,4 @@
-const util = require('../src/util');
+var util = require('../src/util');
 
 exports.TestUtil = {
     setUp: function(callback) {
@@ -32,10 +32,8 @@ exports.TestUtil = {
         // bad step
         try {
             var a = util.range(2, 7, 0);
-            test.fail('oops');
-        } catch (re) {
-            // pass
-        }
+            test.fail('oops: ' + a);
+        } catch (e) { }
 
         // start and end are the wrong way around
         // (note: python's range returns empty list in this case)
@@ -100,4 +98,4 @@ exports.TestUtil = {
         test.done();
     }
 
-}
+};

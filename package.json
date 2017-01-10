@@ -2,13 +2,18 @@
   "name": "wordfindatron",
   "version": "0.0.1",
   "devDependencies": {
+    "browserify": "^13.3.0",
     "grunt-browserify": "^0.2.5",
     "grunt-cli": "^1.2.0",
     "grunt-contrib-clean": "^0.7.0",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-contrib-jshint": "^1.1.0",
+    "grunt-contrib-nodeunit": "^1.0.0",
     "grunt-contrib-sass": "^1.0.0",
     "grunt-contrib-watch": "^1.0.0",
     "jshint": "^2.9.4",
-    "nodeunit": "^0.10.2"
+    "nodeunit": "^0.10.2",
+    "uglifyify": "^3.0.4"
   },
   "main": "main.js",
   "dependencies": {
@@ -19,5 +24,5 @@
   },
   "author": "joshleejosh",
   "license": "ISC",
-  "description": ""
+  "description": "Little word find puzzles on demand."
 }

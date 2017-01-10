@@ -35,7 +35,7 @@ deploy: dist
 	
 
 hint:
-	$(JSHINT) src
+	$(JSHINT) src tests
 
 test:
 	$(UNITTEST) tests
