@@ -1,0 +1,22 @@
+{
+  "name": "wordfindatron",
+  "version": "0.0.1",
+  "devDependencies": {
+    "grunt-browserify": "^0.2.5",
+    "grunt-cli": "^1.2.0",
+    "grunt-contrib-clean": "^0.7.0",
+    "grunt-contrib-sass": "^1.0.0",
+    "grunt-contrib-watch": "^1.0.0",
+    "nodeunit": "^0.10.2"
+  },
+  "main": "main.js",
+  "dependencies": {
+    "d3": "^4.4.1"
+  },
+  "scripts": {
+    "test": "node_modules/nodeunit/bin/nodeunit tests"
+  },
+  "author": "joshleejosh",
+  "license": "ISC",
+  "description": ""
+}

@@ -1,0 +1,88 @@
+
+$cBodyBg: #f4f4f4;
+$cBodyText: #333;
+$cCellBgOff: $cBodyBg;
+$cCellTextOff: $cBodyText;
+$cCellBgOn: $cBodyText;
+$cCellTextOn: #eee;
+$tableWidth: 50vw;
+
+body {
+	background-color: $cBodyBg;
+	color: $cBodyText;
+}
+
+#wfgrid {
+	margin: auto;
+	width: $tableWidth;
+	text-align: center;
+	td {
+		width: $tableWidth / 8;
+		position: relative;
+		padding: 0;
+		border: 0;
+
+		-webkit-user-select: none;  /* Chrome all / Safari all */
+		-moz-user-select: none;     /* Firefox all */
+		-ms-user-select: none;      /* IE 10+ */
+		user-select: none;          /* Likely future */      
+		cursor: pointer;
+
+		.gc {
+			position: absolute;
+			font-size: $tableWidth / 16;
+			top: $tableWidth / 40;
+			bottom: 0;
+			left: 0;
+			right: 0;
+		}
+	}
+	td:after {
+		content: '';
+		display: block;
+		margin-top: 100%;
+	}
+	td.cell0 {
+		border: solid 1px $cCellBgOff;
+		border-radius: 50%;
+		background-color: transparent;
+		color: $cBodyText;
+	}
+	td.cell1 {
+		border: solid 1px $cCellBgOn;
+		border-radius: 50%;
+		background-color: transparent;
+		color: $cBodyText;
+	}
+	td.cell2 {
+		border: solid 1px $cCellBgOn;
+		border-radius: 50%;
+		background-color: $cCellBgOn;
+		color: $cCellBgOff;
+	}
+}
+
+#wflist {
+	margin: 1em 0;
+	padding: 0;
+}
+.wflistword {
+	display: block;
+	list-style: none;
+	margin: 0 1em;
+	padding: 0;
+	font-size: 2em;
+	text-align: center;
+	background-color: transparent;
+	color: $cBodyText;
+}
+.wfsolved {
+	background-color: $cCellBgOn;
+	color: $cCellBgOff;
+}
+
+#toolbar {
+	text-align: center;
+	font-size: 1em;
+}
+
