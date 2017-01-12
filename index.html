@@ -8,26 +8,39 @@
     <link href="wordfindatron.css" rel="stylesheet" />
 </head>
 <body>
-    <form id="toolbar">
-        <button type="button" id="tbUndo">undo</button>
-        <button type="button" id="tbClear">reset</button>
-        <button type="button" id="tbNew">new</button>
-        <br />
-        <label for="tbSize">Grid Size:</label>
-        <input type="number" id="tbSize" min="4" max="12" value="8" />
-        <br />
-        <label for="tbWords"># Words:</label>
-        <input type="number" id="tbWords" min="3" max="12" value="6" />
-    </form>
+<div id="main">
+    <h1>WORDFINDATRON</h1>
 
-    <table id="wfgrid" cellpadding="0" cellspacing="0" summary="A nice little word find puzzle">
-        <tbody></tbody>
-    </table>
+    <div id="wffield">
+        <table id="wfgrid" cellpadding="0" cellspacing="0" summary="A nice little word find puzzle">
+            <tbody></tbody>
+        </table>
+    </div>
 
-    <ul id="wflist">
-    </ul>
+    <div id="info">
+
+        <ul id="wflist">
+        </ul>
+
+        <form id="toolbar">
+            <button type="button" id="tbUndo">undo</button>
+            <button type="button" id="tbClear">clear</button>
+            <button type="button" id="tbSolve">solve</button>
+            <br />
+            <label for="tbSize">Grid Size:</label>
+            <input type="number" id="tbSize" min="4" max="12" value="8" />
+            <br />
+            <label for="tbWords"># Words:</label>
+            <input type="number" id="tbWords" min="3" max="12" value="6" />
+            <br />
+            <button type="button" id="tbNew">new</button>
+        </form>
+
+    </div>
 
     <p id="message">Loading...</p>
+
+</div>
 </body>
 <script src="wordfindatron.js"></script>
 </html>

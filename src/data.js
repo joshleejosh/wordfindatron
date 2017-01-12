@@ -1,31 +1,50 @@
+(function () {
+'use strict';
+
 var d3 = require('d3');
+var consts = require('./consts');
 
 var wordlist, blacklist;
 
 function getWordlist(wl) {
     return wordlist[wl];
 }
+
 function getBlacklist() {
     return blacklist;
 }
 
-function makeWordlist(clobw) {
-    wordlist = {};
-    for (var i=0; i<20; i++) {
-        wordlist[i] = [];
-    }
-    var words = clobw.split('\n');
-    for (i=0; i<words.length; i++) {
-        if (words[i]) {
-            wordlist[words[i].length].push(words[i]);
-        }
-    }
-}
-
 function bailout(m, v) {
-    console.log(m);
     if (v) {
         v.messageArea.text(m);
+    }
+    throw Error(m);
+}
+
+function buildWordlists(clob) {
+    var curlist = wordlist;
+    var lines = clob.split('\n');
+    for (var i=0; i<lines.length; i++) {
+        var line = lines[i];
+
+        if (line.startsWith(consts.WORDLIST_TAG_WORDLIST)) {
+            curlist = wordlist;
+        } else if (line.startsWith(consts.WORDLIST_TAG_BLACKLIST)) {
+            curlist = blacklist;
+        }
+
+        if (line.length === 0) {
+            continue;
+        }
+        if (line.startsWith('#')) {
+            continue;
+        }
+
+        if (curlist === wordlist) {
+            wordlist[line.length].push(line);
+        } else if (curlist === blacklist) {
+            curlist.push(line);
+        }
     }
 }
 
@@ -33,48 +52,40 @@ function load(view, callback) {
     if (wordlist && blacklist) {
         callback();
     } else {
+        wordlist = {};
+        for (var i=0; i<20; i++) {
+            wordlist[i] = [];
+        }
+        blacklist = [];
+
         if (view) {
-            // ajax requests
+            // ajax request
             view.messageArea.text('Loading...');
-            d3.text('data/words7.txt', function(clobw) {
-                if (clobw) {
-                    makeWordlist(clobw);
-                    d3.text('data/blacklist.txt', function(clobb) {
-                        if (clobb) {
-                            blacklist = clobb.split('\n');
-                            callback();
-                        } else {
-                            bailout('Couldn\'t load blacklist', view);
-                        }
-                    });
+            d3.text('wordlists.txt', function(clob) {
+                if (clob) {
+                    buildWordlists(clob);
+                    callback();
                 } else {
                     bailout('Couldn\'t load wordlist', view);
                 }
             });
         } else {
-            // local file loads
+            // local file load
             var fs = require('fs');
             console.log('Loading wordlist...');
-            fs.readFile('data/words7.txt', 'utf8', function(err, clobw) {
+            fs.readFile('wordlists.txt', 'utf8', function(err, clob) {
                 if (err) {
                     throw err;
                 }
-                makeWordlist(clobw);
+                buildWordlists(clob);
                 console.log('wordlist lengths: ');
                 for (var i=0; i<20; i++) {
                     if (wordlist[i].length > 0) {
                         console.log('\t', i, wordlist[i].length);
                     }
                 }
-                console.log('Loading blacklist...');
-                fs.readFile('data/blacklist.txt', 'utf8', function(err, clobb) {
-                    if (err) {
-                        throw err;
-                    }
-                    blacklist = clobb.split('\n');
-                    console.log(''+blacklist.length+' words in blacklist.');
-                    callback();
-                });
+                console.log(''+blacklist.length+' words in blacklist.');
+                callback();
             });
         }
     }
@@ -86,3 +97,5 @@ module.exports = {
     getBlacklist:getBlacklist,
     load:load
 };
+
+}());

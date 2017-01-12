@@ -1,3 +1,6 @@
+(function() {
+'use strict';
+
 var consts = require('./consts');
 var util = require('./util');
 
@@ -186,3 +189,5 @@ module.exports = {
     Grid:Grid,
     GridWord:GridWord
 };
+
+}());

@@ -4,19 +4,49 @@ $cBodyText: #333;
 $cCellBg: $cBodyBg;
 $cBgSolved: $cBodyText;
 $cTextSolved: $cBodyBg;
+
 $cellWidth: 12mm;
 $cellFontSize: $cellWidth / 2;
+
 $wordlistFontSize: $cellFontSize * 1.333;
+$margin: $wordlistFontSize;
+
 $cRing: #999;
+$ringSize: $cellWidth * 2/3;
 $ringThickness: 2px;
+$ringTransformOrigin: $ringSize/2 + $ringThickness;
 
 body {
 	background-color: $cBodyBg;
 	color: $cBodyText;
 }
+#main {
+	margin: 0;
+	padding: 0 $margin;
+	border: 0;
+	-webkit-backface-visibility: hidden;
+}
+
+h1 {
+	margin: 0;
+	padding: 0;
+	font-size: $wordlistFontSize * 1.333;
+}
+
+#wffield {
+	clear: both;
+	position: relative;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	-webkit-backface-visibility: hidden;
+}
 
 #wfgrid {
-	margin: auto;
+	float: left;
+	position: relative;
+	margin: 0;
+	padding: 0;
 	cursor: pointer;
 }
 
@@ -52,20 +82,27 @@ td.cellsolved {
 	color: $cTextSolved;
 }
 
+#info {
+	float: left;
+	position: relative;
+}
+
 #wflist {
-	margin: 1em 0;
+	position: relative;
+	margin: 1em auto;
 	padding: 0;
+	text-align: center;
 }
 
 .wfword {
 	display: block;
 	list-style: none;
-	margin: 0 1em;
-	padding: 0;
+	margin: 0;
+	padding: 0 $margin;
 	font-size: $wordlistFontSize;
-	text-align: center;
 	background-color: transparent;
 	color: $cBodyText;
+	//border-radius: $margin;
 }
 .wfsolved {
 	background-color: $cBgSolved;
@@ -73,8 +110,10 @@ td.cellsolved {
 }
 
 #toolbar {
-	margin: 1em auto;
-	text-align: center;
+	position: relative;
+	margin: 0;
+	padding: 0 $margin;
+	text-align: left;
 	font-family: sans-serif;
 	font-size: 1em;
 }
@@ -89,10 +128,12 @@ td.cellsolved {
 	border-radius: 2em;
 	background-color: transparent;
 	color: $cBodyText;
-	height: $cellWidth;
-	width: 0;
+	height: $ringSize;
+	width: $ringSize;
 	top: 0;
 	left: 0;
+	transform-origin: $ringTransformOrigin $ringTransformOrigin;
+	-webkit-backface-visibility: hidden;
 }
 .ringoff {
 	z-index: 1;
@@ -101,5 +142,10 @@ td.cellsolved {
 	background-color: $cBgSolved;
 	border-color: $cBgSolved;
 	z-index: -1;
+}
+
+#message {
+	font-family: monospace;
+	clear: both;
 }
 

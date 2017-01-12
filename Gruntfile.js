@@ -30,10 +30,28 @@ module.exports = function(grunt) {
             }
         },
 
+        concat: {
+            wordlists: {
+                options: {
+                    process: function(src, path) {
+                        console.log(path);
+                        if (path === 'data/words7.txt') {
+                            return '### WORDLIST ###\n' + src;
+                        } else {
+                            return '### BLACKLIST ###\n' + src;
+                        }
+                    }
+                },
+                files:  {
+                    'wordlists.txt': [ 'data/words7.txt', 'data/blacklist.txt', 'data/graylist.txt' ]
+                }
+            }
+        },
+
         copy: {
             dist: {
                 files: [
-                    {expand:true, src:['./data/*'], dest:'dist'},
+                    {expand:true, src:['./wordlists.txt'], dest:'dist'},
                     {expand:true, src:['./index.html'], dest:'dist/'},
                     {expand:true, src:['./wordfindatron.css'], dest:'dist/'},
                     {expand:true, src:['./wordfindatron.js'], dest:'dist/'},
@@ -60,6 +78,7 @@ module.exports = function(grunt) {
             'wordfindatron.js',
             'wordfindatron.css',
             'wordfindatron.css.map',
+            'wordlists.txt',
             'dist/**'
         ],
 
@@ -82,12 +101,13 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-sass');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-clean');
+    grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-nodeunit');
     grunt.loadNpmTasks('grunt-contrib-jshint');
 
-    grunt.registerTask('build',['browserify:dev', 'sass']);
-    grunt.registerTask('dist',['clean', 'browserify:dist', 'sass', 'copy:dist']);
+    grunt.registerTask('build',['browserify:dev', 'sass', 'concat:wordlists']);
+    grunt.registerTask('dist',['clean', 'browserify:dist', 'sass', 'concat:wordlists', 'copy:dist']);
     grunt.registerTask('test',['nodeunit:all']);
     grunt.registerTask('hint',['jshint:all']);
     grunt.registerTask('default',['build']);

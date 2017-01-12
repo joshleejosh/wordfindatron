@@ -1,4 +1,5 @@
-// ==================================================================
+(function () {
+'use strict';
 
 var consts = require('./consts');
 var util = require('./util');
@@ -121,3 +122,5 @@ function makePuzzle(size, nwords) {
 module.exports = {
     makePuzzle:makePuzzle
 };
+
+}());

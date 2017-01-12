@@ -1,12 +1,17 @@
+(function () {
+'use strict';
+
+
 var d3 = require('d3');
 var util = require('./util');
-var viewhelp = require('./viewhelp');
+var viewcell = require('./viewcell');
+var viewring = require('./viewring');
 
 var cells, words;
 var answers, theGrid;
 var rings = [];
 var dragRing;
-
+var inputDisabled = false;
 
 // ==================================================================
 
@@ -36,34 +41,27 @@ function wordBetweenCells(c, d) {
 function msgClear() {
     d3.selectAll('#message span').remove();
 }
-function msgWrite(s) {
+function msgWrite() {
+    var s = '';
+    for (var i=0; i<arguments.length; i++) {
+        s += '['+arguments[i]+'] ';
+    }
     d3.select('#message').append('span').html(s + '<br/>');
 }
 
 // ==================================================================
 
 function getCell(r, c) {
-    var td = d3.select('#' + viewhelp.cid(r, c));
+    var td = d3.select('#' + viewcell.cid(r, c));
     return td.datum();
-}
-
-function findMouseoverCell(x, y) {
-    var rv = null;
-    cells.each(function(d) {
-        if (d.containsPoint({x:x,y:y})) {
-            rv = d;
-        }
-    });
-    return rv;
 }
 
 // annotate all data with their x/y/size in page space.
 function recordCellSizes() {
     cells.each(function(d) {
-        var p = viewhelp.getPosition(this);
-        d.pageX = p.x;
-        d.pageY = p.y;
-        d.pageSize = parseInt(d3.select(this).style('width').replace('px',''), 10);
+        d.element = this;
+        d.selection = d3.select(this);
+        d.size = parseInt(d3.select(this).style('width'), 10);
     });
 }
 
@@ -133,12 +131,14 @@ function checkWord(c, d, w) {
 function checkRings() {
     cells.classed('cellsolved', false);
     words.classed('wfsolved', false);
+    var answered = 0;
     for (var i=0; i<rings.length; i++) {
         var answer = checkWord(rings[i].startCell, rings[i].endCell, rings[i].word);
         if (answer) {
             markRing(rings[i], true);
             markAnswer(answer, true);
             markWord(rings[i].word, true);
+            answered++;
         } else {
             var revword = rings[i].word.split('').reverse().join(''); // FIXME: will break on unicode
             answer = checkWord(rings[i].endCell, rings[i].startCell, revword);
@@ -150,89 +150,181 @@ function checkRings() {
                 markRing(rings[i], false);
             }
         }
+    }
 
+    if (answered === answers.length) {
+        console.log("yay!");
     }
 }
 
 function redrawRings() {
     for (var i=0; i<rings.length; i++) {
         rings[i].calculateMetrics();
-        rings[i].resize();
+        rings[i].resize(false);
     }
 }
+
 
 // ==================================================================
 
-function cancelDrag() {
+function cancelDrag(transit) {
     if (dragRing) {
-        dragRing.destroy();
-        dragRing = null;
-    }
-}
-
-function onDragStartLetter(d) {
-    cancelDrag();
-    dragRing = new viewhelp.Ring(d);
-    dragRing.ring = d3.select('body').append('div').html('&nbsp;')
-        .classed('ring', true)
-        .classed('ringoff', true)
-    ;
-    dragRing.resize();
-}
-
-function onDragMoveLetter() {
-    if (!dragRing) {
-        return;
-    }
-
-    // make sure I'm actually moving within the grid
-    var e = findMouseoverCell(d3.event.sourceEvent.pageX, d3.event.sourceEvent.pageY);
-    if (e) {
-        // find angle from drag start to mouse
-        var dy = d3.event.sourceEvent.pageY - dragRing.cy;
-        var dx = d3.event.sourceEvent.pageX - dragRing.cx;
-        var saa = viewhelp.snapAngle(dx, dy);
-        var direction = saa[1];
-
-        // Don't just cast a ray to find the end cell -- for diagonals, we'll
-        // hit cells that are overlapping but off-line. Instead, walk along the
-        // grid in the given direction until you've covered the distance.
-        var dist2 = (dx*dx) + (dy*dy);
-        var r = dragRing.startCell.row;
-        var c = dragRing.startCell.column;
-        var delta = [ [1,0], [1,1], [0,1], [-1,1], [-1,0], [-1,-1], [0,-1], [1,-1] ][direction]; // uh, these are xy instead of rc
-        do {
-            var f = getCell(r, c);
-            var fdx = f.pageX - dragRing.startCell.pageX + dragRing.size*delta[0];
-            var fdy = f.pageY - dragRing.startCell.pageY + dragRing.size*delta[1];
-            var fdist2 = (fdx*fdx) + (fdy*fdy);
-            r += delta[1];
-            c += delta[0];
-        } while (fdist2<dist2 && r>=0 && r<theGrid.size && c>=0 && c<theGrid.size);
-
-        if (f) {
-            dragRing.endCell = f;
-            dragRing.resize();
-            dragRing.word = wordBetweenCells(dragRing.startCell, dragRing.endCell);
+        var kill = function() {
+            if (dragRing) {
+                dragRing.destroy();
+            }
+            dragRing = null;
+        };
+        if (transit) {
+            dragRing.transitionOut(true, kill);
+        } else {
+            kill();
         }
     }
 }
 
-function onDragEndLetter() {
-    if (!dragRing) {
-        return;
+function createDrag(cell, transit) {
+    dragRing = new viewring.Ring(cell);
+    dragRing.ring = d3.select('#wffield').append('div').html('&nbsp;')
+        .classed('ring', true)
+        .classed('ringoff', true)
+    ;
+    dragRing.resize(transit);
+    //var haf = dragRing.ring.size/2 + dragRing.borderSize;
+    //dragRing.ring.style('transform-origin', ''+haf+'px '+haf+'px');
+    if (transit) {
+        dragRing.transitionIn(true, null);
     }
+}
+
+function continueDrag(newx, newy, transitt, transitcb) {
+    // find angle from drag start to mouse
+    var dy = newy - dragRing.cy;
+    var dx = newx - dragRing.cx;
+    var saa = util.snapAngle(dx, dy);
+    var direction = saa[1];
+
+    // Don't just cast a ray to find the end cell -- for diagonals, we'll
+    // hit cells that are overlapping but off-line. Instead, walk along the
+    // grid in the given direction until you've covered the distance.
+    var dist2 = (dx*dx) + (dy*dy);
+    var r = dragRing.startCell.row;
+    var c = dragRing.startCell.column;
+    var delta = [ [1,0], [1,1], [0,1], [-1,1], [-1,0], [-1,-1], [0,-1], [1,-1] ][direction]; // uh, these are xy instead of rc
+    do {
+        var f = getCell(r, c);
+        var fp = f.getPagePosition();
+        var sp = dragRing.startCell.getPagePosition();
+        var fdx = fp.x - sp.x + dragRing.size*delta[0];
+        var fdy = fp.y - sp.y + dragRing.size*delta[1];
+        var fdist2 = (fdx*fdx) + (fdy*fdy);
+        r += delta[1];
+        c += delta[0];
+    } while (fdist2<dist2 && r>=0 && r<theGrid.size && c>=0 && c<theGrid.size);
+
+    if (f) {
+        dragRing.endCell = f;
+        dragRing.word = wordBetweenCells(dragRing.startCell, dragRing.endCell);
+        dragRing.resize(transitt, transitcb);
+    }
+}
+
+function finishDrag(transit) {
     if (dragRing.word.length < 2) {
-        cancelDrag();
+        cancelDrag(transit);
         return;
     }
     dragRing.ring.style('z-index', '-1');
     rings.push(dragRing);
     dragRing = null;
+}
+
+function onDragStartLetter(d) {
+    if (inputDisabled) {
+        return;
+    }
+    cancelDrag(true);
+    createDrag(d, true);
+}
+
+function onDragMoveLetter() {
+    if (inputDisabled) {
+        return;
+    }
+    if (!dragRing) {
+        return;
+    }
+    if (d3.event.sourceEvent.type === 'touchmove') {
+        if (d3.event.sourceEvent.touches.length > 0) {
+            continueDrag(d3.event.sourceEvent.touches.item(0).clientX, d3.event.sourceEvent.touches.item(0).clientY, true);
+        }
+    } else {
+        continueDrag(d3.event.sourceEvent.clientX, d3.event.sourceEvent.clientY, true);
+    }
+}
+
+function onDragEndLetter() {
+    if (inputDisabled) {
+        return;
+    }
+    if (!dragRing) {
+        return;
+    }
+    finishDrag(true);
     checkRings();
 }
 
 // ==================================================================
+
+function disableInput() {
+    inputDisabled = true;
+    d3.selectAll('#toolbar button').attr('disabled', true);
+    d3.selectAll('#toolbar input').attr('disabled', true);
+}
+
+function enableInput() {
+    inputDisabled = false;
+    d3.selectAll('#toolbar button').attr('disabled', null);
+    d3.selectAll('#toolbar input').attr('disabled', null);
+}
+
+function autosolve() {
+    disableInput();
+    var _fanswer = function(i) {
+        if (i >= answers.length) {
+            enableInput();
+            return;
+        }
+        var answer = answers[i];
+        var params = util.sliceParams(theGrid.size, answer.direction, answer.slice);
+        var dc = params[2], dr = params[3];
+        var c = params[0] + answer.offset * dc;
+        var r = params[1] + answer.offset * dr;
+        var ec = c + (answer.word.length-1) * dc;
+        var er = r + (answer.word.length-1) * dr;
+        var startCell = getCell(r, c);
+        createDrag(startCell, false);
+
+        var _fcell = function() {
+            if (r === er && c === ec) {
+                return;
+            }
+            r += dr;
+            c += dc;
+            var cell = getCell(r,c);
+            var cp = cell.getPagePosition();
+            var transitcb = (r!==er || c!==ec) ? _fcell : function() {
+                finishDrag(false);
+                checkRings();
+                _fanswer(i+1);
+            };
+            continueDrag(cp.x+dragRing.size, cp.y+dragRing.size, true, transitcb);
+        };
+        _fcell();
+    };
+    _fanswer(0);
+    // god I hope tail-call is working here.
+}
 
 function displayPuzzle(puzzle, cbNewPuzzle) {
     answers = puzzle[0];
@@ -245,15 +337,15 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
     // Create dummy elements to get CSS derived metrics.
     {
         var szdummy = body.append('td').classed('cell', true);
-        var cellWidth = parseInt(szdummy.style('width').replace('px', ''), 10);
+        var cw = parseInt(szdummy.style('width'), 10) * theGrid.size;
         d3.select('#wfgrid')
-            .style('width', cellWidth * theGrid.size + 'px')
-            .style('min-width', cellWidth * theGrid.size + 'px');
+            .style('width', cw + 'px')
+            .style('min-width', cw + 'px');
         szdummy.remove();
 
         szdummy = body.append('div').classed('ring', true);
-        var bw = parseInt(szdummy.style('border-width').replace('px', ''), 10);
-        viewhelp.Ring.prototype.borderSize = bw;
+        viewring.Ring.prototype.borderSize = parseInt(szdummy.style('border-width'), 10);
+        viewring.Ring.prototype.size = parseInt(szdummy.style('width'), 10);
         szdummy.remove();
     }
 
@@ -270,7 +362,7 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
             .data(function(row) {
                 var c = 0;
                 var rv = row.map(function(s) {
-                    return new viewhelp.Cell(s, r, c++);
+                    return new viewcell.Cell(s, r, c++);
                 });
                 r++;
                 return rv;
@@ -282,7 +374,7 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
         ;
 
         cells.call(d3.drag()
-            .on('start', onDragStartLetter)
+                .on('start', onDragStartLetter)
                 .on('drag', onDragMoveLetter)
                 .on('end', onDragEndLetter)
         );
@@ -294,7 +386,7 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
 
     recordCellSizes();
     d3.select(window).on('resize', function() {
-        cancelDrag();
+        cancelDrag(false);
         recordCellSizes();
         redrawRings();
     });
@@ -323,14 +415,22 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
         ;
         body.select('#tbClear')
             .on('click', function() {
-                cancelDrag();
+                cancelDrag(true);
                 clearRings();
                 checkRings();
             })
         ;
+        body.select('#tbSolve')
+            .on('click', function() {
+                cancelDrag(true);
+                clearRings();
+                checkRings();
+                autosolve();
+            })
+        ;
         body.select('#tbNew')
             .on('click', function() {
-                cancelDrag();
+                cancelDrag(false);
                 clearRings();
                 cbNewPuzzle(getGridSize(), getNumWords());
                 checkRings();
@@ -338,6 +438,11 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
         ;
     }
 
+    enableInput();
+    msgClear();
+    msgWrite(navigator.appName, navigator.platform);
+    msgWrite(navigator.userAgent);
+    console.log(navigator);
 }
 
 // ==================================================================
@@ -346,6 +451,9 @@ module.exports = {
     displayPuzzle:displayPuzzle,
     messageArea:d3.select('#message'),
     getGridSize:getGridSize,
-    getNumWords:getNumWords
+    getNumWords:getNumWords,
+    disableInput:disableInput,
+    enableInput:enableInput
 };
 
+}());

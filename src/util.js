@@ -1,4 +1,7 @@
+(function () {
+'use strict';
 
+// TODO: manual seeding
 function rnd() {
     return Math.random();
 }
@@ -82,12 +85,38 @@ function sliceParams (sz, di, si) {
     ][di];
 }
 
+// Given dx,dy, find the angle and snap it to one of the 8 directions.
+function snapAngle(dx, dy) {
+    var angle = Math.atan2(dy, dx);
+    if (angle < 0) {
+        angle += Math.TAU;
+    }
+    // snap to 8 directions, 0=E, 1=SE, 2=S, 3=SW, etc.
+    // TODO: hysteresis based on the direction you're dragging in
+    var direction = (Math.floor(((angle-Math.TAU/16) / Math.TAU) * 8) + 1)%8;
+    angle = direction * (Math.TAU/8);
+    return [angle, direction];
+}
+
+function getElementPosition(e) {
+    var r = e.getBoundingClientRect();
+    return {x:r.left, y:r.top};
+}
+
+function isMobile() {
+    return false;
+}
+
 module.exports = {
     rnd:rnd,
     rndint:rndint,
     sign:sign,
     clamp:clamp,
     range:range,
-    sliceParams:sliceParams
+    sliceParams:sliceParams,
+    snapAngle:snapAngle,
+    getElementPosition:getElementPosition,
+    isMobile:isMobile
 };
 
+}());
