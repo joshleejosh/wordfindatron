@@ -21,17 +21,26 @@ function getGridSize() {
     var rv = parseInt(d.property('value'), 10);
     return rv;
 }
+function writeGridSize(v) {
+    d3.select('#tbSize').property('value', v);
+}
 
 function getNumWords() {
     var d = d3.select('#tbWords');
     var rv = parseInt(d.property('value'), 10);
     return rv;
 }
+function writeNumWords(v) {
+    d3.select('#tbWords').property('value', v);
+}
 
 function getSeed() {
     var d = d3.select('#tbSeed');
     var rv = parseInt(d.property('value'), 10);
     return rv;
+}
+function writeSeed(v) {
+    d3.select('#tbSeed').property('value', v);
 }
 
 function wordBetweenCells(c, d) {
@@ -518,6 +527,9 @@ module.exports = {
     getGridSize:getGridSize,
     getNumWords:getNumWords,
     getSeed:getSeed,
+    writeGridSize:writeGridSize,
+    writeNumWords:writeNumWords,
+    writeSeed:writeSeed,
     disableInput:disableInput,
     enableInput:enableInput
 };

@@ -19,7 +19,11 @@ var puzzle = require('../src/puzzle');
 data.load(null, function() {
     var p = puzzle.makePuzzle(gridSize, numWords, seed);
     console.log(p[1].toString());
-    console.log(p[0].map(function (a) { return a.word; }).join(' '));
-    console.log(p[2].toString());
+    // just making sure serialization works.
+    var s = puzzle.serialize(p[0], p[2]);
+    var q = puzzle.deserialize(s);
+    console.log(q[0].map(function (a) { return a.word; }).join(' '));
+    console.log(q[2].toString());
+
 });
 

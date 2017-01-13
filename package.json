@@ -20,6 +20,7 @@
   "main": "main.js",
   "dependencies": {
     "d3": "^4.4.1",
+    "lz-string": "^1.4.4",
     "random-js": "^1.0.8"
   },
   "scripts": {

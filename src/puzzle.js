@@ -2,12 +2,16 @@
 'use strict';
 
 var Random = require('random-js');
+var lz = require('lz-string');
 var consts = require('./consts');
 var util = require('./util');
 var grid = require('./grid');
 var data = require('./data');
 
 var RNG = Random.engines.mt19937();
+function seedRNG(v) {
+    RNG.seed(v);
+}
 
 // ==================================================================
 
@@ -39,7 +43,10 @@ function findFittingWord(template) {
         return null;
     }
 
-    var wordlen = Random.integer(Math.min(consts.MIN_WORDLEN, tlen), Math.min(consts.MAX_WORDLEN, template.length))(RNG);
+    var wordlen = Random.integer(
+        Math.min(consts.MIN_WORDLEN, tlen),
+        Math.min(consts.MAX_WORDLEN, template.length)
+    )(RNG);
     //console.log('Find word of length ['+wordlen+'] that fits into ['+template+']');
 
     var candidates = [];
@@ -94,7 +101,8 @@ function makePuzzle(size, nwords, seedv) {
     if (!seedv) {
         seedv = new Date().getTime();
     }
-    RNG.seed(seedv);
+    console.log(seedv);
+    seedRNG(seedv);
 
     var answers = [];
     var g = new grid.Grid(size);
@@ -117,8 +125,6 @@ function makePuzzle(size, nwords, seedv) {
         if (p) {
             var word = p[0];
             var offset = p[1];
-            //console.log(direction + ',' + slicei + ',[' + sliceword + '],['+word+'],['+offset+']');
-
             g.placeWord(direction, slicei, offset, word);
             answers.push(new grid.GridWord(word, direction, slicei, offset));
         }
@@ -130,8 +136,62 @@ function makePuzzle(size, nwords, seedv) {
     return [answers, g, filled];
 }
 
+// ==================================================================
+
+function serialize(answers, grid) {
+    var s = grid.size + ':';
+    for (var r=0; r<grid.size; r++) {
+        for (var c=0; c<grid.size; c++) {
+            s += grid.grid[r][c];
+        }
+    }
+    s += ':';
+    for (var i=0; i<answers.length; i++) {
+        var a = answers[i];
+        s += '' + a.direction + ',' +
+            a.slice + ',' +
+            a.offset + ',' +
+            a.word + ';';
+    }
+
+    var rv = lz.compressToEncodedURIComponent(s);
+    return rv;
+}
+
+function deserialize(c) {
+    var s = lz.decompressFromEncodedURIComponent(c);
+    var amain = s.split(':');
+
+    var size = parseInt(amain[0], 10);
+    var newGrid = new grid.Grid(size);
+    newGrid.fromString(amain[1]);
+
+    var newAnswers = [];
+    var aanswers = amain[2].split(';');
+    for (var i=0; i<aanswers.length; i++) {
+        if (!aanswers[i]) {
+            continue;
+        }
+        var aanswer = aanswers[i].split(',');
+        var gw = new grid.GridWord(aanswer[3], parseInt(aanswer[0], 10), parseInt(aanswer[1], 10), parseInt(aanswer[2], 10));
+        newAnswers.push(gw);
+    }
+
+    var answerGrid = new grid.Grid(size);
+    for (i=0; i<newAnswers.length; i++) {
+        answerGrid.placeWord(newAnswers[i].direction, newAnswers[i].slice, newAnswers[i].offset, newAnswers[i].word);
+    }
+
+    return [newAnswers, answerGrid, newGrid];
+}
+
+
+// ==================================================================
+
 module.exports = {
-    makePuzzle:makePuzzle
+    makePuzzle:makePuzzle,
+    serialize:serialize,
+    deserialize:deserialize
 };
 
 }());
