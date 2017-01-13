@@ -1,5 +1,5 @@
 
-$cBgBody: #f4f4f4;
+$cBgBody: #f6f6f6;
 $cTextBody: #333;
 $cCellBg: $cBgBody;
 $cBgSolved: $cTextBody;
@@ -57,6 +57,7 @@ h1 {
 	margin: 0;
 	padding: 0;
 	cursor: pointer;
+	// width is set in code.
 }
 
 td.cell {
@@ -67,10 +68,10 @@ td.cell {
 	border: 0;
 	color: $cTextBody;
 
-	-webkit-user-select: none;  /* Chrome all / Safari all */
-	-moz-user-select: none;     /* Firefox all */
-	-ms-user-select: none;      /* IE 10+ */
-	user-select: none;          /* Likely future */      
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
 
 	.gc {
 		position: absolute;
@@ -183,12 +184,17 @@ td.cellsolved {
 	left: 0;
 	transform-origin: $ringTransformOrigin $ringTransformOrigin;
 	-webkit-backface-visibility: hidden;
+
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
 }
 .ringsolved {
 	// set these in js.
 	//background-color: $cBgSolved;
 	//border-color: $cBgSolved;
-	z-index: -1;
+	z-index: -2;
 }
 
 #message {

@@ -9,6 +9,7 @@ function Ring(cell) {
     this.startCell = cell;
     this.endCell = null;
     this.word = '';
+    this.answer = null;
 
     this.calculateMetrics = function() {
         // displayPuzzle() sets some properties as defaults on my prototype.
@@ -125,6 +126,9 @@ function Ring(cell) {
 
     this.destroy = function(tween) {
         tween = util.calcTweenTime(tween);
+        this.startCell = null;
+        this.endCell = null;
+        this.answer = null;
         if (this.ring) {
             var r = this.ring;
             this.ring.transition('ringdie')
@@ -138,11 +142,16 @@ function Ring(cell) {
             ;
             this.ring = null;
         }
-        this.startCell = null;
-        this.endCell = null;
     };
 
-    this.mark = function(tween, t) {
+    this.mark = function(answer, tween, t) {
+        this.answer = (t)?answer:null;
+        if (t && this.answer) {
+            this.ring.attr('id', 'ring_'+answer.word);
+        }
+        if (this.ring.classed('ringsolved') === t) {
+            return;
+        }
         tween = util.calcTweenTime(tween);
         var bgc = this.bgColor;
         var boc = this.borderColor;

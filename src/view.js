@@ -7,14 +7,18 @@ var util = require('./util');
 var viewcell = require('./viewcell');
 var viewring = require('./viewring');
 
-var cells, words;
+var cells, wordlist;
 var answers, theGrid;
 var rings = [];
 var dragRing;
 var inputDisabled = false;
-var wfBgColor, wfTextColor;
+var colors = {};
 
 // ==================================================================
+
+function updateLabel(id, v, suffix) {
+    d3.select('#'+id).html(v + ' &mdash; ' + suffix);
+}
 
 function getGridSize() {
     var d = d3.select('#tbSize');
@@ -85,6 +89,71 @@ function recordCellSizes() {
 
 // ==================================================================
 
+function doVictory() {
+    d3.selectAll('.cell')
+        .filter(function() { return !d3.select(this).classed('cellsolved'); })
+        .transition().duration(consts.FADE_TIME)
+        .style('color', colors.ring)
+    ;
+
+    d3.selectAll('.ring').style('z-index', -3);
+
+    var ft = consts.FADE_TIME * 2 + 1;
+    var i = 0;
+    wordlist.each(function (d) {
+        d3.select(this).transition()
+            .duration(consts.FADE_TIME)
+            .delay(ft*i)
+            .style('background-color', colors.ring)
+            .on('end', function() {
+                d3.select(this).transition()
+                    .duration(consts.FADE_TIME)
+                    .style('background-color', colors.bodyText)
+                ;
+            })
+        ;
+
+        d3.select('#ring_' + d.word).transition()
+            .duration(consts.FADE_TIME)
+            .delay(ft*i)
+            .style('background-color', colors.ring)
+            .style('border-color', colors.ring)
+            .on('start', function() {
+                d3.select(this).style('z-index', -1);
+            })
+            .on('end', function() {
+                d3.select(this).transition()
+                    .duration(consts.FADE_TIME)
+                    .style('background-color', colors.bodyText)
+                    .style('border-color', colors.bodyText)
+                    .on('end', function() {
+                        d3.select(this).style('z-index', -2);
+                    })
+                ;
+            })
+        ;
+
+        i++;
+    });
+}
+
+function cancelVictory() {
+    d3.selectAll('.cell')
+        .filter(function() { return d3.select(this).style('color') === colors.ring; })
+        .style('color', colors.bodyText)
+    ;
+    wordlist.interrupt();
+    d3.selectAll('.wfsolved')
+        .style('background-color', colors.bodyText);
+    d3.selectAll('.ring').interrupt();
+    d3.selectAll('.ringsolved')
+        .style('background-color', colors.bodyText)
+        .style('border-color', colors.bodyText);
+}
+
+
+// ==================================================================
+
 function popRing(tween) {
     if (rings.length === 0) {
         return;
@@ -100,6 +169,7 @@ function clearRings(tween) {
 }
 
 function markAnswer(answer, t) {
+    var marked = [];
     var params = util.sliceParams(theGrid.size, answer.direction, answer.slice);
     var dc = params[2];
     var dr = params[3];
@@ -107,21 +177,28 @@ function markAnswer(answer, t) {
     var r = params[1] + answer.offset * dr;
     for (var i=0; i<answer.word.length; i++) {
         var cell = getCell(r + dr*i, c + dc*i);
-        d3.select('#' + cell.id()).classed('cellsolved', t);
+        var d = d3.select('#' + cell.id());
+        if (!d.empty() && d.classed('cellsolved') !== t) {
+            d.classed('cellsolved', t);
+        }
+        marked.push(cell);
     }
+    return marked;
 }
 
-function markWord(word, t, tween) {
+function markWord(d, word, t, tween) {
     if (tween === undefined) {
         tween = consts.FADE_TIME;
     }
-    var d = d3.select('#wflist_'+word);
-    if (!d.empty()) {
+    if (!d) {
+        d = d3.select('#wflist_'+word);
+    }
+    if (!d.empty() && d.classed('wfsolved')!==t) {
         var tt = util.calcTweenTime(tween);
-        var bgc = wfBgColor, txc = wfTextColor;
+        var bgc = colors.bodyBg, txc = colors.bodyText;
         if (t) {
-            bgc = wfTextColor;
-            txc = wfBgColor;
+            bgc = colors.bodyText;
+            txc = colors.bodyBg;
         }
         d.classed('wfsolved', t);
         d.transition('wordmark')
@@ -143,60 +220,57 @@ function checkWord(c, d, w) {
         var wec = wsc + (a.word.length-1) * dc;
         var wer = wsr + (a.word.length-1) * dr;
         //console.log(w, answers[i].word, c.column, c.row, wsc, wsr, d.column, d.row, wec, wer);
-        if (a.word === w && c.column === wsc && c.row === wsr && d.column === wec && d.row === wer) {
+        if (a.word === w &&
+                c.column === wsc && c.row === wsr &&
+                d.column === wec && d.row === wer) {
             return a;
         }
     }
     return null;
 }
 
-function checkRings() {
-    cells.classed('cellsolved', false);
-
+function checkAnswers() {
     var answered = 0;
-    var awords = [];
+    var awords = [], marked = [];
     for (var i=0; i<rings.length; i++) {
         var answer = checkWord(rings[i].startCell, rings[i].endCell, rings[i].word);
-        if (answer) {
-            rings[i].mark(consts.FADE_TIME, true);
-            markAnswer(answer, true);
-            markWord(rings[i].word, true);
-            answered++;
-            awords.push(rings[i].word);
-        } else {
+        if (!answer) {
             var revword = rings[i].word.split('').reverse().join(''); // FIXME: will break on unicode
             answer = checkWord(rings[i].endCell, rings[i].startCell, revword);
-            if (answer) {
-                rings[i].mark(true, true);
-                markAnswer(answer, true);
-                markWord(revword, true);
-                awords.push(revword);
-                answered++;
-            } else {
-                rings[i].mark(true, false);
-            }
+        }
+
+        if (answer) {
+            rings[i].mark(answer, consts.FADE_TIME, true);
+            marked = marked.concat(markAnswer(answer, true));
+            awords.push(answer.word);
+            answered++;
+        } else {
+            rings[i].mark(consts.FADE_TIME, false);
         }
     }
 
-    words.each(function (d) {
-        if (d3.select(this).classed('wfsolved') && awords.indexOf(d.word)===-1) {
-            markWord(d.word, false);
+    // if an answer ring was removed, reset affected cells.
+    d3.selectAll('.cellsolved').each(function (d) {
+        if (marked.indexOf(d) === -1) {
+            var s = d3.select(this);
+            if (s.classed('cellsolved')) {
+                s.classed('cellsolved', false);
+            }
         }
+    });
+
+    wordlist.each(function (d) {
+        markWord(d3.select(this), d.word, (awords.indexOf(d.word) !== -1));
     });
 
     if (answered === answers.length) {
         console.log("yay!");
+        doVictory();
+    } else {
+        cancelVictory();
     }
-}
 
-/*
-function redrawRings() {
-    for (var i=0; i<rings.length; i++) {
-        rings[i].calculateMetrics();
-        rings[i].resize(false);
-    }
 }
-*/
 
 // ==================================================================
 
@@ -223,8 +297,6 @@ function createDrag(cell, tween) {
         .classed('ringsolved', false)
     ;
     dragRing.resize(tween);
-    //var haf = dragRing.ring.size/2 + dragRing.borderSize;
-    //dragRing.ring.style('transform-origin', ''+haf+'px '+haf+'px');
     if (tween) {
         dragRing.transitionIn(true, null);
     }
@@ -304,7 +376,7 @@ function onDragEndLetter() {
         return;
     }
     finishDrag(true);
-    checkRings();
+    checkAnswers();
 }
 
 // ==================================================================
@@ -348,7 +420,7 @@ function autosolve() {
             var cp = cell.getPagePosition();
             var transitcb = (r!==er || c!==ec) ? _fcell : function() {
                 finishDrag(false);
-                checkRings();
+                checkAnswers();
                 _fanswer(i+1);
             };
             continueDrag(cp.x+dragRing.size, cp.y+dragRing.size, consts.TWEEN_TIME, transitcb);
@@ -367,7 +439,7 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
     d3.selectAll('#wflist li').remove();
     var body = d3.select('body');
 
-    // Create dummy elements to get CSS derived metrics.
+    // Create dummy elements to get CSS derived metrics
     {
         var szdummy = body.append('td').classed('cell', true);
         var cw = parseInt(szdummy.style('width'), 10) * theGrid.size;
@@ -375,6 +447,7 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
             .style('width', cw + 'px')
             .style('min-width', cw + 'px');
         d3.select('#info').style('width', cw + 'px');
+        d3.select('#help').style('width', cw + 'px');
         szdummy.remove();
 
         szdummy = body.append('div').classed('ring', true);
@@ -383,15 +456,16 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
         viewring.Ring.prototype.solvedColor = szdummy.style('color');
         viewring.Ring.prototype.bgColor = szdummy.style('background-color');
         viewring.Ring.prototype.borderColor = szdummy.style('border-color');
+        colors.ring = szdummy.style('border-color');
         szdummy.remove();
 
         szdummy = body.append('div').classed('wfword', true);
-        wfBgColor = szdummy.style('background-color');
-        wfTextColor = szdummy.style('color');
+        colors.bodyBg = szdummy.style('background-color');
+        colors.bodyText = szdummy.style('color');
         szdummy.remove();
     }
 
-    // create the grid.
+    // build the grid
     {
         var rows = body.select('#wfgrid tbody').selectAll('tr')
             .data(theGrid.grid)
@@ -427,18 +501,11 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
     }
 
     recordCellSizes();
-    d3.select(window).on('resize', function() {
-        /*
-        cancelDrag(false);
-        recordCellSizes();
-        redrawRings();
-        */
-    });
 
-    // word list
+    // build the word list
     {
         var ul = body.select('#wflist');
-        words = ul.selectAll('li')
+        wordlist = ul.selectAll('li')
             .data(answers)
             .enter()
             .append('li')
@@ -449,56 +516,52 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
         ;
     }
 
-    // toolbar
+    // configure the toolbar
     {
-        body.select('#tbUndo')
-            .on('click', function() {
-                popRing(true);
-                checkRings();
-            })
-        ;
-        body.select('#tbClear')
-            .on('click', function() {
-                cancelDrag(true);
-                clearRings(true);
-                checkRings();
-            })
-        ;
-        body.select('#tbNew')
-            .on('click', function() {
-                cancelDrag(false);
-                clearRings(false);
-                cbNewPuzzle(getGridSize(), getNumWords());
-                checkRings();
-            })
-        ;
-        body.select('#tbShowAdv')
-            .on('click', function() {
-                var a = body.select('#tbadvanced');
-                var b = a.style('display');
-                b = (b === 'none') ? 'block' : 'none';
-                a.style('display', b);
-                if (b === 'none') {
-                    d3.select(this).text('options');
-                } else {
-                    d3.select(this).text('(hide)');
-                }
-            })
-        ;
+        body.select('#tbUndo').on('click', function() {
+            popRing(true);
+            checkAnswers();
+        });
+        body.select('#tbClear').on('click', function() {
+            cancelDrag(true);
+            clearRings(true);
+            checkAnswers();
+        });
+        body.select('#tbNew').on('click', function() {
+            cancelDrag(false);
+            clearRings(false);
+            cbNewPuzzle(getGridSize(), getNumWords());
+            checkAnswers();
+        });
 
-        var v = d3.select('#tbSize').property('value');
-        d3.select('#labTbSize').html(v + ' &mdash; Grid Size');
+        body.select('#tbShowAdv').on('click', function() {
+            var a = body.select('#tbadvanced');
+            var b = a.style('display');
+            b = (b === 'none') ? 'block' : 'none';
+            a.style('display', b);
+            if (b === 'none') {
+                d3.select(this).text('options');
+            } else {
+                d3.select(this).text('(hide)');
+            }
+        });
+
+        updateLabel('labTbSize', getGridSize(), 'Grid Size');
         body.select('#tbSize')
+            .on('input', function() {
+                updateLabel('labTbSize', getGridSize(), 'Grid Size');
+            })
             .on('change', function() {
-                var v = d3.select('#tbSize').property('value');
-                d3.select('#labTbSize').html(v + ' &mdash; Grid Size');
+                updateLabel('labTbSize', getGridSize(), 'Grid Size');
             });
-        v = d3.select('#tbWords').property('value');
-        d3.select('#labTbWords').html(v + ' &mdash; # Words');
+
+        updateLabel('labTbWords', getNumWords(), '# Words');
         body.select('#tbWords')
+            .on('input', function() {
+                updateLabel('labTbWords', getNumWords(), '# Words');
+            })
             .on('change', function() {
-                var v = d3.select('#tbWords').property('value');
-                d3.select('#labTbWords').html(v + ' &mdash; # Words');
+                updateLabel('labTbWords', getNumWords(), '# Words');
             });
 
         if (consts.CHEAT && d3.select('#tbSolve').empty()) {
@@ -508,7 +571,7 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
                 .on('click', function() {
                     cancelDrag(true);
                     clearRings(false);
-                    checkRings();
+                    checkAnswers();
                     autosolve();
                 })
             ;
