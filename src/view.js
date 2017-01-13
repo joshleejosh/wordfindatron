@@ -479,9 +479,9 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
                 b = (b === 'none') ? 'block' : 'none';
                 a.style('display', b);
                 if (b === 'none') {
-                    d3.select(this).text('(more)');
+                    d3.select(this).text('options');
                 } else {
-                    d3.select(this).text('(less)');
+                    d3.select(this).text('(hide)');
                 }
             })
         ;
@@ -502,7 +502,7 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
             });
 
         if (consts.CHEAT && d3.select('#tbSolve').empty()) {
-            d3.select('#tbadvanced').append('button')
+            d3.select('#toolbar').insert('button', '#tbNew')
                 .attr('id', 'tbSolve')
                 .text('Cheat')
                 .on('click', function() {
@@ -512,6 +512,7 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
                     autosolve();
                 })
             ;
+            d3.select('#toolbar').insert('span', '#tbNew').text(' ');
         }
 
     }

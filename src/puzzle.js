@@ -15,7 +15,26 @@ function seedRNG(v) {
 
 // ==================================================================
 
-function wordFits(word, template) {
+// Build array of slices to pick from.
+// But only do half the directions; we'll handle mirrors below, but we
+// don't want any reverse collisions while looking for slots.
+function shuffleSlices(size) {
+    var sa = [];
+    for (var d=0; d<4; d++) {
+        var a = 0, b = size;
+        if (d%2 === 1) {
+            a = consts.MIN_WORDLEN - 1;
+            b = (size*2) - consts.MIN_WORDLEN;
+        }
+        for (var s=a; s<b; s++) {
+            sa.push([d, s]);
+        }
+    }
+    Random.shuffle(RNG, sa);
+    return sa;
+}
+
+function fitWord(word, template) {
     var offsets = util.range(0, template.length - word.length + 1);
     Random.shuffle(RNG, offsets);
     for (var i=0; i<offsets.length; i++) {
@@ -36,17 +55,15 @@ function wordFits(word, template) {
     return -1;
 }
 
-function findFittingWord(template) {
+function findFittingWord(template, wordlen) {
     var tlen = template.length;
     if (tlen < consts.MIN_WORDLEN) {
         console.log('findFittingWord: Bad template ['+template+']');
         return null;
     }
-
-    var wordlen = Random.integer(
-        Math.min(consts.MIN_WORDLEN, tlen),
-        Math.min(consts.MAX_WORDLEN, template.length)
-    )(RNG);
+    if (wordlen > tlen) {
+        console.log('findFittingWord: bad word length ['+wordlen+'] for ['+template+']');
+    }
     //console.log('Find word of length ['+wordlen+'] that fits into ['+template+']');
 
     var candidates = [];
@@ -54,7 +71,7 @@ function findFittingWord(template) {
     for (var i=0; i<wordlist.length; i++) {
         var w = wordlist[i];
         if (w.length === wordlen && blacklist.indexOf(w) === -1) {
-            var f = wordFits(w, template);
+            var f = fitWord(w, template);
             if (f !== -1) {
                 candidates.push([w, f]);
             }
@@ -70,25 +87,6 @@ function findFittingWord(template) {
 
     var pair = Random.pick(RNG, candidates);
     return pair;
-}
-
-// Build array of slices to pick from.
-// But only do half the directions; we'll handle mirrors below, but we
-// don't want any reverse collisions while looking for slots.
-function shuffleSlices(size) {
-    var sa = [];
-    for (var d=0; d<4; d++) {
-        var a = 0, b = size;
-        if (d%2 === 1) {
-            a = consts.MIN_WORDLEN - 1;
-            b = (size*2) - consts.MIN_WORDLEN;
-        }
-        for (var s=a; s<b; s++) {
-            sa.push([d, s]);
-        }
-    }
-    Random.shuffle(RNG, sa);
-    return sa;
 }
 
 function makePuzzle(size, nwords, seedv) {
@@ -108,7 +106,7 @@ function makePuzzle(size, nwords, seedv) {
     var g = new grid.Grid(size);
     var sa = shuffleSlices(size);
 
-    for (var i=0; i<nwords && i<sa.length; i++) {
+    for (var i=0; answers.length<nwords && i<sa.length; i++) {
         var direction = sa[i][0], slicei = sa[i][1];
         // flip it?
         if (Random.bool()(RNG)) {
@@ -116,8 +114,14 @@ function makePuzzle(size, nwords, seedv) {
         }
 
         var sliceword = g.cutSlice(direction, slicei);
-        for (var j=0; j<consts.MAX_WORD_GEN_FAILURES; j++) {
-            var p = findFittingWord(sliceword);
+        var wordlens = util.range(
+            Math.min(consts.MIN_WORDLEN, sliceword.length),
+            Math.min(consts.MAX_WORDLEN, sliceword.length) + 1
+        );
+        Random.shuffle(RNG, wordlens);
+
+        for (var j=0; j<wordlens.length; j++) {
+            var p = findFittingWord(sliceword, wordlens[j]);
             if (p) {
                 break;
             }
@@ -127,6 +131,8 @@ function makePuzzle(size, nwords, seedv) {
             var offset = p[1];
             g.placeWord(direction, slicei, offset, word);
             answers.push(new grid.GridWord(word, direction, slicei, offset));
+        } else {
+            console.log('makePuzzle: gave up on ['+direction+'] ['+slicei+'] ['+sliceword+']');
         }
     }
     //console.log(g.toString());
