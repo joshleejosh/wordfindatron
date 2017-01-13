@@ -12,12 +12,10 @@ function Ring(cell) {
     this.word = '';
 
     this.calculateMetrics = function() {
-        // displayPuzzle() sets some of these on the prototype.
+        // displayPuzzle() sets some properties as defaults on my prototype.
         //this.borderSize = Ring.prototype.borderSize;
         //this.size = this.startCell.size * 2 / 3;
         var sp = this.startCell.getPagePosition();
-        this.pageX = sp.x;
-        this.pageY = sp.y;
         this.cx = (sp.x + this.startCell.size/2);
         this.cy = (sp.y + this.startCell.size/2);
         this.cellOffset = (this.startCell.size - this.size) / 2;
@@ -56,10 +54,10 @@ function Ring(cell) {
 
         // position the ring.
         if (this.startCell) {
-            var pp = util.getElementPosition(d3.select('#wffield').node());
-            var sp = util.getElementPosition(this.startCell.element);
-            var y = sp.y - pp.y + this.cellOffset - this.borderSize;
-            var x = sp.x - pp.x + this.cellOffset - this.borderSize;
+            var pp = d3.select('#wffield').node().getBoundingClientRect();
+            var sp = this.startCell.getPagePosition();
+            var y = sp.y - pp.top + this.cellOffset - this.borderSize;
+            var x = sp.x - pp.left + this.cellOffset - this.borderSize;
             this.ring.style('top', '' + y + 'px')
                      .style('left', '' + x + 'px')
             ;
@@ -67,7 +65,7 @@ function Ring(cell) {
             // scale, translate, and rotate the ring.
             if (this.endCell) {
                 var wid = this.calcWidth();
-                var ep = util.getElementPosition(this.endCell.element);
+                var ep = this.endCell.getPagePosition();
                 var a = util.snapAngle(ep.x - sp.x, ep.y - sp.y);
                 var rot = a[0] * (360.0/Math.TAU);
                 this.ring.transition('ringresize')
@@ -97,14 +95,15 @@ function Ring(cell) {
         } else if (transit === true) {
             transit = consts.TRANSITION_TIME / 2;
         }
+        var pp = d3.select('#wffield').node().getBoundingClientRect();
 
         var y = parseInt(this.ring.style('top'), 10);
         var x = parseInt(this.ring.style('left'), 10);
         var w = parseInt(this.ring.style('width'), 10);
         var h = parseInt(this.ring.style('height'), 10);
         this.ring
-            .style('top', this.cy + 'px')
-            .style('left', this.cx + 'px')
+            .style('top', (this.cy-pp.top) + 'px')
+            .style('left', (this.cx-pp.left) + 'px')
             .style('width', '1px')
             .style('height', '1px');
         this.ring.transition('ringlife')
@@ -128,12 +127,13 @@ function Ring(cell) {
         } else if (transit === true) {
             transit = consts.TRANSITION_TIME;
         }
+        var pp = d3.select('#wffield').node().getBoundingClientRect();
 
         this.ring.transition('ringlife')
             .duration(transit)
             .ease(d3.easeSinIn)
-            .style('top', this.cy + 'px')
-            .style('left', this.cx + 'px')
+            .style('top', (this.cy-pp.top) + 'px')
+            .style('left', (this.cx-pp.left) + 'px')
             .style('width', '1px')
             .style('height', '1px')
             .on('end', function() {

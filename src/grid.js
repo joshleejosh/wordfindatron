@@ -25,8 +25,9 @@ var Grid = function(size) {
      */
     this.fromString = function(s) {
         for (var r=0,i=0; r<this.size && i<s.length; r++) {
-            for (var c=0; c<this.size && i<s.length; c++,i++) {
+            for (var c=0; c<this.size && i<s.length; c++) {
                 this.grid[r][c] = s[i];
+                i++;
             }
         }
         return this;

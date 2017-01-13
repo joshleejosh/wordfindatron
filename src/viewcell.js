@@ -1,6 +1,5 @@
 (function () {
 'use strict';
-var util = require('./util');
 
 function cid(r, c) {
     return 'c'+r+'_'+c;
@@ -21,16 +20,10 @@ function Cell(s, r, c) {
 
     this.getPagePosition = function() {
         if (this.element) {
-            return util.getElementPosition(this.element);
+            var p = this.element.getBoundingClientRect();
+            return {x:p.left, y:p.top};
         }
         throw Error('Cell.getPosition: No element for ['+this.column+','+this.row+']');
-    };
-
-    this.containsPoint = function(p) {
-        return (p.x >= this.pageX &&
-                p.x < (this.pageX + this.pageSize) &&
-                p.y >= this.pageY &&
-                p.y < (this.pageY + this.pageSize));
     };
 }
 

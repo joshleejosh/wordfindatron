@@ -1,5 +1,7 @@
 (function () {
 'use strict';
+var MobileDetect = require('mobile-detect');
+    
 
 // TODO: manual seeding
 function rnd() {
@@ -59,15 +61,15 @@ function range(start, end, step) {
  * Return tuple (x, y, dx, dy), where x,y is the starting location for the
  * slice on the grid and dx,dy is the increment to walk through the slice.
  *
- * direction     slice 0 starting point (G = grid size - 1)
- * 0 → W to E    top-left (0,0)
- * 1 ↘ NW to SE  bottom-left (0,G)
- * 2 ↓ N to S    top-left  (0,0)
- * 3 ↙ NE to SW  top-left (0,0)
- * 4 ← E to W    top-right (G,0)
- * 5 ↖ SE to NW  bottom-left (0,G)
- * 6 ↑ S to N    bottom-left (0,G)
- * 7 ↗ SW to NE  top-left (0,0)
+ * direction … slice 0 starting point (G = grid size - 1)
+ * 0 → E       top-left (0,0)
+ * 1 ↘ SE      bottom-left (0,G)
+ * 2 ↓ S       top-left  (0,0)
+ * 3 ↙ SW      top-left (0,0)
+ * 4 ← W       top-right (G,0)
+ * 5 ↖ NW       bottom-left (0,G)
+ * 6 ↑ N       bottom-left (0,G)
+ * 7 ↗ NE      top-left (0,0)
  */
 function sliceParams (sz, di, si) {
     var mg = sz - 1;
@@ -98,13 +100,9 @@ function snapAngle(dx, dy) {
     return [angle, direction];
 }
 
-function getElementPosition(e) {
-    var r = e.getBoundingClientRect();
-    return {x:r.left, y:r.top};
-}
-
 function isMobile() {
-    return false;
+    var md = new MobileDetect(window.navigator.userAgent);
+    return md.mobile();
 }
 
 module.exports = {
@@ -115,7 +113,6 @@ module.exports = {
     range:range,
     sliceParams:sliceParams,
     snapAngle:snapAngle,
-    getElementPosition:getElementPosition,
     isMobile:isMobile
 };
 

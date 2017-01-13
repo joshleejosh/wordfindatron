@@ -439,10 +439,6 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
     }
 
     enableInput();
-    msgClear();
-    msgWrite(navigator.appName, navigator.platform);
-    msgWrite(navigator.userAgent);
-    console.log(navigator);
 }
 
 // ==================================================================
