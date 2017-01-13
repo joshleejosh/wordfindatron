@@ -4,6 +4,14 @@
 var consts = require('./consts');
 var util = require('./util');
 
+/* I represent a word placed on a Grid. */
+var GridWord = function(w, d, s, o) {
+    this.word = w;
+    this.direction = d;
+    this.slice = s;
+    this.offset = o;
+};
+
 /*
  * I represent a grid of letters used in a word puzzle.
  * I can be _sliced_ in any of 8 directions.
@@ -176,14 +184,6 @@ var Grid = function(size) {
             }
         }
     };
-};
-
-/* I represent a word placed on a Grid. */
-var GridWord = function(w, d, s, o) {
-    this.word = w;
-    this.direction = d;
-    this.slice = s;
-    this.offset = o;
 };
 
 module.exports = {

@@ -100,13 +100,13 @@ td.cellsolved {
 	margin: 0;
 	padding: 0 $margin;
 	font-size: $wordlistFontSize;
-	background-color: transparent;
+	background-color: $cBodyBg;
 	color: $cBodyText;
 	//border-radius: $margin;
 }
 .wfsolved {
-	background-color: $cBgSolved;
-	color: $cTextSolved;
+	//background-color: $cBgSolved;
+	//color: $cTextSolved;
 }
 
 #toolbar {
@@ -121,13 +121,14 @@ td.cellsolved {
 .ring {
 	display: block;
 	position: absolute;
+	z-index: 1;
 	margin: 0;
 	padding: 0;
 	border: solid $ringThickness;
 	border-color: $cRing;
 	border-radius: 2em;
 	background-color: transparent;
-	color: $cBodyText;
+	color: $cBgSolved; // HACK: use text color to hide the alt state color for code to peek at (since we never have any text in a ring)
 	height: $ringSize;
 	width: $ringSize;
 	top: 0;
@@ -135,12 +136,10 @@ td.cellsolved {
 	transform-origin: $ringTransformOrigin $ringTransformOrigin;
 	-webkit-backface-visibility: hidden;
 }
-.ringoff {
-	z-index: 1;
-}
-.ringon {
-	background-color: $cBgSolved;
-	border-color: $cBgSolved;
+.ringsolved {
+	// set these in js.
+	//background-color: $cBgSolved;
+	//border-color: $cBgSolved;
 	z-index: -1;
 }
 

@@ -2,7 +2,6 @@
 'use strict';
 
 var d3 = require('d3');
-var consts = require('./consts');
 var util = require('./util');
 
 function Ring(cell) {
@@ -22,14 +21,6 @@ function Ring(cell) {
     };
     this.calculateMetrics();
 
-    this.destroy = function() {
-        if (this.ring) {
-            this.ring.remove();
-        }
-        this.startCell = null;
-        this.endCell = null;
-    };
-
     this.calcWidth = function() {
         if (!this.startCell || !this.endCell) {
             return this.size;
@@ -45,12 +36,8 @@ function Ring(cell) {
         return dist + this.size;
     };
 
-    this.resize = function(transit, transitcb) {
-        if (util.isMobile() || transit === false) {
-            transit = 0;
-        } else if (transit === true) {
-            transit = consts.TRANSITION_TIME;
-        }
+    this.resize = function(tween, transitcb) {
+        tween = util.calcTweenTime(tween);
 
         // position the ring.
         if (this.startCell) {
@@ -69,7 +56,7 @@ function Ring(cell) {
                 var a = util.snapAngle(ep.x - sp.x, ep.y - sp.y);
                 var rot = a[0] * (360.0/Math.TAU);
                 this.ring.transition('ringresize')
-                    .duration(transit)
+                    .duration(tween)
                     .ease(d3.easeSinOut)
                     .style('width', wid + 'px')
                     .style('transform', 'rotate(' + rot + 'deg)')
@@ -79,7 +66,7 @@ function Ring(cell) {
             } else {
                 // snap back to a single cell.
                 this.ring.transition('ringresize')
-                    .duration(transit)
+                    .duration(tween)
                     .ease(d3.easeSinOut)
                     .style('width', this.size + 'px')
                     .style('transform', null)
@@ -89,12 +76,8 @@ function Ring(cell) {
         }
     };
 
-    this.transitionIn = function(transit, cb) {
-        if (util.isMobile() || transit === false) {
-            transit = 0;
-        } else if (transit === true) {
-            transit = consts.TRANSITION_TIME / 2;
-        }
+    this.transitionIn = function(tween, cb) {
+        tween = util.calcTweenTime(tween);
         var pp = d3.select('#wffield').node().getBoundingClientRect();
 
         var y = parseInt(this.ring.style('top'), 10);
@@ -107,7 +90,7 @@ function Ring(cell) {
             .style('width', '1px')
             .style('height', '1px');
         this.ring.transition('ringlife')
-            .duration(transit)
+            .duration(tween)
             .ease(d3.easeSinOut)
             .style('top', y + 'px')
             .style('left', x + 'px')
@@ -121,16 +104,12 @@ function Ring(cell) {
         ;
     };
 
-    this.transitionOut = function(transit, cb) {
-        if (util.isMobile() || transit === false) {
-            transit = 0;
-        } else if (transit === true) {
-            transit = consts.TRANSITION_TIME;
-        }
+    this.transitionOut = function(tween, cb) {
+        tween = util.calcTweenTime(tween);
         var pp = d3.select('#wffield').node().getBoundingClientRect();
 
         this.ring.transition('ringlife')
-            .duration(transit)
+            .duration(tween)
             .ease(d3.easeSinIn)
             .style('top', (this.cy-pp.top) + 'px')
             .style('left', (this.cx-pp.left) + 'px')
@@ -141,6 +120,42 @@ function Ring(cell) {
                     cb();
                 }
             })
+        ;
+    };
+
+    this.destroy = function(tween) {
+        tween = util.calcTweenTime(tween);
+        if (this.ring) {
+            var r = this.ring;
+            this.ring.transition('ringdie')
+                .duration(tween)
+                .style('width', '1px')
+                .on('end', function() {
+                    if (r) {
+                        r.remove();
+                    }
+                })
+            ;
+            this.ring = null;
+        }
+        this.startCell = null;
+        this.endCell = null;
+    };
+
+    this.mark = function(tween, t) {
+        tween = util.calcTweenTime(tween);
+        var bgc = this.bgColor;
+        var boc = this.borderColor;
+        if (t) {
+            bgc = this.solvedColor;
+            boc = this.solvedColor;
+        }
+
+        this.ring.classed('ringsolved', t);
+        this.ring.transition('ringmark')
+            .duration(tween)
+            .style('background-color', bgc)
+            .style('border-color', boc)
         ;
     };
 

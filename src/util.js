@@ -1,6 +1,6 @@
 (function () {
 'use strict';
-var MobileDetect = require('mobile-detect');
+var consts = require('./consts');
     
 
 // TODO: manual seeding
@@ -100,9 +100,13 @@ function snapAngle(dx, dy) {
     return [angle, direction];
 }
 
-function isMobile() {
-    var md = new MobileDetect(window.navigator.userAgent);
-    return md.mobile();
+function calcTweenTime(t) {
+    if (!t) {
+        t = 0;
+    } else if (t === true) {
+        t = consts.TWEEN_TIME;
+    }
+    return t;
 }
 
 module.exports = {
@@ -113,7 +117,7 @@ module.exports = {
     range:range,
     sliceParams:sliceParams,
     snapAngle:snapAngle,
-    isMobile:isMobile
+    calcTweenTime:calcTweenTime
 };
 
 }());

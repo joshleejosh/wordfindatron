@@ -30,7 +30,7 @@ function wordFits(word, template) {
     return -1;
 }
 
-function findFittingWord (template) {
+function findFittingWord(template) {
     var tlen = template.length;
     if (tlen < consts.MIN_WORDLEN) {
         console.log('findFittingWord: Bad template ['+template+']');
@@ -90,8 +90,7 @@ function makePuzzle(size, nwords) {
     var g = new grid.Grid(size);
     var sa = shuffleSlices(size);
 
-    var i = 0, failures = 0;
-    while (i<nwords && failures<consts.MAX_WORD_GEN_FAILURES) {
+    for (var i=0; i<nwords && i<sa.length; i++) {
         var direction = sa[i][0], slicei = sa[i][1];
         // flip it?
         if (util.rnd() < 0.5) {
@@ -99,18 +98,20 @@ function makePuzzle(size, nwords) {
         }
 
         var sliceword = g.cutSlice(direction, slicei);
-        var p = findFittingWord(sliceword);
-        if (!p) {
-            failures++;
-            continue;
+        for (var j=0; j<consts.MAX_WORD_GEN_FAILURES; j++) {
+            var p = findFittingWord(sliceword);
+            if (p) {
+                break;
+            }
         }
-        var word = p[0];
-        var offset = p[1];
-        //console.log(direction + ',' + slicei + ',[' + sliceword + '],['+word+'],['+offset+']');
+        if (p) {
+            var word = p[0];
+            var offset = p[1];
+            //console.log(direction + ',' + slicei + ',[' + sliceword + '],['+word+'],['+offset+']');
 
-        g.placeWord(direction, slicei, offset, word);
-        answers.push(new grid.GridWord(word, direction, slicei, offset));
-        i++;
+            g.placeWord(direction, slicei, offset, word);
+            answers.push(new grid.GridWord(word, direction, slicei, offset));
+        }
     }
     //console.log(g.toString());
 

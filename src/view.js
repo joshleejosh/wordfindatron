@@ -1,8 +1,8 @@
 (function () {
 'use strict';
 
-
 var d3 = require('d3');
+var consts = require('./consts');
 var util = require('./util');
 var viewcell = require('./viewcell');
 var viewring = require('./viewring');
@@ -12,6 +12,7 @@ var answers, theGrid;
 var rings = [];
 var dragRing;
 var inputDisabled = false;
+var wfBgColor, wfTextColor;
 
 // ==================================================================
 
@@ -38,6 +39,7 @@ function wordBetweenCells(c, d) {
 
 // ==================================================================
 
+/*
 function msgClear() {
     d3.selectAll('#message span').remove();
 }
@@ -48,6 +50,7 @@ function msgWrite() {
     }
     d3.select('#message').append('span').html(s + '<br/>');
 }
+*/
 
 // ==================================================================
 
@@ -67,27 +70,17 @@ function recordCellSizes() {
 
 // ==================================================================
 
-function popRing() {
+function popRing(tween) {
     if (rings.length === 0) {
         return;
     }
-    rings[rings.length-1].destroy();
-    rings.pop();
+    var r = rings.pop();
+    r.destroy(tween);
 }
 
-function clearRings() {
+function clearRings(tween) {
     while (rings.length > 0) {
-        popRing();
-    }
-}
-
-function markRing(ring, t) {
-    if (t) {
-        ring.ring.classed('ringoff', false);
-        ring.ring.classed('ringon', true);
-    } else {
-        ring.ring.classed('ringoff', true);
-        ring.ring.classed('ringon', false);
+        popRing(tween);
     }
 }
 
@@ -103,10 +96,24 @@ function markAnswer(answer, t) {
     }
 }
 
-function markWord(word, t) {
-    var e = d3.select('#wflist_'+word);
-    if (!e.empty()) {
-        e.classed('wfsolved', t);
+function markWord(word, t, tween) {
+    if (tween === undefined) {
+        tween = consts.FADE_TIME;
+    }
+    var d = d3.select('#wflist_'+word);
+    if (!d.empty()) {
+        var tt = util.calcTweenTime(tween);
+        var bgc = wfBgColor, txc = wfTextColor;
+        if (t) {
+            bgc = wfTextColor;
+            txc = wfBgColor;
+        }
+        d.classed('wfsolved', t);
+        d.transition('wordmark')
+            .duration(tt)
+            .style('background-color', bgc)
+            .style('color', txc)
+        ;
     }
 }
 
@@ -130,27 +137,37 @@ function checkWord(c, d, w) {
 
 function checkRings() {
     cells.classed('cellsolved', false);
-    words.classed('wfsolved', false);
+
     var answered = 0;
+    var awords = [];
     for (var i=0; i<rings.length; i++) {
         var answer = checkWord(rings[i].startCell, rings[i].endCell, rings[i].word);
         if (answer) {
-            markRing(rings[i], true);
+            rings[i].mark(consts.FADE_TIME, true);
             markAnswer(answer, true);
             markWord(rings[i].word, true);
             answered++;
+            awords.push(rings[i].word);
         } else {
             var revword = rings[i].word.split('').reverse().join(''); // FIXME: will break on unicode
             answer = checkWord(rings[i].endCell, rings[i].startCell, revword);
             if (answer) {
-                markRing(rings[i], true);
+                rings[i].mark(true, true);
                 markAnswer(answer, true);
                 markWord(revword, true);
+                awords.push(revword);
+                answered++;
             } else {
-                markRing(rings[i], false);
+                rings[i].mark(true, false);
             }
         }
     }
+
+    words.each(function (d) {
+        if (d3.select(this).classed('wfsolved') && awords.indexOf(d.word)===-1) {
+            markWord(d.word, false);
+        }
+    });
 
     if (answered === answers.length) {
         console.log("yay!");
@@ -164,10 +181,9 @@ function redrawRings() {
     }
 }
 
-
 // ==================================================================
 
-function cancelDrag(transit) {
+function cancelDrag(tween) {
     if (dragRing) {
         var kill = function() {
             if (dragRing) {
@@ -175,7 +191,7 @@ function cancelDrag(transit) {
             }
             dragRing = null;
         };
-        if (transit) {
+        if (tween) {
             dragRing.transitionOut(true, kill);
         } else {
             kill();
@@ -183,16 +199,16 @@ function cancelDrag(transit) {
     }
 }
 
-function createDrag(cell, transit) {
+function createDrag(cell, tween) {
     dragRing = new viewring.Ring(cell);
     dragRing.ring = d3.select('#wffield').append('div').html('&nbsp;')
         .classed('ring', true)
-        .classed('ringoff', true)
+        .classed('ringsolved', false)
     ;
-    dragRing.resize(transit);
+    dragRing.resize(tween);
     //var haf = dragRing.ring.size/2 + dragRing.borderSize;
     //dragRing.ring.style('transform-origin', ''+haf+'px '+haf+'px');
-    if (transit) {
+    if (tween) {
         dragRing.transitionIn(true, null);
     }
 }
@@ -222,16 +238,16 @@ function continueDrag(newx, newy, transitt, transitcb) {
         c += delta[0];
     } while (fdist2<dist2 && r>=0 && r<theGrid.size && c>=0 && c<theGrid.size);
 
-    if (f) {
+    if (f && f !== dragRing.endCell) {
         dragRing.endCell = f;
         dragRing.word = wordBetweenCells(dragRing.startCell, dragRing.endCell);
         dragRing.resize(transitt, transitcb);
     }
 }
 
-function finishDrag(transit) {
+function finishDrag(tween) {
     if (dragRing.word.length < 2) {
-        cancelDrag(transit);
+        cancelDrag(tween);
         return;
     }
     dragRing.ring.style('z-index', '-1');
@@ -318,7 +334,7 @@ function autosolve() {
                 checkRings();
                 _fanswer(i+1);
             };
-            continueDrag(cp.x+dragRing.size, cp.y+dragRing.size, true, transitcb);
+            continueDrag(cp.x+dragRing.size, cp.y+dragRing.size, consts.TWEEN_TIME/2, transitcb);
         };
         _fcell();
     };
@@ -346,6 +362,14 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
         szdummy = body.append('div').classed('ring', true);
         viewring.Ring.prototype.borderSize = parseInt(szdummy.style('border-width'), 10);
         viewring.Ring.prototype.size = parseInt(szdummy.style('width'), 10);
+        viewring.Ring.prototype.solvedColor = szdummy.style('color');
+        viewring.Ring.prototype.bgColor = szdummy.style('background-color');
+        viewring.Ring.prototype.borderColor = szdummy.style('border-color');
+        szdummy.remove();
+
+        szdummy = body.append('div').classed('wfword', true);
+        wfBgColor = szdummy.style('background-color');
+        wfTextColor = szdummy.style('color');
         szdummy.remove();
     }
 
@@ -386,9 +410,11 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
 
     recordCellSizes();
     d3.select(window).on('resize', function() {
+        /*
         cancelDrag(false);
         recordCellSizes();
         redrawRings();
+        */
     });
 
     // word list
@@ -409,21 +435,21 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
     {
         body.select('#tbUndo')
             .on('click', function() {
-                popRing();
+                popRing(true);
                 checkRings();
             })
         ;
         body.select('#tbClear')
             .on('click', function() {
                 cancelDrag(true);
-                clearRings();
+                clearRings(true);
                 checkRings();
             })
         ;
         body.select('#tbSolve')
             .on('click', function() {
                 cancelDrag(true);
-                clearRings();
+                clearRings(false);
                 checkRings();
                 autosolve();
             })
@@ -431,7 +457,7 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
         body.select('#tbNew')
             .on('click', function() {
                 cancelDrag(false);
-                clearRings();
+                clearRings(false);
                 cbNewPuzzle(getGridSize(), getNumWords());
                 checkRings();
             })
