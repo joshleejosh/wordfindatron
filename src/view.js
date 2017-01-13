@@ -28,6 +28,12 @@ function getNumWords() {
     return rv;
 }
 
+function getSeed() {
+    var d = d3.select('#tbSeed');
+    var rv = parseInt(d.property('value'), 10);
+    return rv;
+}
+
 function wordBetweenCells(c, d) {
     if (c.row===d.row && c.column===d.column) {
         return c.letter;
@@ -174,12 +180,14 @@ function checkRings() {
     }
 }
 
+/*
 function redrawRings() {
     for (var i=0; i<rings.length; i++) {
         rings[i].calculateMetrics();
         rings[i].resize(false);
     }
 }
+*/
 
 // ==================================================================
 
@@ -434,7 +442,6 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
 
     // toolbar
     {
-        var tb = body.select('#toolbar');
         body.select('#tbUndo')
             .on('click', function() {
                 popRing(true);
@@ -477,11 +484,11 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
                 var v = d3.select('#tbSize').property('value');
                 d3.select('#labTbSize').html(v + ' &mdash; Grid Size');
             });
-        var v = d3.select('#tbWords').property('value');;
+        v = d3.select('#tbWords').property('value');
         d3.select('#labTbWords').html(v + ' &mdash; # Words');
         body.select('#tbWords')
             .on('change', function() {
-                var v = d3.select('#tbWords').property('value');;
+                var v = d3.select('#tbWords').property('value');
                 d3.select('#labTbWords').html(v + ' &mdash; # Words');
             });
 
@@ -510,6 +517,7 @@ module.exports = {
     messageArea:d3.select('#message'),
     getGridSize:getGridSize,
     getNumWords:getNumWords,
+    getSeed:getSeed,
     disableInput:disableInput,
     enableInput:enableInput
 };

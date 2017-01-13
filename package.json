@@ -19,7 +19,8 @@
   },
   "main": "main.js",
   "dependencies": {
-    "d3": "^4.4.1"
+    "d3": "^4.4.1",
+    "random-js": "^1.0.8"
   },
   "scripts": {
     "test": "node_modules/nodeunit/bin/nodeunit tests"

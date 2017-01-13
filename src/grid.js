@@ -175,11 +175,11 @@ var Grid = function(size) {
     /*
      * Fill all blanks with junk.
      */
-    this.fillJunk = function() {
+    this.fillJunk = function(frnd) {
         for (var r=0; r<this.size; r++) {
             for (var c=0; c<this.size; c++) {
                 if (this.grid[r][c] === ' ') {
-                    this.grid[r][c] = consts.ALPHABET.charAt(util.rndint(0,25));
+                    this.grid[r][c] = frnd(consts.ALPHABET);
                 }
             }
         }

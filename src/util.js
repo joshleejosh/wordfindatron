@@ -2,16 +2,6 @@
 'use strict';
 var consts = require('./consts');
     
-
-// TODO: manual seeding
-function rnd() {
-    return Math.random();
-}
-// inclusive.
-function rndint(min, max) {
-    return Math.floor(min + rnd()*((max+1)-min));
-}
-
 function sign(i) {
     if (i < 0) {
         return -1;
@@ -110,8 +100,6 @@ function calcTweenTime(t) {
 }
 
 module.exports = {
-    rnd:rnd,
-    rndint:rndint,
     sign:sign,
     clamp:clamp,
     range:range,

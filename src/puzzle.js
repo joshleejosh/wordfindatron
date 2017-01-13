@@ -1,17 +1,19 @@
 (function () {
 'use strict';
 
+var Random = require('random-js');
 var consts = require('./consts');
 var util = require('./util');
-var d3 = require('d3');
 var grid = require('./grid');
 var data = require('./data');
+
+var RNG = Random.engines.mt19937();
 
 // ==================================================================
 
 function wordFits(word, template) {
     var offsets = util.range(0, template.length - word.length + 1);
-    d3.shuffle(offsets);
+    Random.shuffle(RNG, offsets);
     for (var i=0; i<offsets.length; i++) {
         var offset = offsets[i];
         var wi = 0, ti = offset;
@@ -37,7 +39,7 @@ function findFittingWord(template) {
         return null;
     }
 
-    var wordlen = util.rndint(Math.min(consts.MIN_WORDLEN, tlen), Math.min(consts.MAX_WORDLEN, template.length));
+    var wordlen = Random.integer(Math.min(consts.MIN_WORDLEN, tlen), Math.min(consts.MAX_WORDLEN, template.length))(RNG);
     //console.log('Find word of length ['+wordlen+'] that fits into ['+template+']');
 
     var candidates = [];
@@ -59,7 +61,7 @@ function findFittingWord(template) {
         //console.log(''+candidates.length+' candidates');
     }
 
-    var pair = candidates[util.rndint(0, candidates.length-1)];
+    var pair = Random.pick(RNG, candidates);
     return pair;
 }
 
@@ -78,14 +80,22 @@ function shuffleSlices(size) {
             sa.push([d, s]);
         }
     }
-    d3.shuffle(sa);
+    Random.shuffle(RNG, sa);
     return sa;
 }
 
-function makePuzzle(size, nwords) {
+function makePuzzle(size, nwords, seedv) {
     if (size === undefined) {
         size = 8;
     }
+    if (nwords === undefined) {
+        nwords = 8;
+    }
+    if (!seedv) {
+        seedv = new Date().getTime();
+    }
+    RNG.seed(seedv);
+
     var answers = [];
     var g = new grid.Grid(size);
     var sa = shuffleSlices(size);
@@ -93,7 +103,7 @@ function makePuzzle(size, nwords) {
     for (var i=0; i<nwords && i<sa.length; i++) {
         var direction = sa[i][0], slicei = sa[i][1];
         // flip it?
-        if (util.rnd() < 0.5) {
+        if (Random.bool()(RNG)) {
             direction = (direction + 4) % 8;
         }
 
@@ -116,7 +126,7 @@ function makePuzzle(size, nwords) {
     //console.log(g.toString());
 
     var filled = g.copy();
-    filled.fillJunk();
+    filled.fillJunk(function(a) { return Random.pick(RNG, a); });
     return [answers, g, filled];
 }
 

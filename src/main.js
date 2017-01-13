@@ -6,7 +6,7 @@ var puzzle = require('./puzzle');
 data.load(view, function() {
     var doit = function() {
         view.disableInput();
-        var p = puzzle.makePuzzle(view.getGridSize(), view.getNumWords());
+        var p = puzzle.makePuzzle(view.getGridSize(), view.getNumWords(), view.getSeed());
         view.displayPuzzle(p, function() {
             doit();
         });
