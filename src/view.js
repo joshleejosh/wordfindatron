@@ -334,7 +334,7 @@ function autosolve() {
                 checkRings();
                 _fanswer(i+1);
             };
-            continueDrag(cp.x+dragRing.size, cp.y+dragRing.size, consts.TWEEN_TIME/2, transitcb);
+            continueDrag(cp.x+dragRing.size, cp.y+dragRing.size, consts.TWEEN_TIME, transitcb);
         };
         _fcell();
     };
@@ -357,6 +357,7 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
         d3.select('#wfgrid')
             .style('width', cw + 'px')
             .style('min-width', cw + 'px');
+        d3.select('#info').style('width', cw + 'px');
         szdummy.remove();
 
         szdummy = body.append('div').classed('ring', true);
@@ -433,6 +434,7 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
 
     // toolbar
     {
+        var tb = body.select('#toolbar');
         body.select('#tbUndo')
             .on('click', function() {
                 popRing(true);
@@ -446,14 +448,6 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
                 checkRings();
             })
         ;
-        body.select('#tbSolve')
-            .on('click', function() {
-                cancelDrag(true);
-                clearRings(false);
-                checkRings();
-                autosolve();
-            })
-        ;
         body.select('#tbNew')
             .on('click', function() {
                 cancelDrag(false);
@@ -462,6 +456,48 @@ function displayPuzzle(puzzle, cbNewPuzzle) {
                 checkRings();
             })
         ;
+        body.select('#tbShowAdv')
+            .on('click', function() {
+                var a = body.select('#tbadvanced');
+                var b = a.style('display');
+                b = (b === 'none') ? 'block' : 'none';
+                a.style('display', b);
+                if (b === 'none') {
+                    d3.select(this).text('(more)');
+                } else {
+                    d3.select(this).text('(less)');
+                }
+            })
+        ;
+
+        var v = d3.select('#tbSize').property('value');
+        d3.select('#labTbSize').html(v + ' &mdash; Grid Size');
+        body.select('#tbSize')
+            .on('change', function() {
+                var v = d3.select('#tbSize').property('value');
+                d3.select('#labTbSize').html(v + ' &mdash; Grid Size');
+            });
+        var v = d3.select('#tbWords').property('value');;
+        d3.select('#labTbWords').html(v + ' &mdash; # Words');
+        body.select('#tbWords')
+            .on('change', function() {
+                var v = d3.select('#tbWords').property('value');;
+                d3.select('#labTbWords').html(v + ' &mdash; # Words');
+            });
+
+        if (consts.CHEAT && d3.select('#tbSolve').empty()) {
+            d3.select('#tbadvanced').append('button')
+                .attr('id', 'tbSolve')
+                .text('Cheat')
+                .on('click', function() {
+                    cancelDrag(true);
+                    clearRings(false);
+                    checkRings();
+                    autosolve();
+                })
+            ;
+        }
+
     }
 
     enableInput();

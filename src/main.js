@@ -1,6 +1,5 @@
 (function () {
 'use strict';
-
 var data = require('./data');
 var view = require('./view');
 var puzzle = require('./puzzle');
@@ -14,5 +13,4 @@ data.load(view, function() {
     };
     doit();
 });
-
 }());

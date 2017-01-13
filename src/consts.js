@@ -5,6 +5,7 @@ if (!Math.TAU) {
     Math.TAU = Math.PI * 2;
 }
 
+exports.CHEAT = true;
 exports.ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 exports.ALPHABET64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 exports.MIN_WORDLEN = 4;
