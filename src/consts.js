@@ -9,6 +9,7 @@
     exports.ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     exports.ALPHABET64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
+    exports.MAX_GRID_SIZE = 16;
     exports.MIN_WORDLEN = 4;
     exports.MAX_WORDLEN = 7;
 

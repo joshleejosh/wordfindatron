@@ -303,8 +303,9 @@ function msgWrite() {
 
     function continueDrag(newx, newy, transitt, transitcb) {
         // find angle from drag start to mouse
-        var dy = newy - dragRing.cy;
-        var dx = newx - dragRing.cx;
+        var anchor = dragRing.getAnchor();
+        var dy = newy - anchor.y;
+        var dx = newx - anchor.x;
         var saa = util.snapAngle(dx, dy);
         var direction = saa[1];
 
@@ -612,8 +613,7 @@ function msgWrite() {
         }
 
         if (puzzle.seed) {
-            var h = '' + puzzle.seed + '-' + getGridSize() + '-' + getNumWords();
-            var u = '?h=' + h;
+            var u = '?p=' + puzzle.serialize();
             d3.select('#permalink').html('').append('a')
                 .attr('href', u)
                 .text('permalink');
@@ -638,5 +638,4 @@ function msgWrite() {
         disableInput: disableInput,
         enableInput: enableInput
     };
-
 }());

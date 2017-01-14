@@ -13,23 +13,22 @@
         this.column = c;
         this.size = 46;
         this.borderSize = 0;
-
-        this.id = function() {
-            return cid(this.row, this.column);
-        };
-
-        this.getPagePosition = function() {
-            if (!this.element) {
-                throw Error('Cell.getPosition: No element for ['+this.column+','+this.row+']');
-            }
-            var p = this.element.getBoundingClientRect();
-            return {x: p.left, y: p.top};
-        };
     }
+
+    Cell.prototype.id = function() {
+        return cid(this.row, this.column);
+    };
+
+    Cell.prototype.getPagePosition = function() {
+        if (!this.element) {
+            throw Error('Cell.getPosition: No element for ['+this.column+','+this.row+']');
+        }
+        var p = this.element.getBoundingClientRect();
+        return {x: p.left, y: p.top};
+    };
 
     module.exports = {
         cid: cid,
         Cell: Cell
     };
-
 }());

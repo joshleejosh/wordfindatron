@@ -15,15 +15,14 @@
     "grunt-contrib-sass": "^1.0.0",
     "grunt-contrib-watch": "^1.0.0",
     "grunt-eslint": "^19.0.0",
-    "grunt-modernizr": "^1.0.2",
     "jshint": "^2.9.4",
     "nodeunit": "^0.10.2",
     "uglifyify": "^3.0.4"
   },
   "main": "main.js",
   "dependencies": {
+    "bit-buffer": "0.0.3",
     "d3": "^4.4.1",
-    "lz-string": "^1.4.4",
     "random-js": "^1.0.8"
   },
   "scripts": {

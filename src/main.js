@@ -14,8 +14,6 @@
             var p;
             if (q && q.p) {
                 p = puzzle.deserialize(q.p);
-            } else if (q && q.h) {
-                p = puzzle.fromParameters(q.h);
             } else {
                 p = new puzzle.Puzzle(view.getGridSize(), view.getSeed());
                 p.generate(view.getNumWords());

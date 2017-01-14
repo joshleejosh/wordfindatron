@@ -2,7 +2,7 @@
     'use strict';
 
     var Random = require('random-js');
-    var lz = require('lz-string');
+    var bitBuffer = require('bit-buffer');
     var consts = require('./consts');
     var util = require('./util');
     var grid = require('./grid');
@@ -16,14 +16,15 @@
         }
         if (!seedv) {
             seedv = new Date().getTime();
+            util.log(seedv);
         }
         this.answers = [];
+        this.words = [];
         this.size = size;
         this.grid = new grid.Grid(this.size);
         this.seed = seedv;
         this.rng = Random.engines.mt19937();
         this.rng.seed(this.seed);
-
         return this;
     }
 
@@ -35,6 +36,7 @@
     Puzzle.prototype.addAnswer = function(a) {
         this.grid.placeWord(a);
         this.answers.push(a);
+        this.words.push(a.word);
     };
 
     Puzzle.prototype.answerGrid = function() {
@@ -44,6 +46,10 @@
             rv.placeWord(a);
         }
         return rv;
+    };
+
+    Puzzle.prototype.containsWord = function(w) {
+        return (this.words.indexOf(w) !== -1);
     };
 
     /*
@@ -71,6 +77,9 @@
      * Try to lay the given word into the rack string, working around existing characters.
      */
     Puzzle.prototype.fitWord = function(word, rack) {
+        if (!word || !rack) {
+            return -1;
+        }
         var offsets = util.range(0, rack.length - word.length + 1);
         Random.shuffle(this.rng, offsets);
         for (var i=0; i<offsets.length; i++) {
@@ -103,13 +112,12 @@
         if (wordlen > tlen) {
             util.log('findFittingWord: bad word length ['+wordlen+'] for ['+rack+']');
         }
-        //util.log('Find word of length ['+wordlen+'] that fits into ['+rack+']');
 
         var candidates = [];
         var wordlist = data.getWordlist(wordlen), blacklist = data.getBlacklist();
         for (var i=0; i<wordlist.length; i++) {
             var w = wordlist[i];
-            if (w.length === wordlen && blacklist.indexOf(w) === -1) {
+            if (w.length === wordlen && blacklist.indexOf(w) === -1 && !this.containsWord(w)) {
                 var f = this.fitWord(w, rack);
                 if (f !== -1) {
                     candidates.push([w, f]);
@@ -118,10 +126,8 @@
         }
 
         if (candidates.length === 0) {
-            //util.log('findFittingWord: no candidates for ['+wordlen+']['+rack+']');
             return null;
         }
-        //util.log(''+candidates.length+' candidates');
 
         var pair = Random.pick(this.rng, candidates);
         return pair;
@@ -159,7 +165,6 @@
                 util.log('generate: gave up on ['+direction+'] ['+slicei+'] ['+rack+']');
             }
         }
-        //util.log(this.grid.toString());
 
         var rr = this.rng;
         this.grid.fillJunk(function(a) {
@@ -169,44 +174,69 @@
 
     // ==================================================================
 
-    function serialize(puz) {
-        var s = puz.grid.size + ':';
-        for (var r=0; r<puz.grid.size; r++) {
-            for (var c=0; c<puz.grid.size; c++) {
-                s += puz.grid.grid[r][c];
+    var NLEN_NLEN = 4,   // nibble length 4, allows grid sizes up to (2^n)^2
+        NLEN_LETTER = 5, // 26 letters
+        NLEN_DIR = 3;    // 8 directions
+
+    Puzzle.prototype.serialize = function() {
+        var nlen = Math.ceil(Math.log2(Math.max(this.size, this.answers.length)) + 1);
+        var bufsz = Math.ceil((
+            (NLEN_NLEN) + // nibble length
+            (nlen) + // size
+            (NLEN_LETTER*this.size*this.size) + // grid
+            (nlen) + // number of answers
+            (NLEN_DIR*this.answers.length) + // directions
+            ((nlen+1)*this.answers.length) + // slices
+            (nlen*this.answers.length) + // offsets
+            (nlen*this.answers.length) // lengths
+        ) / 8);
+
+        var buf = new ArrayBuffer(bufsz);
+        var bs = new bitBuffer.BitStream(buf);
+        bs.writeBits(nlen, NLEN_NLEN);
+        bs.writeBits(this.size, nlen);
+        for (var r=0; r<this.grid.size; r++) {
+            for (var c=0; c<this.grid.size; c++) {
+                // A = 1, Z = 26
+                var n = this.grid.grid[r][c].charCodeAt(0) - 64;
+                bs.writeBits(n, NLEN_LETTER);
             }
         }
-        s += ':';
-        for (var i=0; i<puz.answers.length; i++) {
-            var a = puz.answers[i];
-            s += '' + a.direction + ',' +
-                a.slice + ',' +
-                a.offset + ',' +
-                a.word + ';';
+
+        bs.writeBits(this.answers.length, nlen);
+        for (var i=0; i<this.answers.length; i++) {
+            bs.writeBits(this.answers[i].direction, NLEN_DIR);
+            bs.writeBits(this.answers[i].slice, nlen+1);
+            bs.writeBits(this.answers[i].offset, nlen);
+            bs.writeBits(this.answers[i].word.length, nlen);
         }
 
-        var rv = lz.compressToEncodedURIComponent(s);
+        var rv = Buffer.from(buf).toString('base64').replace('+', '_').replace('/', '-');
         return rv;
-    }
+    };
 
-    function deserialize(c) {
-        var s = lz.decompressFromEncodedURIComponent(c);
-        var amain = s.split(':');
+    function deserialize(instr) {
+        var buf = Buffer.from(instr.replace('-', '/').replace('_', '+'), 'base64');
+        var bs = new bitBuffer.BitStream(buf);
 
-        var size = parseInt(amain[0], 10);
+        var nlen = bs.readBits(NLEN_NLEN);
+        var size = bs.readBits(nlen);
         var puz = new Puzzle(size);
-        var newGrid = new grid.Grid(size);
-        newGrid.fromString(amain[1]);
-        puz.setGrid(newGrid);
-
-        var aanswers = amain[2].split(';');
-        for (var i=0; i<aanswers.length; i++) {
-            if (!aanswers[i]) {
-                continue;
+        var gs = '';
+        for (var r=0; r<size; r++) {
+            for (var c=0; c<size; c++) {
+                gs += String.fromCharCode(bs.readBits(NLEN_LETTER) + 64);
             }
-            var aanswer = aanswers[i].split(',');
-            var gw = new grid.GridWord(aanswer[3], parseInt(aanswer[0], 10), parseInt(aanswer[1], 10), parseInt(aanswer[2], 10));
-            puz.addAnswer(gw);
+        }
+        puz.setGrid(new grid.Grid(size).fromString(gs));
+
+        var nanswers = bs.readBits(nlen);
+        for (var i=0; i<nanswers; i++) {
+            var di = bs.readBits(NLEN_DIR);
+            var sc = bs.readBits(nlen+1);
+            var of = bs.readBits(nlen);
+            var wl = bs.readBits(nlen);
+            puz.addAnswer(new grid.GridWord(puz.grid.readWord(di, sc, of, wl), di, sc, of));
         }
 
         return puz;
@@ -214,30 +244,9 @@
 
     // ==================================================================
 
-    function fromParameters(h) {
-        var a = h.split('-');
-        var s, z, w;
-        if (a.length > 0) {
-            s = parseInt(a[0], 10);
-        }
-        if (a.length > 1) {
-            z = parseInt(a[1], 10);
-        }
-        if (a.length > 2) {
-            w = parseInt(a[2], 10);
-        }
-        var p = new Puzzle(z, s);
-        p.generate(w);
-        return p;
-    }
-
-    // ==================================================================
-
     module.exports = {
         Puzzle: Puzzle,
-        serialize: serialize,
-        deserialize: deserialize,
-        fromParameters: fromParameters
+        deserialize: deserialize
     };
 
 }());

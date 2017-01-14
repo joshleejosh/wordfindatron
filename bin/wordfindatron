@@ -21,10 +21,9 @@ data.load(null, function() {
     p.generate(numWords);
     console.log(p.answerGrid().toString());
     // just making sure serialization works.
-    var s = puzzle.serialize(p);
+    var s = p.serialize();
     var q = puzzle.deserialize(s);
     console.log(q.answers.map(function (a) { return a.word; }).join(' '));
     console.log(q.grid.toString());
-
 });
 

@@ -75,7 +75,7 @@
                 "before": true
             }
         ],
-        "line-comment-position": "warn",
+        "line-comment-position": "off",
         "linebreak-style": [
             "error",
             "unix"
@@ -118,7 +118,7 @@
         "no-floating-decimal": "error",
         "no-implicit-globals": "error",
         "no-implied-eval": "error",
-        "no-inline-comments": "warn",
+        "no-inline-comments": "off",
         "no-inner-declarations": [
             "error",
             "functions"

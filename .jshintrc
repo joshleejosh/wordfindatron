@@ -14,6 +14,6 @@
 	"undef": true,
 	"unused": true,
 	"curly": true,
-	"predef": [ "module", "require", "exports", "console", "window", "document", "navigator" ],
-	"esversion":3
+	"predef": [ "module", "require", "exports", "console", "window", "document", "navigator", "Buffer" ],
+	"esversion":6
 }
