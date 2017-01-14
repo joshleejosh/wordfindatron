@@ -13,6 +13,7 @@ UGLIFY=
 BROWSERIFY=node_modules/browserify/bin/cmd.js
 UNITTEST=node_modules/nodeunit/bin/nodeunit
 JSHINT=node_modules/jshint/bin/jshint
+ESLINT=node_modules/eslint/bin/eslint.js
 RSYNC=rsync -azv
 
 build: $(WORDS) $(JS) $(CSS)
@@ -43,7 +44,10 @@ deploy: dist
 	
 
 hint:
-	$(JSHINT) src tests
+	$(JSHINT) src
+
+lint:
+	$(ESLINT) src
 
 test:
 	$(UNITTEST) tests

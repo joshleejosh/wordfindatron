@@ -74,6 +74,10 @@ module.exports = function(grunt) {
             all: [ 'src' ]
         },
 
+        eslint: {
+            target: [ 'src/*.js' ]
+        },
+
         clean: [
             'wordfindatron.js',
             'wordfindatron.css',
@@ -105,11 +109,13 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-nodeunit');
     grunt.loadNpmTasks('grunt-contrib-jshint');
+    grunt.loadNpmTasks('grunt-eslint');
 
     grunt.registerTask('build',['browserify:dev', 'sass', 'concat:wordlists']);
     grunt.registerTask('dist',['clean', 'browserify:dist', 'sass', 'concat:wordlists', 'copy:dist']);
     grunt.registerTask('test',['nodeunit:all']);
     grunt.registerTask('hint',['jshint:all']);
+    grunt.registerTask('lint',['eslint']);
     grunt.registerTask('default',['build']);
 
 }

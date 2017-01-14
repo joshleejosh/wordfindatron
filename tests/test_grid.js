@@ -78,6 +78,18 @@ exports.TestGrid = {
         test.done();
     },
 
+    testPlaceGridWord: function(test) {
+        var g = new grid.Grid(6).fromString('  A   B    C     D      E       F   ');
+        g.placeWord(new grid.GridWord('HI', 0, 2, 2));
+        g.placeWord(new grid.GridWord('TOOMANY', 2, 4, 3)); // runs off the end after TOO
+        g.placeWord(new grid.GridWord('OHM', 5, 8, 0)); // overwrites D
+        g.placeWord(new grid.GridWord('123456', 7, 5, 0));
+        test.equal(g.toString(), '  AM 6\nB   5C\n  H4 O\n  3 T \nE2  O \n1 F O \n');
+        g.placeWord(new grid.GridWord('éñ🄰', 6, 1, 3)); // omg long unicode
+        test.equal(g.toString(), ' 🄰AM 6\nBñ  5C\n éH4 O\n  3 T \nE2  O \n1 F O \n');
+        test.done();
+    },
+
     testReadWord: function(test) {
         var g = new grid.Grid(5).fromString('ABCDEFGHIJKLMNOPQRSTUVWXY');
         test.equal(g.readWord(0, 3, 2, 2), 'RS');

@@ -32,11 +32,22 @@ body {
 	-webkit-backface-visibility: hidden;
 }
 
+a {
+	color: $cTextBody;
+	text-decoration: none;
+	&:hover {
+		text-decoration: underline;
+	}
+}
+
 h1 {
 	margin: 0;
 	padding: 0;
 	font-family: sans-serif;
 	font-size: $wordlistFontSize;
+	a:hover {
+		text-decoration: none;
+	}
 }
 
 /* ========================================================================== */
@@ -134,6 +145,11 @@ td.cellsolved {
 	}
 }
 
+#permalink {
+	display: inline-block;
+	font-size: $buttonFontSize * 2 / 3;
+}
+
 
 /* ========================================================================== */
 
@@ -173,7 +189,8 @@ td.cellsolved {
 	z-index: 1;
 	margin: 0;
 	padding: 0;
-	border: solid $ringThickness;
+	border-style: solid;
+	border-width: $ringThickness;
 	border-color: $cRing;
 	border-radius: 2em;
 	background-color: transparent;

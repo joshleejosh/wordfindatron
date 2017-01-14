@@ -17,13 +17,14 @@ var data = require('../src/data');
 var puzzle = require('../src/puzzle');
 
 data.load(null, function() {
-    var p = puzzle.makePuzzle(gridSize, numWords, seed);
-    console.log(p[1].toString());
+    var p = new puzzle.Puzzle(gridSize, seed);
+    p.generate(numWords);
+    console.log(p.answerGrid().toString());
     // just making sure serialization works.
-    var s = puzzle.serialize(p[0], p[2]);
+    var s = puzzle.serialize(p);
     var q = puzzle.deserialize(s);
-    console.log(q[0].map(function (a) { return a.word; }).join(' '));
-    console.log(q[2].toString());
+    console.log(q.answers.map(function (a) { return a.word; }).join(' '));
+    console.log(q.grid.toString());
 
 });
 
