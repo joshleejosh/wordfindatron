@@ -8,3 +8,6 @@ wordfindatron.js
 wordlists.txt
 dist
 TODO.md
+
+tmp
+.DS_Store

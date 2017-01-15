@@ -8,7 +8,7 @@
         for (var i=0; i<arguments.length; i++) {
             s += '[' + arguments[i] + '] ';
         }
-        //console.log(s);
+        console.log(s);
         return s;
     }
 
@@ -56,36 +56,6 @@
         return rv;
     }
 
-    /*
-     * Return tuple (x, y, dx, dy), where x,y is the starting location for the
-     * slice on the grid and dx,dy is the increment to walk through the slice.
-     *
-     * direction … slice 0 starting point (G = grid size - 1)
-     * 0 → E       top-left (0,0)
-     * 1 ↘ SE      bottom-left (0,G)
-     * 2 ↓ S       top-left  (0,0)
-     * 3 ↙ SW      top-left (0,0)
-     * 4 ← W       top-right (G,0)
-     * 5 ↖ NW       bottom-left (0,G)
-     * 6 ↑ N       bottom-left (0,G)
-     * 7 ↗ NE      top-left (0,0)
-     */
-    function sliceParams (sz, di, si) {
-        var mg = sz - 1;
-        if ((sz <= 0) || (si < 0) || (di%2 === 0 && si > mg) || (di%2 === 1 && si > ((sz*2)-2))) {
-            throw RangeError('sliceParams: slice '+si+' out of range for grid size '+sz+'');
-        }
-        return [[0                       , si                      ,  1,  0],
-            [Math.max(0, si-mg)      , Math.max(0, mg-si)      ,  1,  1],
-            [si                      , 0                       ,  0,  1],
-            [Math.min(mg, mg-(mg-si)), Math.max(0, si-mg)      , -1,  1],
-            [mg                      , si                      , -1,  0],
-            [Math.min(mg, mg-(mg-si)), Math.min(mg, mg-(si-mg)), -1, -1],
-            [si                      , mg                      ,  0, -1],
-            [Math.max(0, si-mg)      , Math.min(mg, mg-(mg-si)),  1, -1]
-        ][di];
-    }
-
     // Given dx,dy, find the angle and snap it to one of the 8 directions.
     function snapAngle(dx, dy) {
         var angle = Math.atan2(dy, dx);
@@ -113,7 +83,6 @@
         sign: sign,
         clamp: clamp,
         range: range,
-        sliceParams: sliceParams,
         snapAngle: snapAngle,
         calcTweenTime: calcTweenTime
     };

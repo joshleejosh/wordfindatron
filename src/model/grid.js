@@ -1,17 +1,79 @@
 (function() {
     'use strict';
 
-    var consts = require('./consts');
-    var util = require('./util');
+    var consts = require('../consts');
+    var util = require('../util');
+
+    // ==================================================================
+
+    /*
+     * Return tuple (x, y, dx, dy), where x,y is the starting location for the
+     * slice on the grid and dx,dy is the increment to walk through the slice.
+     *
+     * direction … slice 0 starting point (G = grid size - 1)
+     * 0 → E       top-left (0,0)
+     * 1 ↘ SE      bottom-left (0,G)
+     * 2 ↓ S       top-left  (0,0)
+     * 3 ↙ SW      top-left (0,0)
+     * 4 ← W       top-right (G,0)
+     * 5 ↖ NW       bottom-left (0,G)
+     * 6 ↑ N       bottom-left (0,G)
+     * 7 ↗ NE      top-left (0,0)
+     */
+    function sliceParams (sz, di, si) {
+        var mg = sz - 1;
+        if ((sz <= 0) || (si < 0) || (di%2 === 0 && si > mg) || (di%2 === 1 && si > ((sz*2)-2))) {
+            throw RangeError('sliceParams: slice '+si+' out of range for grid size '+sz+'');
+        }
+        return [[0                       , si                      ,  1,  0],
+                [Math.max(0, si-mg)      , Math.max(0, mg-si)      ,  1,  1],
+                [si                      , 0                       ,  0,  1],
+                [Math.min(mg, mg-(mg-si)), Math.max(0, si-mg)      , -1,  1],
+                [mg                      , si                      , -1,  0],
+                [Math.min(mg, mg-(mg-si)), Math.min(mg, mg-(si-mg)), -1, -1],
+                [si                      , mg                      ,  0, -1],
+                [Math.max(0, si-mg)      , Math.min(mg, mg-(mg-si)),  1, -1]
+        ][di];
+    }
 
     // ==================================================================
 
     /* I represent a word placed on a Grid. */
-    var GridWord = function(w, d, s, o) {
-        this.word = w;
+    var GridWord = function(gridSize, w, d, s, o) {
         this.direction = d;
         this.slice = s;
         this.offset = o;
+        this.word = w;
+
+        var params = sliceParams(gridSize, this.direction, this.slice);
+        var dx = params[2];
+        var dy = params[3];
+        this.startLocation = {
+            x: params[0] + (this.offset * dx),
+            y: params[1] + (this.offset * dy)
+        };
+        this.endLocation = {
+            x: this.startLocation.x + ((this.word.length - 1) * dx),
+            y: this.startLocation.y + ((this.word.length - 1) * dy)
+        };
+    };
+
+    GridWord.prototype.getCellCoordinates = function() {
+        var rv = [];
+        var sx = this.startLocation.x;
+        var sy = this.startLocation.y;
+        var ex = this.endLocation.x;
+        var ey = this.endLocation.y;
+        var dx = util.sign(ex - sx);
+        var dy = util.sign(ey - sy);
+        var x = sx, y = sy;
+        while (x!==ex || y!==ey) {
+            rv.push({x: x, y: y});
+            x += dx;
+            y += dy;
+        }
+        rv.push({x: x, y: y});
+        return rv;
     };
 
     // ==================================================================
@@ -30,6 +92,14 @@
                 row.push(' ');
             }
             this.grid.push(row);
+        }
+    };
+
+    Grid.prototype.reset = function() {
+        for (var gr=0; gr<this.size; gr++) {
+            for (var gc=0; gc<this.size; gc++) {
+                this.grid[gr][gc] = ' ';
+            }
         }
     };
 
@@ -78,7 +148,7 @@
      * out of the grid along the given slice.
      */
     Grid.prototype.cutSlice = function(di, si) {
-        var a = util.sliceParams(this.size, di, si);
+        var a = sliceParams(this.size, di, si);
         var x = a[0], y = a[1], dx = a[2], dy = a[3];
         var cut = '';
         while (0 <= x && x < this.size && 0 <= y && y < this.size) {
@@ -101,7 +171,7 @@
             word = gw.word;
         }
 
-        var a = util.sliceParams(this.size, di, si);
+        var a = sliceParams(this.size, di, si);
         var x = a[0], y = a[1], dx = a[2], dy = a[3];
         x += dx * offset;
         y += dy * offset;
@@ -123,7 +193,7 @@
      */
     Grid.prototype.readWord = function(di, si, offset, wlen) {
         var rv = '';
-        var a = util.sliceParams(this.size, di, si);
+        var a = sliceParams(this.size, di, si);
         var x = a[0], y = a[1], dx = a[2], dy = a[3];
         x += dx * offset;
         y += dy * offset;
@@ -202,6 +272,7 @@
 
     module.exports = {
         Grid: Grid,
-        GridWord: GridWord
+        GridWord: GridWord,
+        sliceParams: sliceParams
     };
 }());

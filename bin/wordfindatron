@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+var data = require('../src/model/data');
+var puzzle = require('../src/model/puzzle');
+
 var gridSize = 6;
 if (process.argv.length > 2) {
     gridSize = parseInt(process.argv[2], 10);
@@ -12,9 +15,6 @@ var seed = 0;
 if (process.argv.length > 4) {
     seed = parseInt(process.argv[4], 10);
 }
-
-var data = require('../src/data');
-var puzzle = require('../src/puzzle');
 
 data.load(null, function() {
     var p = new puzzle.Puzzle(gridSize, seed);

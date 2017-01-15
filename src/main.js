@@ -2,27 +2,41 @@
     'use strict';
 
     var url = require('url');
-    var data = require('./data');
-    var view = require('./view');
-    var puzzle = require('./puzzle');
+    var util = require('./util');
+    var data = require('./model/data');
+    var puzzle = require('./model/puzzle');
+    var view = require('./view/view');
 
+    function wordfindatronMain(q) {
+        view.disableInput();
+        view.msgClear();
+        view.msgWrite('Loading...');
+        var p;
 
-    data.load(view, function() {
-        var query = url.parse(window.location.href, true).query;
-        var doit = function(q) {
-            view.disableInput();
-            var p;
+        try {
             if (q && q.p) {
                 p = puzzle.deserialize(q.p);
             } else {
                 p = new puzzle.Puzzle(view.getGridSize(), view.getSeed());
                 p.generate(view.getNumWords());
             }
+        } catch (e) {
+            util.log(e.message);
+            view.msgClear();
+            view.msgWrite(e.message);
+            p = null;
+            throw e;
+        }
 
+        if (p) {
             view.displayPuzzle(p, function() {
-                doit();
+                wordfindatronMain();
             });
-        };
-        doit(query);
+        }
+    }
+
+    data.load(view, function() {
+        var query = url.parse(window.location.href, true).query;
+        wordfindatronMain(query);
     });
 }());

@@ -59,23 +59,23 @@ module.exports = function(grunt) {
             }
         },
 
-        nodeunit: {
+        jasmine: {
             options: {
-                reporter: 'default'
+                specs: 'tests/*Spec.js'
             },
-            all: [ 'tests' ]
+            src: 'src/**/*.js'
         },
 
-        jshint: {
-            options: {
-                jshintrc: true,
-                force: true
-            },
-            all: [ 'src' ]
+        jasmine_nodejs: {
+            tests: {
+                options: {
+                },
+                specs: ['tests/*Spec.js']
+            }
         },
 
         eslint: {
-            target: [ 'src/*.js' ]
+            target: [ 'src/**/*.js' ]
         },
 
         clean: [
@@ -92,7 +92,7 @@ module.exports = function(grunt) {
                 tasks: ['sass']
             },
             js: {
-                files: 'src/*.js',
+                files: 'src/**/*.js',
                 tasks: ['browserify:dev']
             },
             options: {
@@ -102,18 +102,18 @@ module.exports = function(grunt) {
     });
 
     grunt.loadNpmTasks('grunt-browserify');
-    grunt.loadNpmTasks('grunt-contrib-sass');
-    grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-copy');
-    grunt.loadNpmTasks('grunt-contrib-nodeunit');
-    grunt.loadNpmTasks('grunt-contrib-jshint');
+    grunt.loadNpmTasks('grunt-contrib-jasmine');
+    grunt.loadNpmTasks('grunt-contrib-sass');
+    grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-eslint');
+    grunt.loadNpmTasks('grunt-jasmine-nodejs');
 
     grunt.registerTask('build',['browserify:dev', 'sass', 'concat:wordlists']);
     grunt.registerTask('dist',['clean', 'browserify:dist', 'sass', 'concat:wordlists', 'copy:dist']);
-    grunt.registerTask('test',['nodeunit:all']);
+    grunt.registerTask('test',['jasmine_nodejs']);
     grunt.registerTask('hint',['jshint:all']);
     grunt.registerTask('lint',['eslint']);
     grunt.registerTask('default',['build']);

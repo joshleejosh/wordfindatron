@@ -2,7 +2,7 @@
     'use strict';
 
     var d3 = require('d3');
-    var consts = require('./consts');
+    var consts = require('../consts');
 
     var wordlist, blacklist;
 
@@ -16,7 +16,7 @@
 
     function bailout(m, v) {
         if (v) {
-            v.messageArea.text(m);
+            v.msgWrite(m);
         }
         throw Error(m);
     }
@@ -60,7 +60,7 @@
 
         if (view) {
             // ajax request
-            view.messageArea.text('Loading...');
+            view.msgWrite('Loading...');
             d3.text('wordlists.txt', function(clob) {
                 if (clob) {
                     buildWordlists(clob);
@@ -83,11 +83,9 @@
         return null;
     }
 
-
     module.exports = {
         getWordlist: getWordlist,
         getBlacklist: getBlacklist,
         load: load
     };
-
 }());

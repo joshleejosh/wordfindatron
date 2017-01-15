@@ -7,18 +7,20 @@ SCSS=$(BASENAME).scss
 HTML=index.html
 DATA=data
 
+JSFILES=src/*.js src/**/*.js
+
 DEBUG=--debug
 UGLIFY=
 
 BROWSERIFY=node_modules/browserify/bin/cmd.js
-UNITTEST=node_modules/nodeunit/bin/nodeunit
-JSHINT=node_modules/jshint/bin/jshint
+TESTCONFIG=JASMINE_CONFIG_PATH=./jasmine.json
+UNITTEST=node_modules/jasmine/bin/jasmine.js
 ESLINT=node_modules/eslint/bin/eslint.js
 RSYNC=rsync -azv
 
 build: $(WORDS) $(JS) $(CSS)
 
-$(JS): $(SRC)/*.js
+$(JS): $(JSFILES)
 	$(BROWSERIFY) $(DEBUG) $(UGLIFY) $(SRC)/main.js -o $(JS)
 
 $(CSS): wordfindatron.scss
@@ -42,15 +44,11 @@ dist: clean build
 deploy: dist
 	(test -z '$(DEPLOYPATH)' && echo 'Set DEPLOYPATH when calling deploy!') || (test '$(DEPLOYPATH)' && $(RSYNC) dist/ $(DEPLOYPATH)/$(BASENAME)/)
 	
-
-hint:
-	$(JSHINT) src
-
 lint:
 	$(ESLINT) src
 
-test:
-	$(UNITTEST) tests
+test: $(JSFILES) $(WORDS)
+	$(UNITTEST) $(TESTCONFIG)
 
 clean:
 	rm -rf dist/*

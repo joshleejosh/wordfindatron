@@ -2,7 +2,8 @@
     'use strict';
 
     var d3 = require('d3');
-    var util = require('./util');
+    var util = require('../util');
+    var colors = require('./colors');
 
     function Ring(cell) {
         this.ring = null;
@@ -175,8 +176,32 @@
         this.ring.classed('ringsolved', t);
         this.ring.transition('ringmark')
             .duration(tween)
+            .ease(d3.easeSinIn)
             .style('background-color', bgc)
             .style('border-color', boc)
+        ;
+    };
+
+    Ring.prototype.doVictory = function(i, tweent) {
+        var r = this.ring;
+        r.transition()
+            .duration(tweent)
+            .delay((tweent * 2.5) * i)
+            .style('background-color', colors.ring)
+            .style('border-color', colors.ring)
+            .on('start', function() {
+                d3.select(this).style('z-index', -1);
+            })
+            .on('end', function() {
+                r.transition()
+                    .duration(tweent)
+                    .style('background-color', colors.bodyText)
+                    .style('border-color', colors.bodyText)
+                    .on('end', function() {
+                        d3.select(this).style('z-index', -2);
+                    })
+                ;
+            })
         ;
     };
 
