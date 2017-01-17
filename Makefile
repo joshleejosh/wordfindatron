@@ -13,9 +13,9 @@ DEBUG=--debug
 UGLIFY=
 
 BROWSERIFY=node_modules/browserify/bin/cmd.js
-TESTCONFIG=JASMINE_CONFIG_PATH=./jasmine.json
-UNITTEST=node_modules/jasmine/bin/jasmine.js
+UNITTEST=tests/runTests.js
 ESLINT=node_modules/eslint/bin/eslint.js
+ISTANBUL=node_modules/istanbul/lib/cli.js
 RSYNC=rsync -azv
 
 build: $(WORDS) $(JS) $(CSS)
@@ -48,7 +48,10 @@ lint:
 	$(ESLINT) src
 
 test: $(JSFILES) $(WORDS)
-	$(UNITTEST) $(TESTCONFIG)
+	node $(UNITTEST)
+
+coverage: $(JSFILES) $(WORDS)
+	$(ISTANBUL) cover $(UNITTEST)
 
 clean:
 	rm -rf dist/*

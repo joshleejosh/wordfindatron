@@ -12,7 +12,7 @@
     exports.MAX_GRID_SIZE = 16;
     exports.MIN_WORDLEN = 4;
     exports.MAX_WORDLEN = 7;
-    exports.MAX_CONFLICT_RETRIES = 10;
+    exports.MAX_CONFLICT_RETRIES = 20;
 
     exports.TWEEN_TIME = (1.0 / 15.0) * 1000;
     exports.FADE_TIME = exports.TWEEN_TIME * 4;

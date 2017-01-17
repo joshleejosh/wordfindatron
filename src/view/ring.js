@@ -51,7 +51,7 @@
 
         // position the ring.
         if (this.startCell) {
-            var pp = d3.select('#wffield').node().getBoundingClientRect();
+            var pp = d3.select('#playField').node().getBoundingClientRect();
             var sp = this.startCell.getPagePosition();
             var y = sp.y - pp.top + this.getCellOffset();
             var x = sp.x - pp.left + this.getCellOffset();
@@ -88,7 +88,7 @@
 
     Ring.prototype.transitionIn = function(tween, cb) {
         tween = util.calcTweenTime(tween);
-        var pp = d3.select('#wffield').node().getBoundingClientRect();
+        var pp = d3.select('#playField').node().getBoundingClientRect();
 
         var y = parseInt(this.ring.style('top'), 10);
         var x = parseInt(this.ring.style('left'), 10);
@@ -118,7 +118,7 @@
 
     Ring.prototype.transitionOut = function(tween, cb) {
         tween = util.calcTweenTime(tween);
-        var pp = d3.select('#wffield').node().getBoundingClientRect();
+        var pp = d3.select('#playField').node().getBoundingClientRect();
         var anchor = this.getAnchor();
 
         this.ring.transition('ringlife')
@@ -184,7 +184,7 @@
 
     Ring.prototype.doVictory = function(i, tweent) {
         var r = this.ring;
-        r.transition()
+        r.transition('victory')
             .duration(tweent)
             .delay((tweent * 2.5) * i)
             .style('background-color', colors.ring)
@@ -192,15 +192,12 @@
             .on('start', function() {
                 d3.select(this).style('z-index', -1);
             })
+            .transition('victory')
+            .duration(tweent)
+            .style('background-color', colors.bodyText)
+            .style('border-color', colors.bodyText)
             .on('end', function() {
-                r.transition()
-                    .duration(tweent)
-                    .style('background-color', colors.bodyText)
-                    .style('border-color', colors.bodyText)
-                    .on('end', function() {
-                        d3.select(this).style('z-index', -2);
-                    })
-                ;
+                d3.select(this).style('z-index', -2);
             })
         ;
     };

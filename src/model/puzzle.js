@@ -15,31 +15,53 @@
         return (w === x);
     }
 
-    function ConflictScanException(di, si, of, wl, word) {
-        this.message = 'Failed to fix conflict at ['+di+']['+si+']['+of+']['+wl+'] ['+word+']';
+    function PuzzleConflictError(di, si, of, wl, word) {
+        if (typeof di === 'string') {
+            this.message = di;
+        } else {
+            this.message = 'Failed to fix conflict at ['+di+']['+si+']['+of+']['+wl+'] ['+word+']';
+        }
     }
-    ConflictScanException.prototype = Object.create(Error.prototype);
-    ConflictScanException.prototype.name = 'ConflictScanException';
-    ConflictScanException.prototype.constructor = ConflictScanException;
+    PuzzleConflictError.prototype = Object.create(Error.prototype);
+    PuzzleConflictError.prototype.name = 'PuzzleConflictError';
+    PuzzleConflictError.prototype.constructor = PuzzleConflictError;
 
     // ==================================================================
 
-    function Puzzle(size, seedv) {
+    function Puzzle(size, seedv, wordlist) {
         if (size === undefined) {
             size = 8;
         }
+        if (size < 0) {
+            throw new RangeError('size ['+size+']');
+        }
+        if (wordlist) {
+            for (var mi=0; mi<wordlist.length; mi++) {
+                if (wordlist[mi].length > size) {
+                    size = wordlist[mi].length;
+                }
+            }
+        }
+
         if (!seedv) {
             seedv = new Date().getTime();
-            util.log(seedv);
         }
+        if (typeof seedv !== 'number') {
+            throw new TypeError('bad seed ['+seedv+']');
+        }
+
         this.answers = [];
         this.words = [];
         this.size = size;
         this.grid = new grid.Grid(this.size);
-        this.seed = seedv;
-        this.rng = Random.engines.mt19937();
-        this.rng.seed(this.seed);
-        this.conflictRetries = 0;
+        this.setSeed(seedv);
+
+        if (wordlist) {
+            for (var i=0; i<wordlist.length; i++) {
+                this.makeAnswer(wordlist[i]);
+            }
+        }
+
         return this;
     }
 
@@ -51,6 +73,21 @@
         if (newseed === undefined) {
             newseed = this.seed;
         }
+        this.setSeed(newseed);
+    };
+
+    Puzzle.prototype.copy = function() {
+        var rv = new Puzzle(this.size, this.seed);
+        rv.setGrid(this.grid.copy());
+        for (var i=0; i<this.answers.length; i++) {
+            var a = this.answers[i];
+            var b = new grid.GridWord(this.size, a.word, a.direction, a.slice, a.offset);
+            rv.addAnswer(b);
+        }
+        return rv;
+    };
+
+    Puzzle.prototype.setSeed = function(newseed) {
         this.seed = newseed;
         this.rng = Random.engines.mt19937();
         this.rng.seed(this.seed);
@@ -59,6 +96,15 @@
     Puzzle.prototype.setGrid = function(g) {
         this.grid = g;
         this.size = this.grid.size;
+    };
+
+    Puzzle.prototype.answerGrid = function() {
+        var rv = new grid.Grid(this.grid.size);
+        for (var i=0; i<this.answers.length; i++) {
+            var a = this.answers[i];
+            rv.placeWord(a);
+        }
+        return rv;
     };
 
     Puzzle.prototype.addAnswer = function(a) {
@@ -84,13 +130,27 @@
         return false;
     };
 
-    Puzzle.prototype.answerGrid = function() {
-        var rv = new grid.Grid(this.grid.size);
-        for (var i=0; i<this.answers.length; i++) {
-            var a = this.answers[i];
-            rv.placeWord(a);
+    /*
+     * Find a place for the given word in the grid and make it an answer..
+     */
+    Puzzle.prototype.makeAnswer = function(word) {
+        var sa = this.shuffleSlices(this.size);
+        for (var i=0; i<sa.length; i++) {
+            var direction = sa[i][0], slicei = sa[i][1];
+            // flip it?
+            if (Random.bool()(this.rng)) {
+                direction = (direction + 4) % 8;
+            }
+
+            var rack = this.grid.cutSlice(direction, slicei);
+            var offset = this.fitWord(word, rack);
+            if (offset !== -1) {
+                var gw = new grid.GridWord(this.size, word, direction, slicei, offset);
+                this.addAnswer(gw);
+                return gw;
+            }
         }
-        return rv;
+        throw new PuzzleConflictError('makeAnswer: Couldn\'t fit ['+word+']!');
     };
 
     Puzzle.prototype.containsWord = function(w) {
@@ -244,7 +304,7 @@
                 var h = hits[hi];
                 var fixed = ffix(puz, h[0], h[1], h[2], h[3]);
                 if (!fixed) {
-                    throw new ConflictScanException(h[0], h[1], h[2], h[3], puz.grid.readWord(h[0], h[1], h[2], h[3]));
+                    throw new PuzzleConflictError(h[0], h[1], h[2], h[3], puz.grid.readWord(h[0], h[1], h[2], h[3]));
                 }
             }
             return hits.length;
@@ -258,7 +318,7 @@
                 return;
             }
         }
-        throw new ConflictScanException(0, 0, 0, 0, 'TOOMANYRETRIES');
+        throw new PuzzleConflictError(0, 0, 0, 0, 'TOOMANYRETRIES');
     };
 
     /* Make a puzzle! */
@@ -299,23 +359,7 @@
             return Random.pick(rr, a);
         });
 
-        try {
-            this.scanConflicts();
-        } catch (e) {
-            if (e instanceof ConflictScanException) {
-                util.log(e.message);
-                if (++this.conflictRetries > consts.MAX_CONFLICT_RETRIES) {
-                    throw new ConflictScanException(0, 0, 0, 0, 'GROSSFAILURE');
-                }
-                // throw out this puzzle and start over.
-                var newseed = new Date().getTime();
-                util.log('reseed ['+newseed+']');
-                this.reset(newseed);
-                this.generate(nwords);
-            } else {
-                throw e;
-            }
-        }
+        this.scanConflicts();
     };
 
     // ==================================================================
@@ -408,7 +452,7 @@
 
     module.exports = {
         Puzzle: Puzzle,
-        ConflictScanException: ConflictScanException,
+        PuzzleConflictError: PuzzleConflictError,
         deserialize: deserialize
     };
 

@@ -1,0 +1,3 @@
+verbose: false
+reporting:
+        dir: ./coverage_report

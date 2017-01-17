@@ -6,15 +6,20 @@
     var util = require('../util');
     var colors = require('./colors');
 
-    function ListWord(gridWord) {
+    function ListWord(id, gridWord) {
+        this.lwid = id;
         this.answer = gridWord;
         this.word = this.answer.word;
         this.selection = null;
     }
 
+    ListWord.prototype.id = function() {
+        return 'lw_' + this.lwid;
+    };
+
     ListWord.prototype.isSolved = function() {
         if (!this.selection) {
-            this.selection = d3.select('#wflist_'+this.word);
+            this.selection = d3.select('#'+this.id());
         }
         return (!this.selection.empty() && this.selection.classed('wfsolved'));
     };
@@ -24,7 +29,7 @@
             tweent = consts.FADE_TIME;
         }
         if (!this.selection) {
-            this.selection = d3.select('#wflist_'+this.word);
+            this.selection = d3.select('#'+this.id());
         }
         if (!this.selection.empty() && this.selection.classed('wfsolved')!==m) {
             var tt = util.calcTweenTime(tweent);
@@ -37,7 +42,7 @@
             this.selection.classed('wfsolved', m);
             this.selection.transition('wordmark')
                 .duration(tt)
-                .ease(d3.easeSinIn)
+                .ease(d3.easeQuadIn)
                 .style('background-color', bgc)
                 .style('color', txc)
             ;
@@ -46,21 +51,19 @@
 
     ListWord.prototype.doVictory = function(i, tweent) {
         if (!this.selection) {
-            this.selection = d3.select('#wflist_'+this.word);
+            this.selection = d3.select('#'+this.id());
         }
         var s = this.selection;
-        s.transition()
+        s.transition('victory')
             .duration(tweent)
             .delay((tweent * 2.5) * i)
             .style('background-color', colors.ring)
-            .on('end', function() {
-                s.transition()
-                    .duration(tweent)
-                    .style('background-color', colors.bodyText)
-                ;
-            })
+            .transition('victory')
+            .style('background-color', colors.bodyText)
         ;
     };
+
+    // ==================================================================
 
     module.exports = {
         ListWord: ListWord

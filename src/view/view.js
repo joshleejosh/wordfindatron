@@ -11,8 +11,10 @@
     var listword = require('./listword');
     var drag = require('./drag');
     var table = require('./table');
+    var toolbar = require('./toolbar');
+    var editor = require('./editor');
 
-    var thePuzzle, theTable;
+    var thePuzzle, theTable, theWordlist;
     var rings = [];
     var inputDisabled = false;
     var hintWords;
@@ -21,35 +23,14 @@
 
     // ==================================================================
 
-    function updateLabel(id, v, suffix) {
-        d3.select('#'+id).html(v + ' &mdash; ' + suffix);
-    }
-
     function getGridSize() {
-        var d = d3.select('#tbSize');
-        var rv = parseInt(d.property('value'), 10);
-        return rv;
+        return toolbar.getGridSize();
     }
-    function writeGridSize(v) {
-        d3.select('#tbSize').property('value', v);
-    }
-
     function getNumWords() {
-        var d = d3.select('#tbWords');
-        var rv = parseInt(d.property('value'), 10);
-        return rv;
+        return toolbar.getNumWords();
     }
-    function writeNumWords(v) {
-        d3.select('#tbWords').property('value', v);
-    }
-
     function getSeed() {
-        var d = d3.select('#tbSeed');
-        var rv = parseInt(d.property('value'), 10);
-        return rv;
-    }
-    function writeSeed(v) {
-        d3.select('#tbSeed').property('value', v);
+        return toolbar.getSeed();
     }
 
     // ==================================================================
@@ -69,14 +50,14 @@
 
     function disableInput() {
         inputDisabled = true;
-        d3.selectAll('#toolbar button').attr('disabled', true);
-        d3.selectAll('#toolbar input').attr('disabled', true);
+        toolbar.disable();
+        editor.disable();
     }
 
     function enableInput() {
         inputDisabled = false;
-        d3.selectAll('#toolbar button').attr('disabled', null);
-        d3.selectAll('#toolbar input').attr('disabled', null);
+        toolbar.enable();
+        editor.enable();
     }
 
     // ==================================================================
@@ -109,39 +90,102 @@
     function doVictory() {
         d3.selectAll('.cell')
             .filter(function() { return !d3.select(this).classed('cellsolved'); })
-            .transition()
+            .transition('victory')
             .duration(consts.FADE_TIME * thePuzzle.answers.length * 2)
-            .ease(d3.easeSinOut)
+            .ease(d3.easeQuadOut)
             .style('color', colors.bodyBg)
         ;
-
         d3.selectAll('.ring').style('z-index', -3);
-
-        var i = 0;
-        d3.selectAll('#wflist>li').each(function (d) {
-            d.doVictory(i, consts.FADE_TIME);
-            ringForAnswer(d.answer).doVictory(i, consts.FADE_TIME);
-            i++;
-        });
+        for (var i=0; i<theWordlist.length; i++) {
+            theWordlist[i].doVictory(i, consts.FADE_TIME);
+            ringForAnswer(theWordlist[i].answer).doVictory(i, consts.FADE_TIME);
+        }
     }
 
     function cancelVictory() {
-        d3.selectAll('.cell').interrupt();
+        d3.selectAll('.cell').interrupt('victory');
         d3.selectAll('.cell')
             .filter(function() {
                 return !d3.select(this).classed('cellsolved');
             })
             .style('color', null)
         ;
-        d3.selectAll('#wflist>li').interrupt();
+        d3.selectAll('#wflist>li').interrupt('victory');
         d3.selectAll('.wfsolved')
             .style('background-color', colors.bodyText);
-        d3.selectAll('.ring').interrupt();
+        d3.selectAll('.ring').interrupt('victory');
         d3.selectAll('.ringsolved')
             .style('background-color', colors.bodyText)
             .style('border-color', colors.bodyText);
     }
 
+    function hideGame(cb) {
+        d3.select('#info')
+            .transition('game')
+                .duration(consts.FADE_TIME)
+                .ease(d3.easeQuadOut)
+                .style('width', '0px')
+            .on('end', function () {
+                d3.select(this).style('display', 'none').style('width', null);
+                d3.select('#playField')
+                    .transition('game')
+                        .duration(consts.FADE_TIME)
+                        .ease(d3.easeQuadOut)
+                        .style('width', '0px')
+                    .on('end', function () {
+                        d3.select(this).style('display', 'none').style('width', null);
+                        if (cb) {
+                            return cb();
+                        }
+                        return null;
+                    });
+            })
+        ;
+        d3.select('#playHelp')
+            .transition('game')
+                .duration(consts.FADE_TIME)
+                .ease(d3.easeQuadOut)
+                .style('height', '0px')
+            .on('end', function() {
+                d3.select(this).style('height', null).style('display', 'none');
+            })
+        ;
+    }
+
+    function showGame(cb) {
+        d3.select('#playField')
+                .style('display', 'inline-block')
+                .style('width', '0px')
+            .transition('game')
+                .duration(consts.FADE_TIME)
+                .ease(d3.easeQuadIn)
+                .style('width', null)
+            .on('end', function() {
+                d3.select('#info')
+                        .style('display', 'inline-block')
+                        .style('width', '0px')
+                    .transition('game')
+                        .duration(consts.FADE_TIME)
+                        .ease(d3.easeQuadIn)
+                        .style('width', null)
+                    .on('end', function () {
+                        d3.select('#playHelp')
+                                .style('display', 'block')
+                                .style('height', '0px')
+                            .transition('game')
+                                .duration(consts.FADE_TIME)
+                                .ease(d3.easeQuadIn)
+                                .style('height', null)
+                        ;
+                        if (cb) {
+                            return cb();
+                        }
+                        return null;
+                    })
+                ;
+            })
+        ;
+    }
 
     // ==================================================================
 
@@ -160,21 +204,21 @@
     function checkAnswers() {
         var answered = 0;
         var awords = [], marked = [];
-        for (var i=0; i<rings.length; i++) {
-            var answer = checkWord(rings[i].startCell, rings[i].endCell, rings[i].word);
+        for (var ri=0; ri<rings.length; ri++) {
+            var answer = checkWord(rings[ri].startCell, rings[ri].endCell, rings[ri].word);
             if (!answer) {
                 // FIXME: will break on unicode
-                var revword = rings[i].word.split('').reverse().join('');
-                answer = checkWord(rings[i].endCell, rings[i].startCell, revword);
+                var revword = rings[ri].word.split('').reverse().join('');
+                answer = checkWord(rings[ri].endCell, rings[ri].startCell, revword);
             }
 
             if (answer) {
-                rings[i].mark(answer, consts.FADE_TIME, true);
+                rings[ri].mark(answer, consts.FADE_TIME, true);
                 marked = marked.concat(theTable.markAnswer(answer, true));
                 awords.push(answer.word);
                 answered++;
             } else {
-                rings[i].mark(consts.FADE_TIME, false);
+                rings[ri].mark(consts.FADE_TIME, false);
             }
         }
 
@@ -188,14 +232,13 @@
             }
         });
 
-        d3.selectAll('#wflist>li').each(function (d) {
-            d.mark((awords.indexOf(d.word) !== -1));
-        });
+        for (var wi=0; wi<theWordlist.length; wi++) {
+            theWordlist[wi].mark((awords.indexOf(theWordlist[wi].word) !== -1));
+        }
 
         if (answered === thePuzzle.answers.length) {
             doVictory();
         }
-
     }
 
     // ==================================================================
@@ -307,8 +350,10 @@
         fanswer(0);
     }
 
-    var infoWidthState;
+    // the info column should be skinny if it's next to the grid, but wide if it's below it.
+    //var infoWidthState;
     function setInfoWidth() {
+        /*
         var g = d3.select('#wfgrid');
         var i = d3.select('#info');
         var grect = g.node().getBoundingClientRect();
@@ -327,45 +372,69 @@
             i.style('max-width', gw);
             infoWidthState = 1;
         }
+        */
     }
 
-    function displayPuzzle(puz, cbNewPuzzle) {
+    function rebindWordList() {
+        var ul = d3.select('#wflist');
+        var lis = ul.selectAll('li').data(theWordlist);
+        lis.enter()
+            .append('li')
+            .attr('id', function(d) { return d.id(); })
+            .classed('wfword', true)
+            .classed('wfsolved', false)
+        ;
+        lis.exit().remove();
+        ul.selectAll('li').append('span')
+                .style('display', 'inline')
+                .text(function(d) { return d.word; })
+        ;
+    }
+
+
+    function displayPuzzle(puz, cbNewPuzzle, cbCommitEdit) {
         thePuzzle = puz;
+        util.log(thePuzzle.seed);
         hintWords = null;
         d3.select('#message').text('');
-        d3.selectAll('#wfgrid tr').remove();
         d3.selectAll('#wflist li').remove();
+        table.wipe();
+        toolbar.wipe();
+        editor.wipe();
         var body = d3.select('body');
 
         // Create dummy elements to get CSS derived metrics
         {
-            var szdummy = body.append('td').classed('cell', true);
-            var cw = parseInt(szdummy.style('width'), 10) * thePuzzle.size;
+            var dummy = body.append('td').classed('cell', true);
+            var cw = parseInt(dummy.style('width'), 10) * thePuzzle.size;
             d3.select('#wfgrid')
                 .style('width', cw + 'px')
                 .style('min-width', cw + 'px');
-            d3.select('#help').style('width', cw + 'px');
-            szdummy.remove();
+            d3.selectAll('.help').style('width', cw + 'px');
+            dummy.remove();
 
-            szdummy = body.append('div').classed('ring', true);
-            ring.Ring.prototype.borderSize = parseInt(szdummy.style('border-top-width'), 10);
-            ring.Ring.prototype.size = parseInt(szdummy.style('width'), 10);
-            ring.Ring.prototype.solvedColor = szdummy.style('color');
-            ring.Ring.prototype.bgColor = szdummy.style('background-color');
-            ring.Ring.prototype.borderColor = szdummy.style('border-top-color');
-            colors.setColor('ring', szdummy.style('border-top-color'));
-            szdummy.remove();
+            dummy = body.append('div').classed('ring', true);
+            ring.Ring.prototype.borderSize = parseInt(dummy.style('border-top-width'), 10);
+            ring.Ring.prototype.size = parseInt(dummy.style('width'), 10);
+            ring.Ring.prototype.solvedColor = dummy.style('color');
+            ring.Ring.prototype.bgColor = dummy.style('background-color');
+            ring.Ring.prototype.borderColor = dummy.style('border-top-color');
+            colors.setColor('ring', dummy.style('border-top-color'));
+            dummy.remove();
 
-            szdummy = body.append('div').classed('wfword', true);
-            colors.setColor('bodyBg', szdummy.style('background-color'));
-            colors.setColor('bodyText', szdummy.style('color'));
-            szdummy.remove();
+            dummy = body.append('div').classed('wfword', true);
+            colors.setColor('bodyBg', dummy.style('background-color'));
+            colors.setColor('bodyText', dummy.style('color'));
+            dummy.remove();
+
+            dummy = body.append('div').classed('warning', true);
+            colors.setColor('warningText', dummy.style('color'));
+            dummy.remove();
         }
-
 
         // build the grid
         {
-            var rows = body.select('#wfgrid tbody').selectAll('tr')
+            var rows = d3.select('#wfgrid tbody').selectAll('tr')
                 .data(thePuzzle.grid.grid)
                 .enter()
                 .append('tr')
@@ -404,104 +473,85 @@
             });
         }
 
-
-        // build the word list
-        {
-            var ul = body.select('#wflist');
-            ul.selectAll('li')
-                .data(thePuzzle.answers.map(function(a) {
-                    return new listword.ListWord(a);
-                }))
-                .enter()
-                .append('li')
-                .attr('id', function(d) { return 'wflist_' + d.word; })
-                .classed('wfword', true)
-                .classed('wfsolved', false)
-                .text(function(d) { return d.word; })
-            ;
+        theWordlist = [];
+        for (var i=0; i<thePuzzle.answers.length; i++) {
+            theWordlist.push(new listword.ListWord(i, thePuzzle.answers[i]));
         }
+        rebindWordList();
 
-        //minInfoWidth = d3.select('#info').style('width');
+        editor.init(thePuzzle, {
+            onQuit: function() {
+                disableInput();
+                editor.hide(function() {
+                    toolbar.show(function() {
+                        showGame(function() {
+                            enableInput();
+                        });
+                    });
+                });
+            },
+            onCommit: function(csz, csd, cwl) {
+                if (cbCommitEdit) {
+                    var newPuzzle = cbCommitEdit(csz, csd, cwl);
+                    if (newPuzzle) {
+                        disableInput();
+                        editor.hide(function() {
+                            displayPuzzle(newPuzzle, cbNewPuzzle, cbCommitEdit);
+                            toolbar.show(function() {
+                                showGame(function() {
+                                    enableInput();
+                                });
+                            });
+                        });
+                    }
+                }
+            }
+        });
+
         setInfoWidth();
         d3.select(window).on('resize', setInfoWidth);
 
-        // configure the toolbar
-        {
-            var toolbar = d3.select('#toolbar');
-            body.select('#tbUndo').on('click', function() {
+        toolbar.init({
+            onUndo: function() {
                 popRing(true);
                 cancelVictory();
                 checkAnswers();
-            });
-
-            body.select('#tbReset').on('click', function() {
+            },
+            onReset: function() {
                 drag.cancelDrag(true);
                 clearRings(true);
                 cancelVictory();
                 checkAnswers();
-            });
-
-            body.select('#tbHint').on('click', function() {
+            },
+            onHint: function() {
                 showHint();
-            });
-
-            body.select('#tbNew').on('click', function() {
+            },
+            onNew: function() {
                 drag.cancelDrag(false);
                 clearRings(false);
                 cbNewPuzzle(getGridSize(), getNumWords());
                 checkAnswers();
-            });
-
-            body.select('#tbShowAdv').on('click', function() {
-                var a = body.select('#tbadvanced');
-                var b = a.style('display');
-                b = (b === 'none') ? 'block' : 'none';
-                a.style('display', b);
-                if (b === 'none') {
-                    d3.select(this).text('options');
-                } else {
-                    d3.select(this).text('(hide)');
-                }
-            });
-
-            updateLabel('labTbSize', getGridSize(), 'Grid Size');
-            body.select('#tbSize')
-                .on('input', function() {
-                    updateLabel('labTbSize', getGridSize(), 'Grid Size');
-                })
-                .on('change', function() {
-                    updateLabel('labTbSize', getGridSize(), 'Grid Size');
+            },
+            onEdit: function() {
+                disableInput();
+                clearRings(false);
+                cancelVictory();
+                checkAnswers();
+                toolbar.hide(function() {
+                    hideGame(function() {
+                        editor.show(function() {
+                            enableInput();
+                        });
+                    });
                 });
-
-            updateLabel('labTbWords', getNumWords(), '# Words');
-            body.select('#tbWords')
-                .on('input', function() {
-                    updateLabel('labTbWords', getNumWords(), '# Words');
-                })
-                .on('change', function() {
-                    updateLabel('labTbWords', getNumWords(), '# Words');
-                });
-
-            if (consts.CHEAT && d3.select('#tbSolve').empty()) {
-                toolbar.insert('button', '#tbNew')
-                    .attr('id', 'tbSolve')
-                    .attr('type', 'button')
-                    .text('Solve')
-                    .on('click', function() {
-                        drag.cancelDrag(true);
-                        clearRings(false);
-                        checkAnswers();
-                        autosolve();
-                    })
-                ;
-                toolbar.insert('span', '#tbNew').text(' ');
+            },
+            onSolve: function() {
+                drag.cancelDrag(true);
+                clearRings(false);
+                checkAnswers();
+                autosolve();
             }
-
-            toolbar.on('submit', function() {
-                d3.event.preventDefault();
-            });
-
-        }
+        });
 
         if (thePuzzle.seed) {
             var u = '?p=' + thePuzzle.serialize();
@@ -525,9 +575,6 @@
         getGridSize: getGridSize,
         getNumWords: getNumWords,
         getSeed: getSeed,
-        writeGridSize: writeGridSize,
-        writeNumWords: writeNumWords,
-        writeSeed: writeSeed,
         disableInput: disableInput,
         enableInput: enableInput
     };

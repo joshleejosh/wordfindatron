@@ -5,19 +5,20 @@ $cCellBg: $cBgBody;
 $cBgSolved: $cTextBody;
 $cTextSolved: $cBgBody;
 
-$cellWidth: 12mm;
-$cellFontSize: $cellWidth / 2;
-$buttonFontSize: $cellFontSize;
+$wCell: 12mm;
+$fsCell: $wCell / 2;
+$fsButton: $fsCell;
 
-$wordlistFontSize: $cellFontSize * 1.333;
-$margin: $wordlistFontSize;
+$fsWordlist: $fsCell * 1.333;
+$margin: $fsWordlist;
 
 $cRing: #999;
-$ringSize: $cellWidth * 2/3;
+$wRing: $wCell * 2/3;
 $ringThickness: 2px;
-$ringTransformOrigin: $ringSize/2 + $ringThickness;
+$ringTransformOrigin: $wRing/2 + $ringThickness;
 
 $cBgDisabled: #999;
+$cWarning: #900;
 
 /* ========================================================================== */
 
@@ -43,20 +44,28 @@ a {
 h1 {
 	margin: 0;
 	padding: 0;
+	overflow: hidden;
 	font-family: sans-serif;
-	font-size: $wordlistFontSize;
+	font-size: $fsWordlist;
 	a:hover {
 		text-decoration: none;
 	}
 }
 
+.warning {
+	font-family: sans-serif;
+	font-weight: bold;
+	color: $cWarning;
+}
+
 /* ========================================================================== */
 
-#wffield {
+#playField {
 	clear: both;
 	display: inline-block;
 	vertical-align: top;
 	position: relative;
+	overflow: hidden;
 	margin: 0;
 	padding: 0;
 	border: 0;
@@ -72,12 +81,12 @@ h1 {
 }
 
 td.cell {
-	width: $cellWidth;
+	width: $wCell;
 	position: relative;
 	margin: 0;
 	padding: 0;
 	border: 0;
-	border-radius: $cellWidth / 2;
+	//border-radius: $wCell / 2;
 	color: $cTextBody;
 
 	-webkit-user-select: none;
@@ -87,8 +96,8 @@ td.cell {
 
 	.gc {
 		position: absolute;
-		font-size: $cellFontSize;
-		top: $cellWidth * .25;
+		font-size: $fsCell;
+		top: $wCell * .25;
 		bottom: 0;
 		left: 0;
 		right: 0;
@@ -112,43 +121,45 @@ td.cellsolved {
 	padding: 0;
 	text-align: left;
 	font-family: sans-serif;
-	font-size: $buttonFontSize;
+	font-size: $fsButton;
+	overflow: hidden;
+}
 
-	button {
-		margin: 0;
-		padding: 0.2em 0.5em;
-		border: solid 1px $cBgSolved;
-		border-radius: $buttonFontSize;
-		background-color: $cBgSolved;
-		color: $cTextSolved;
-		font-size: $buttonFontSize;
-		text-align: center;
-		&:hover {
-			cursor: pointer;
-		}
-		&:active {
-			background-color: $cBgBody;
-			color: $cTextBody;
-		}
-		&:disabled {
-			background-color: $cBgDisabled;
-			border-color: $cBgDisabled;
-		}
+button {
+	margin: 1mm;
+	padding: 0.2em 0.5em;
+	border: solid 1px $cRing;
+	border-radius: $fsButton;
+	background-color: $cBgBody;
+	color: $cTextBody;
+	font-size: $fsButton;
+	text-align: center;
+	&:hover {
+		cursor: pointer;
 	}
+	&:active {
+		background-color: $cRing;
+		color: $cBgBody;
+	}
+	&:disabled {
+		background-color: $cBgBody;
+		border-color: $cRing;
+		color: $cRing;
+	}
+}
 
-	#tbShowAdv {
-		font-size: $buttonFontSize * 2 / 3;
-	}
+#tbShowAdv {
+	font-size: $fsButton * 2 / 3;
+}
 
-	#tbadvanced {
-		display: none;
-		margin: 1em 0 0 0;
-	}
+#tbadvanced {
+	display: none;
+	margin: 1em 0 0 0;
 }
 
 #permalink {
 	display: inline-block;
-	font-size: $buttonFontSize * 2 / 3;
+	font-size: $fsButton * 2 / 3;
 }
 
 
@@ -158,25 +169,33 @@ td.cellsolved {
 	display: inline-block;
 	vertical-align: top;
 	position: relative;
+	margin: 0 auto;
+	padding: 0;
+	text-align: left;
+	overflow: hidden;
 }
 
 #wflist {
 	position: relative;
 	margin: 1em auto;
 	padding: 0;
-	text-align: center;
+	text-align: left;
+
 }
 
 .wfword {
+	position: relative;
 	display: block;
+	overflow: hidden;
 	list-style: none;
 	margin: 0;
 	padding: 0 $margin;
-	font-size: $wordlistFontSize;
+	font-size: $fsWordlist;
 	background-color: $cBgBody;
 	color: $cTextBody;
 	//border-radius: $margin;
 }
+
 .wfsolved {
 	//background-color: $cBgSolved;
 	//color: $cTextSolved;
@@ -196,8 +215,8 @@ td.cellsolved {
 	border-radius: 2em;
 	background-color: transparent;
 	color: $cBgSolved; // HACK: use text color to hide the alt state color for code to peek at (since we never have any text in a ring)
-	height: $ringSize;
-	width: $ringSize;
+	height: $wRing;
+	width: $wRing;
 	top: 0;
 	left: 0;
 	transform-origin: $ringTransformOrigin $ringTransformOrigin;
@@ -222,8 +241,59 @@ td.cellsolved {
 
 /* ========================================================================== */
 
-#help {
-	margin: 4em 0 0 0;
+#editor {
+	#editorlist {
+		overflow: hidden;
+		margin-top: 1em;
+		li.editoritem {
+			position: relative;
+			list-style: none;
+			display: block;
+			margin: 0;
+			padding: 0;
+			font-size: $fsWordlist;
+
+			input {
+				background-color: $cBgBody * 0.96;
+				color: $cTextBody;
+				font-family: serif;
+				font-size: $fsWordlist;
+			}
+
+			label.warning {
+				position: absolute;
+				bottom: 0.25em;
+				right: 0;
+				text-align: right;
+				font-size: $fsWordlist / 2;
+				font-weight: normal;
+				color: $cBgBody;
+			}
+		}
+	}
+
+	#editTools {
+		display: block;
+		margin: 1em 0;
+		text-align: left;
+		font-family: sans-serif;
+		font-size: $fsButton;
+		display: none;
+		overflow: hidden;
+	}
+}
+
+/* ========================================================================== */
+
+.help {
+	margin: 0;
 	font-family: sans-serif;
+	overflow: hidden;
+}
+#playHelp {
+	display: block;
+}
+#editHelp {
+	display: none;
 }
 

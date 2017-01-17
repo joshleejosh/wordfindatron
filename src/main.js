@@ -2,10 +2,54 @@
     'use strict';
 
     var url = require('url');
+    var consts = require('./consts');
     var util = require('./util');
     var data = require('./model/data');
     var puzzle = require('./model/puzzle');
     var view = require('./view/view');
+
+    // Keep trying to generate the puzzle until either it succeeds or we exceed the retry limit.
+    function doGeneration(fgen, ferr, caller) {
+        for (var retries=0; retries<consts.MAX_CONFLICT_RETRIES; retries++) {
+            try {
+                return fgen();
+            } catch (e) {
+                if (e instanceof puzzle.PuzzleConflictError) {
+                    util.log(e.message);
+                    if (ferr) {
+                        ferr();
+                    }
+                } else {
+                    throw e;
+                }
+            }
+        }
+        throw new puzzle.PuzzleConflictError(caller+': too many retries');
+    }
+
+    function puzzleForWords(size, seed, words) {
+        try {
+            var p;
+            doGeneration(
+                function() {
+                    p = new puzzle.Puzzle(size, seed, words);
+                    p.generate(words.length);
+                },
+                null,
+                'puzzleForWords'
+            );
+            return p;
+        } catch (e) {
+            if (e instanceof puzzle.PuzzleConflictError) {
+                util.log(e.message);
+                view.msgClear();
+                view.msgWrite('Couldn\'t fit these words into a puzzle.');
+            } else {
+                throw e;
+            }
+        }
+        return null;
+    }
 
     function wordfindatronMain(q) {
         view.disableInput();
@@ -18,7 +62,14 @@
                 p = puzzle.deserialize(q.p);
             } else {
                 p = new puzzle.Puzzle(view.getGridSize(), view.getSeed());
-                p.generate(view.getNumWords());
+                doGeneration(
+                    function() {
+                        return p.generate(view.getNumWords());
+                    },
+                    function() {
+                        p.reset(new Date().getTime());
+                    },
+                    'wordfindatronMain');
             }
         } catch (e) {
             util.log(e.message);
@@ -29,9 +80,7 @@
         }
 
         if (p) {
-            view.displayPuzzle(p, function() {
-                wordfindatronMain();
-            });
+            view.displayPuzzle(p, wordfindatronMain, puzzleForWords);
         }
     }
 

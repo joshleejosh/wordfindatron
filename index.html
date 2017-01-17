@@ -15,8 +15,10 @@
         <button type="button" id="tbUndo">Undo</button>
         <button type="button" id="tbReset">Reset</button>
         <button type="button" id="tbHint">Hint</button>
-        <button type="button" id="tbNew">New</button>
+        <button type="button" id="tbNew">Random</button>
+        <button type="button" id="tbEdit">Edit</button>
         <button type="button" id="tbShowAdv">options</button>
+        <span id="permalink">permalink</span>
         <div id="tbadvanced">
             <input type="range" id="tbSize" min="6" max="16" value="8" />
             <label for="tbSize" id="labTbSize">Grid Size</label>
@@ -24,14 +26,10 @@
             <input type="range" id="tbWords" min="6" max="16" value="8" />
             <label for="tbWords" id="labTbWords"># Words</label>
             <br />
-            <input type="number" id="tbSeed" value="0" />
-            <label for="tbWords" id="labTbWords">Seed #</label>
-            <br />
         </div>
-        <p id="permalink">permalink</p>
     </form>
 
-    <div id="wffield">
+    <div id="playField">
 
         <table id="wfgrid" cellpadding="0" cellspacing="0" summary="A nice little word find puzzle">
             <tbody></tbody>
@@ -41,17 +39,36 @@
     </div>
 
     <div id="info">
-
         <ul id="wflist">
         </ul>
+    </div>
+
+    <div id="editor">
+        <form id="editTools">
+            <button type="button" id="editCommit">Make a Puzzle!</button>
+            <button type="button" id="editQuit">Quit Editing</button>
+            <br />
+            <button type="button" id="editAdd">Add Word</button>
+            <button type="button" id="editDelete">Delete Word</button>
+            <input type="range" id="editGridSize" min="6" max="16" value="8" />
+            <label for="editGridSize" id="labEditGridSize">Grid Size</label>
+        </form>
+
+        <form id="editorlist">
+        </form>
 
     </div>
 
     <p id="message">Loading...</p>
 
-    <div id="help">
+    <div id="playHelp" class="help">
         <p>WORDFINDATRON generates random word find puzzles for you to solve. Play a while; play forever!</p>
-        <p>DRAG to circle words. UNDO to remove your last circle. CLEAR to start over. NEW to create a new puzzle.</p>
+        <p>DRAG to circle words. UNDO to remove your last circle. CLEAR to start over. Hit RANDOM to create a new puzzle.</p>
+    </div>
+
+    <div id="editHelp" class="help">
+        <p>WORDEDITATRON can make puzzles just for you! Just enter a list of your favorite words, and let WORDEDITATRON take care of the rest.</p>
+        <p>ADD or REMOVE words from the list with the buttons. Set the GRID SIZE with the slider. Hit MAKE to create the puzzle. Hit QUIT to go back to just playing.</p>
     </div>
 
 </div>

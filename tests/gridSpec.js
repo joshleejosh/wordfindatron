@@ -10,7 +10,7 @@ describe('Test Grid', function(){
     });
 
     describe('get/set', function() {
-        it('gets', function() {
+        it('gets a cell\'s value', function() {
             var g = new grid.Grid(4).fromString('ABCDEFGHIJKLMNOP');
             expect(g.get(0, 0)).toBe('A');
             expect(g.get(1, 0)).toBe('B');
@@ -30,7 +30,7 @@ describe('Test Grid', function(){
             expect(g.get(3, 3)).toBe('P');
         });
 
-        it('sets', function() {
+        it('sets a cell\'s value', function() {
             var g = new grid.Grid(4);
             g.set(0, 0, 'A');
             g.set(1, 0, 'B');
@@ -156,22 +156,12 @@ describe('Test Grid', function(){
         });
 
         it('rejects bad args', function() {
-            try {
-                expect(g.readWord(7, -1, 0, 1)).toBe('?'); // bad slice
-                fail('oops');
-            } catch (e) { }
-            try {
-                expect(g.readWord(7, 9, 0, 1)).toBe('?'); // bad slice
-                fail('oops');
-            } catch (e) { }
-            try {
-                expect(g.readWord(-1, 5, 1, 2)).toBe('?'); // bad direction
-                fail('oops');
-            } catch (e) { }
-            try {
-                expect(g.readWord(8, 5, 1, 2)).toBe('?'); // bad direction
-                fail('oops');
-            } catch (e) { }
+            // bad slice
+            expect(()=>{ return g.readWord( 7,-1, 0, 1); }).toThrowError();
+            expect(()=>{ return g.readWord( 7, 9, 0, 1); }).toThrowError();
+            // bad direction
+            expect(()=>{ return g.readWord(-1, 5, 1, 2); }).toThrowError();
+            expect(()=>{ return g.readWord( 8, 5, 1, 2); }).toThrowError();
         });
     });
 
@@ -213,14 +203,9 @@ describe('Test Grid', function(){
         });
 
         it('rejects bad args', function() {
-            try {
-                expect(g.coordsToSlice(2,3,2,3)).toEqual([0, 0, 0, 1]); // single point
-                fail('oops');
-            } catch (e) { }
-            try {
-                expect(g.coordsToSlice(2,3,3,5)).toEqual([0, 0, 0, 1]); // off line
-                fail('oops');
-            } catch (e) { }
+            // off line
+            expect(()=>{ return g.coordsToSlice(2,3,2,3); }).toThrowError(RangeError);
+            expect(()=>{ return g.coordsToSlice(2,3,3,5); }).toThrowError(RangeError);
         });
     });
 
@@ -256,28 +241,23 @@ describe('Test Grid', function(){
         });
 
         it('fails on bad arguments', function(){
-            try {
-                expect(grid.sliceParams(5, 0, 5)).toEqual([]);
-                fail('oops');
-            } catch (re) { }
-            try {
-                expect(grid.sliceParams(5, 0, -1)).toEqual([]);
-                fail('oops');
-            } catch (re) { }
-            try {
-                expect(grid.sliceParams(5, 1, 9)).toEqual([]);
-                fail('oops');
-            } catch (re) { }
-            try {
-                expect(grid.sliceParams(5, 1, -1)).toEqual([]);
-                fail('oops');
-            } catch (re) { }
+            expect(()=>{ return grid.sliceParams(5, 0, 5); }).toThrowError(RangeError);
+            expect(()=>{ return grid.sliceParams(5, 0,-1); }).toThrowError(RangeError);
+            expect(()=>{ return grid.sliceParams(5, 1, 9); }).toThrowError(RangeError);
+            expect(()=>{ return grid.sliceParams(5, 1,-1); }).toThrowError(RangeError);
             // bad grid size
-            try {
-                expect(grid.sliceParams(0, 1, 3)).toEqual([]);
-                fail('oops');
-            } catch (re) { }
+            expect(()=>{ return grid.sliceParams(0, 1, 3); }).toThrowError(RangeError);
         });
     });
 
+    describe('GridWord.getCellCoordinates()', function() {
+        it('returns a list of x/y pairs for each cell in this word', function() {
+            expect(new grid.GridWord(5, 'FOO', 1, 3, 1).getCellCoordinates())
+                .toEqual([ {x:1,y:2}, {x:2,y:3}, {x:3,y:4} ]);
+        });
+        it('does NOT halt if the GridWord runs off the end of the grid', function() {
+            expect(new grid.GridWord(7, 'GRONKY', 5, 8, 1).getCellCoordinates())
+                .toEqual([ {x:5,y:3}, {x:4,y:2}, {x:3,y:1}, {x:2,y:0}, {x:1,y:-1}, {x:0,y:-2} ]);
+        });
+    });
 });

@@ -23,7 +23,38 @@ describe('Test Puzzle', function(){
             }
         });
     });
-    
+
+    describe('construct', function() {
+        it('defaults with no args', function() {
+            var puz = new puzzle.Puzzle();
+            expect(puz.seed).toBeCloseTo(new Date().getTime(), -1); // within milliseconds of the date seed
+            expect(puz.size).toBe(8);
+            expect(puz.grid).toEqual(new grid.Grid(8));
+            expect(puz.answers).toEqual([]);
+        });
+
+        it('takes a size', function() {
+            var puz = new puzzle.Puzzle(31);
+            expect(puz.size).toBe(31);
+            expect(()=>{ return new puzzle.Puzzle(-1); }).toThrowError(RangeError);
+        });
+
+        it('takes a seed', function() {
+            var puz = new puzzle.Puzzle(7, -215423);
+            expect(puz.seed).toBe(-215423);
+            // 0 seed is replaced with time
+            puz = new puzzle.Puzzle(7, 0);
+            expect(puz.seed).toBeCloseTo(new Date().getTime(), -1);
+            // reject seeds of the wrong type
+            expect(()=>{ return new puzzle.Puzzle(7, 'badarg'); }).toThrowError(TypeError);
+            // coerce/default other bad seeds
+            puz = new puzzle.Puzzle(7, 44/'NaN');
+            expect(puz.seed).toBeCloseTo(new Date().getTime(), -1);
+            puz = new puzzle.Puzzle(7, null);
+            expect(puz.seed).toBeCloseTo(new Date().getTime(), -1);
+        });
+    });
+
     describe('reset()', function() {
         it('blanks out the puzzle\'s answers and grid', function() {
             var puz = new puzzle.Puzzle(6, 1);
@@ -47,6 +78,29 @@ describe('Test Puzzle', function(){
             expect(puz.words.length).toBe(0);
             puz.reset(1234);
             expect(puz.seed).toBe(1234);
+        });
+    });
+
+    describe('copy()', function()  {
+        it('makes a deep copy of the puzzle\'s grid and answers', function() {
+            var puz = new puzzle.Puzzle(6, 1);
+            var g = new grid.Grid(6).fromString('ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJ');
+            puz.setGrid(g);
+            puz.addAnswer(new grid.GridWord(6, g.readWord(3,7,1,3), 3, 7, 1));
+            puz.addAnswer(new grid.GridWord(6, g.readWord(6,2,2,2), 6, 2, 2));
+            puz.addAnswer(new grid.GridWord(6, g.readWord(1,4,0,5), 1, 4, 0));
+            puz.addAnswer(new grid.GridWord(6, g.readWord(4,5,3,3), 4, 5, 3));
+
+            var quz = puz.copy();
+            expect(quz).not.toBe(puz);
+            expect(quz.size).toEqual(puz.size);
+            expect(quz.seed).toEqual(puz.seed);
+            expect(quz.grid).not.toBe(puz.grid);
+            expect(quz.grid).toEqual(puz.grid);
+            for (var i=0; i<4; i++) {
+                expect(quz.answers[i]).not.toBe(puz.answers[i]);
+                expect(quz.answers[i]).toEqual(puz.answers[i]);
+            }
         });
     });
 
@@ -113,7 +167,6 @@ describe('Test Puzzle', function(){
 
             done();
         });
-
     });
 
     describe('answerGrid()', function() {
@@ -177,6 +230,23 @@ describe('Test Puzzle', function(){
             expect(puz.containsWord('GFE')).toBe(true);
             expect(puz.containsWord('GF')).not.toBe(true);
             expect(puz.containsWord('GFF')).not.toBe(true);
+        });
+    });
+
+    describe('makeAnswer()', function() {
+        it('places a word into the grid and turns it into an answer', function() {
+            var puz = new puzzle.Puzzle(6, 54321);
+            expect(puz.makeAnswer('GRUNT')).toMatchGridWord(3, 6, 0, 'GRUNT', 5, 1, 1, 5);
+            expect(puz.makeAnswer('FUNK')).toMatchGridWord(0, 4, 0, 'FUNK',  0, 4, 3, 4);
+            expect(puz.makeAnswer('PARTY')).toMatchGridWord(2, 4, 0, 'PARTY', 4, 0, 4, 4);
+        });
+        it('freaks out when it can\'t fit a word', function() {
+            var puz = new puzzle.Puzzle(6, 54321);
+            expect(()=>{ return puz.makeAnswer('TOOLONGWORD'); }).toThrowError();
+            puz.makeAnswer('GRUNT');
+            puz.makeAnswer('FUNK');
+            puz.makeAnswer('PARTY');
+            expect(()=>{ return puz.makeAnswer('BADWORD'); }).toThrowError();
         });
     });
 
@@ -245,7 +315,7 @@ describe('Test Puzzle', function(){
             try {
                 puz.scanConflicts();
             } catch (e) {
-                if (e instanceof puzzle.ConflictScanException) {
+                if (e instanceof puzzle.PuzzleConflictError) {
                     expect(puz.grid.toString()).toBe('ABCDE\nFGHIJ\nKKNID\nPQRST\nUVWXY\n')
                 } else {
                     fail(e);
@@ -253,7 +323,53 @@ describe('Test Puzzle', function(){
             }
             done();
         });
+    });
 
+    describe('constructing with pre-set words', function() {
+        it('puts the words in the grid and turns them into answers', function() {
+            var puz = new puzzle.Puzzle(7, -215423, []);
+            expect(puz.answers.length).toBe(0);
+
+            puz = new puzzle.Puzzle(7, -215423, ['FOO']);
+            expect(puz.answers.length).toBe(1);
+            expect(puz.answers[0]).toMatchGridWord(5, 3, 0, 'FOO', 3, 6, 1, 4);
+
+            puz = new puzzle.Puzzle(7, -215423, ['GUNK', 'GOOP', 'GRIZ']);
+            expect(puz.answers.length).toBe(3);
+            expect(puz.answers[0]).toMatchGridWord(5, 3, 0, 'GUNK', 3, 6, 0, 3);
+            expect(puz.answers[1]).toMatchGridWord(2, 2, 1, 'GOOP', 2, 1, 2, 4);
+            expect(puz.answers[2]).toMatchGridWord(5, 8, 1, 'GRIZ', 5, 3, 2, 0);
+        });
+
+        it('generates around the given words', function() {
+            puz = new puzzle.Puzzle(7, -215423, ['GUNK', 'GOOP', 'GRIZ']);
+            puz.generate(5);
+            expect(puz.answers[0]).toMatchGridWord(5, 3, 0, 'GUNK', 3, 6, 0, 3);
+            expect(puz.answers[1]).toMatchGridWord(2, 2, 1, 'GOOP', 2, 1, 2, 4);
+            expect(puz.answers[2]).toMatchGridWord(5, 8, 1, 'GRIZ', 5, 3, 2, 0);
+            // generated one
+            expect(puz.answers[3]).toMatchGridWord(0, 4, 0, 'UNPAVED', 0, 4, 6, 4);
+            expect(puz.answers[4]).toMatchGridWord(5, 5, 0, 'MIAOWS', 5, 6, 0, 1);
+            expect(puz.grid.toString()).toBe('LIZYUNK\nSTGIQQZ\nJWOFRPE\nKIOMIGQ\nUNPAVED\nRWUPIUH\nADOGJMD\n');
+        });
+
+        it('does nothing if you generate() fewer words than you fed in', function() {
+            puz = new puzzle.Puzzle(7, -215423, ['GUNK', 'GOOP', 'GRIZ']);
+            puz.generate(2);
+            expect(puz.answers.length).toBe(3);
+        });
+
+        it('increases grid size if there isn\'t room for the given words', function() {
+            puz = new puzzle.Puzzle(4, -215423, ['GUNK', 'GOOP', 'GRIZ', 'TWIZZLE' ]);
+            expect(puz.size).toBe(7);
+        });
+
+        it('freaks out when it can\'t fit a word', function() {
+            expect(()=>{
+                return new puzzle.Puzzle(7, -215423,
+                    ['GUNK', 'GOOP', 'GRIZ', 'SPOONY', 'TWIZZLE', 'FIDDLE', 'HANKER']);
+            }).toThrowError(puzzle.PuzzleConflictError);
+        });
     });
 
 });

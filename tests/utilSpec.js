@@ -28,10 +28,7 @@ describe('Test Util', function(){
         });
 
         it('fails on an invalid step arg', function() {
-            try {
-                var a = util.range(2, 7, 0);
-                fail('oops: ' + a);
-            } catch (e) { }
+            expect(()=>{ return util.range(2, 7, 0); }).toThrowError(RangeError);
         });
 
         it('flips min and max when they\'re the wrong way around', function() {

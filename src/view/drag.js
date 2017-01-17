@@ -29,7 +29,7 @@
 
     function createDrag(c, t) {
         dragRing = new ring.Ring(c);
-        dragRing.ring = d3.select('#wffield').append('div').html('&nbsp;')
+        dragRing.ring = d3.select('#playField').append('div').html('&nbsp;')
             .classed('ring', true)
             .classed('ringsolved', false)
         ;

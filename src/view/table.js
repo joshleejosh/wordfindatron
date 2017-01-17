@@ -6,6 +6,10 @@
     var colors = require('./colors');
     var cid = require('./cell').cid;
 
+    function wipe() {
+        d3.selectAll('#wfgrid tr').remove();
+    }
+
     function Table(puzzle) {
         this.puzzle = puzzle;
         this.size = puzzle.size;
@@ -47,27 +51,24 @@
             tweent = consts.FADE_TIME;
         }
         var cell = this.getCell(answer.startLocation.x, answer.startLocation.y);
-        cell.selection.transition('hintflash')
-            .duration(tweent)
-            .style('background-color', colors.bodyText)
-            .style('color', colors.bodyBg)
-            .on('end', function() {
-                cell.selection.transition('hintflash')
-                    .duration(tweent)
-                    .style('background-color', colors.bodyBg)
-                    .style('color', colors.bodyText)
-                    .on('end', function() {
-                        cell.selection
-                            .style('background-color', null)
-                            .style('color', null)
-                        ;
-                    })
-                ;
-            })
+        var cw = parseInt(cell.selection.style('width'), 10);
+        cell.selection
+            .transition('hintflash')
+                .duration(tweent)
+                .ease(d3.easeSinOut)
+                .style('background-color', colors.bodyText)
+                .style('color', colors.bodyBg)
+                .style('border-radius', cw + 'px')
+            .transition('hintflash')
+                .ease(d3.easeSinIn)
+                .style('background-color', null)
+                .style('color', null)
+                .style('border-radius', null)
         ;
     };
 
     module.exports = {
+        wipe: wipe,
         Table: Table
     };
 }());
