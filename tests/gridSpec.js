@@ -5,8 +5,66 @@ describe('Test Grid', function(){
         it('is filled with spaces', function() {
             var g = new grid.Grid(3);
             expect(g.size).toBe(3);
-            expect(g.grid).toEqual([[' ',' ',' '],[' ',' ',' '],[' ',' ',' ']]);
             expect(g.toString()).toBe('   \n   \n   \n');
+        });
+    });
+
+    describe('get/set', function() {
+        it('gets', function() {
+            var g = new grid.Grid(4).fromString('ABCDEFGHIJKLMNOP');
+            expect(g.get(0, 0)).toBe('A');
+            expect(g.get(1, 0)).toBe('B');
+            expect(g.get(2, 0)).toBe('C');
+            expect(g.get(3, 0)).toBe('D');
+            expect(g.get(0, 1)).toBe('E');
+            expect(g.get(1, 1)).toBe('F');
+            expect(g.get(2, 1)).toBe('G');
+            expect(g.get(3, 1)).toBe('H');
+            expect(g.get(0, 2)).toBe('I');
+            expect(g.get(1, 2)).toBe('J');
+            expect(g.get(2, 2)).toBe('K');
+            expect(g.get(3, 2)).toBe('L');
+            expect(g.get(0, 3)).toBe('M');
+            expect(g.get(1, 3)).toBe('N');
+            expect(g.get(2, 3)).toBe('O');
+            expect(g.get(3, 3)).toBe('P');
+        });
+
+        it('sets', function() {
+            var g = new grid.Grid(4);
+            g.set(0, 0, 'A');
+            g.set(1, 0, 'B');
+            g.set(2, 0, 'C');
+            g.set(3, 0, 'D');
+            g.set(0, 1, 'E');
+            g.set(1, 1, 'F');
+            g.set(2, 1, 'G');
+            g.set(3, 1, 'H');
+            g.set(0, 2, 'I');
+            g.set(1, 2, 'J');
+            g.set(2, 2, 'K');
+            g.set(3, 2, 'L');
+            g.set(0, 3, 'M');
+            g.set(1, 3, 'N');
+            g.set(2, 3, 'O');
+            g.set(3, 3, 'P');
+            expect(g.toString()).toBe('ABCD\nEFGH\nIJKL\nMNOP\n');
+        });
+
+        it('get rejects bad indices', function() {
+            var g = new grid.Grid(4).fromString('ABCDEFGHIJKLMNOP');
+            expect(()=>{ return g.get(-1, 0); }).toThrowError(RangeError);
+            expect(()=>{ return g.get(0, -1); }).toThrowError(RangeError);
+            expect(()=>{ return g.get(4, 0); }).toThrowError(RangeError);
+            expect(()=>{ return g.get(0, 4); }).toThrowError(RangeError);
+        });
+
+        it('set rejects bad indices', function() {
+            var g = new grid.Grid(4).fromString('ABCDEFGHIJKLMNOP');
+            expect(()=>{ g.set(-1, 0, 'Q'); }).toThrowError(RangeError);
+            expect(()=>{ g.set(0, -1, 'Q'); }).toThrowError(RangeError);
+            expect(()=>{ g.set(4,  0, 'Q'); }).toThrowError(RangeError);
+            expect(()=>{ g.set(0,  4, 'Q'); }).toThrowError(RangeError);
         });
     });
 

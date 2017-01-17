@@ -56,8 +56,13 @@
             x: this.startLocation.x + ((this.word.length - 1) * dx),
             y: this.startLocation.y + ((this.word.length - 1) * dy)
         };
+        return this;
     };
 
+    /*
+     * Return an array of x/y objects representing the
+     * coordinates of each letter in this GridWord.
+     */
     GridWord.prototype.getCellCoordinates = function() {
         var rv = [];
         var sx = this.startLocation.x;
@@ -93,12 +98,27 @@
             }
             this.grid.push(row);
         }
+        return this;
+    };
+
+    Grid.prototype.get = function(x, y) {
+        if (x < 0 || x >= this.size || y < 0 || y >= this.size) {
+            throw new RangeError('['+x+']['+y+']');
+        }
+        return this.grid[y][x];
+    };
+
+    Grid.prototype.set = function(x, y, v) {
+        if (x < 0 || x >= this.size || y < 0 || y >= this.size) {
+            throw new RangeError('['+x+']['+y+']');
+        }
+        this.grid[y][x] = v;
     };
 
     Grid.prototype.reset = function() {
-        for (var gr=0; gr<this.size; gr++) {
-            for (var gc=0; gc<this.size; gc++) {
-                this.grid[gr][gc] = ' ';
+        for (var y=0; y<this.size; y++) {
+            for (var x=0; x<this.size; x++) {
+                this.grid[y][x] = ' ';
             }
         }
     };
@@ -107,9 +127,9 @@
      * Fill in this grid from the given string.
      */
     Grid.prototype.fromString = function(s) {
-        for (var r=0,i=0; r<this.size && i<s.length; r++) {
-            for (var c=0; c<this.size && i<s.length; c++) {
-                this.grid[r][c] = s[i];
+        for (var y=0,i=0; y<this.size && i<s.length; y++) {
+            for (var x=0; x<this.size && i<s.length; x++) {
+                this.set(x, y, s[i]);
                 i++;
             }
         }
@@ -121,9 +141,9 @@
      */
     Grid.prototype.toString = function() {
         var rv = '';
-        for (var r=0; r<this.size; r++) {
-            for (var c=0; c<this.size; c++) {
-                rv += this.grid[r][c];
+        for (var y=0; y<this.size; y++) {
+            for (var x=0; x<this.size; x++) {
+                rv += this.get(x, y);
             }
             rv += '\n';
         }
@@ -135,9 +155,9 @@
      */
     Grid.prototype.copy = function() {
         var rv = new Grid(this.size);
-        for (var r=0; r<this.size; r++) {
-            for (var c=0; c<this.size; c++) {
-                rv.grid[r][c] = this.grid[r][c];
+        for (var y=0; y<this.size; y++) {
+            for (var x=0; x<this.size; x++) {
+                rv.set(x, y, this.get(x, y));
             }
         }
         return rv;
@@ -152,7 +172,7 @@
         var x = a[0], y = a[1], dx = a[2], dy = a[3];
         var cut = '';
         while (0 <= x && x < this.size && 0 <= y && y < this.size) {
-            cut += this.grid[y][x];
+            cut += this.get(x, y);
             x += dx;
             y += dy;
         }
@@ -222,7 +242,7 @@
 
     /*
      * Given two sets of grid coordinates, return slice parameters.
-     * raise RangeError if the two points aren't colinear. (coslicear?)
+     * throw RangeError if the two points aren't colinear. (coslicear?)
      */
     Grid.prototype.coordsToSlice = function(x0, y0, x1, y1) {
         var dy = y1 - y0;
@@ -259,10 +279,10 @@
      * Fill all blanks with junk.
      */
     Grid.prototype.fillJunk = function(frnd) {
-        for (var r=0; r<this.size; r++) {
-            for (var c=0; c<this.size; c++) {
-                if (this.grid[r][c] === ' ') {
-                    this.grid[r][c] = frnd(consts.ALPHABET);
+        for (var y=0; y<this.size; y++) {
+            for (var x=0; x<this.size; x++) {
+                if (this.get(x, y) === ' ') {
+                    this.set(x, y, frnd(consts.ALPHABET));
                 }
             }
         }

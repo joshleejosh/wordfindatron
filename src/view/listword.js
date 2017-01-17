@@ -9,7 +9,15 @@
     function ListWord(gridWord) {
         this.answer = gridWord;
         this.word = this.answer.word;
+        this.selection = null;
     }
+
+    ListWord.prototype.isSolved = function() {
+        if (!this.selection) {
+            this.selection = d3.select('#wflist_'+this.word);
+        }
+        return (!this.selection.empty() && this.selection.classed('wfsolved'));
+    };
 
     ListWord.prototype.mark = function(m, tweent) {
         if (typeof tweent === 'undefined') {

@@ -2,7 +2,7 @@
     'use strict';
 
     var d3 = require('d3');
-    var util = require('../util');
+    var snapAngle = require('../util').snapAngle;
     var ring = require('./ring');
 
     var dragRing;
@@ -43,30 +43,30 @@
     function continueDrag(table, newx, newy, transitt, transitcb) {
         // find angle from drag start to mouse
         var anchor = dragRing.getAnchor();
-        var dy = newy - anchor.y;
         var dx = newx - anchor.x;
-        var saa = util.snapAngle(dx, dy);
+        var dy = newy - anchor.y;
+        var saa = snapAngle(dx, dy);
         var direction = saa[1];
 
         // Don't just cast a ray to find the end cell -- for diagonals, we'll
         // hit cells that are overlapping but off-line. Instead, walk along the
         // grid in the given direction until you've covered the distance.
         var dist2 = (dx*dx) + (dy*dy);
-        var row = dragRing.startCell.row;
-        var col = dragRing.startCell.column;
-        // ummm, these are xy instead of rc
+        var x = dragRing.startCell.x;
+        var y = dragRing.startCell.y;
         var delta = [[1,0], [1,1], [0,1], [-1,1], [-1,0], [-1,-1], [0,-1], [1,-1]][direction];
-        var cell, fdist2;
+
+        var cell, cellDist2;
         do {
-            cell = table.getCell(row, col);
+            cell = table.getCell(x, y);
             var fp = cell.getPagePosition();
             var sp = dragRing.startCell.getPagePosition();
-            var fdx = fp.x - sp.x + (dragRing.size*delta[0]);
-            var fdy = fp.y - sp.y + (dragRing.size*delta[1]);
-            fdist2 = (fdx*fdx) + (fdy*fdy);
-            row += delta[1];
-            col += delta[0];
-        } while (fdist2<dist2 && row>=0 && row<table.size && col>=0 && col<table.size);
+            var cdx = fp.x - sp.x + (dragRing.size*delta[0]);
+            var cdy = fp.y - sp.y + (dragRing.size*delta[1]);
+            cellDist2 = (cdx*cdx) + (cdy*cdy);
+            x += delta[0];
+            y += delta[1];
+        } while (cellDist2<dist2 && y>=0 && y<table.size && x>=0 && x<table.size);
 
         if (cell && cell !== dragRing.endCell) {
             dragRing.endCell = cell;

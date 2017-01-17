@@ -1,27 +1,27 @@
 (function() {
     'use strict';
 
-    function cid(r, c) {
-        return 'c'+r+'_'+c;
+    function cid(x, y) {
+        return 'c'+x+'_'+y;
     }
 
-    function Cell(s, r, c) {
+    function Cell(s, x, y) {
         this.element = null;
         this.selection = null;
         this.letter = s;
-        this.row = r;
-        this.column = c;
+        this.x = x;
+        this.y = y;
         this.size = 46;
         this.borderSize = 0;
     }
 
     Cell.prototype.id = function() {
-        return cid(this.row, this.column);
+        return cid(this.x, this.y);
     };
 
     Cell.prototype.getPagePosition = function() {
         if (!this.element) {
-            throw Error('Cell.getPosition: No element for ['+this.column+','+this.row+']');
+            throw Error('Cell.getPosition: No element for ['+this.x+','+this.y+']');
         }
         var p = this.element.getBoundingClientRect();
         return {x: p.left, y: p.top};

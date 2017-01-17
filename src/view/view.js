@@ -1,8 +1,10 @@
 (function() {
     'use strict';
 
+    var Random = require('random-js');
     var d3 = require('d3');
     var consts = require('../consts');
+    var util = require('../util');
     var colors = require('./colors');
     var cell = require('./cell');
     var ring = require('./ring');
@@ -13,6 +15,9 @@
     var thePuzzle, theTable;
     var rings = [];
     var inputDisabled = false;
+    var hintWords;
+    var rng = Random.engines.mt19937();
+    rng.seed(new Date().getTime());
 
     // ==================================================================
 
@@ -121,12 +126,12 @@
     }
 
     function cancelVictory() {
+        d3.selectAll('.cell').interrupt();
         d3.selectAll('.cell')
             .filter(function() {
-                return !d3.select(this).classed('cellsolved') &&
-                    d3.select(this).style('color') === colors.bodyBg;
+                return !d3.select(this).classed('cellsolved');
             })
-            .style('color', colors.bodyText)
+            .style('color', null)
         ;
         d3.selectAll('#wflist>li').interrupt();
         d3.selectAll('.wfsolved')
@@ -143,10 +148,9 @@
     function checkWord(c, d, w) {
         for (var i=0; i<thePuzzle.answers.length; i++) {
             var a = thePuzzle.answers[i];
-            //console.log(w, thePuzzle.answers[i].word, c.column, c.row, wsc, wsr, d.column, d.row, wec, wer);
             if (a.word === w &&
-                c.column === a.startLocation.x && c.row === a.startLocation.y &&
-                d.column === a.endLocation.x && d.row === a.endLocation.y) {
+                c.x === a.startLocation.x && c.y === a.startLocation.y &&
+                d.x === a.endLocation.x && d.y === a.endLocation.y) {
                 return a;
             }
         }
@@ -190,10 +194,39 @@
 
         if (answered === thePuzzle.answers.length) {
             doVictory();
-        } else {
-            cancelVictory();
         }
 
+    }
+
+    // ==================================================================
+
+    function showHint(depth) {
+        if (typeof depth === 'undefined') {
+            depth = 0;
+        }
+        if (depth > thePuzzle.answers.length) {
+            util.log('showHint: retry depth exceeded, something is very wrong');
+            return null;
+        }
+        if (!hintWords || hintWords.length === 0) {
+            hintWords = d3.selectAll('#wflist>li')
+                .filter(function (d) { return !d.isSolved(); })
+                .data()
+            ;
+            Random.shuffle(rng, hintWords);
+        }
+        if (hintWords.length === 0) {
+            util.log('showHint: Nothing to hint at');
+            return null;
+        }
+
+        var hw = hintWords.shift();
+        // did this word get solved since the last time we reshuffled?
+        if (hw.isSolved()) {
+            return showHint(depth+1);
+        }
+        theTable.flashHint(hw.answer);
+        return hw.answer;
     }
 
     // ==================================================================
@@ -246,7 +279,7 @@
                 return;
             }
             var answer = thePuzzle.answers[i];
-            var startCell = theTable.getCell(answer.startLocation.y, answer.startLocation.x);
+            var startCell = theTable.getCell(answer.startLocation.x, answer.startLocation.y);
             var dragRing = drag.createDrag(startCell, false);
             var coords = answer.getCellCoordinates();
             var cooi = -1;
@@ -255,11 +288,11 @@
                 if (++cooi >= coords.length) {
                     return;
                 }
-                var row = coords[cooi].y;
-                var col = coords[cooi].x;
-                var cc = theTable.getCell(row, col);
+                var x = coords[cooi].x;
+                var y = coords[cooi].y;
+                var cc = theTable.getCell(x, y);
                 var cpos = cc.getPagePosition();
-                var transitcb = (row!==answer.endLocation.y || col!==answer.endLocation.x) ? fcell : function() {
+                var transitcb = (x!==answer.endLocation.x || y!==answer.endLocation.y) ? fcell : function() {
                     var r = drag.finishDrag(false);
                     if (r) {
                         rings.push(r);
@@ -298,6 +331,7 @@
 
     function displayPuzzle(puz, cbNewPuzzle) {
         thePuzzle = puz;
+        hintWords = null;
         d3.select('#message').text('');
         d3.selectAll('#wfgrid tr').remove();
         d3.selectAll('#wflist li').remove();
@@ -342,7 +376,7 @@
                 .data(function(row) {
                     var c = 0;
                     var rv = row.map(function(s) {
-                        return new cell.Cell(s, r, c++);
+                        return new cell.Cell(s, c++, r);
                     });
                     r++;
                     return rv;
@@ -396,13 +430,21 @@
             var toolbar = d3.select('#toolbar');
             body.select('#tbUndo').on('click', function() {
                 popRing(true);
+                cancelVictory();
                 checkAnswers();
             });
-            body.select('#tbClear').on('click', function() {
+
+            body.select('#tbReset').on('click', function() {
                 drag.cancelDrag(true);
                 clearRings(true);
+                cancelVictory();
                 checkAnswers();
             });
+
+            body.select('#tbHint').on('click', function() {
+                showHint();
+            });
+
             body.select('#tbNew').on('click', function() {
                 drag.cancelDrag(false);
                 clearRings(false);

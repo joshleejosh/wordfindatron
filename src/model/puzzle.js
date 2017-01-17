@@ -1,3 +1,5 @@
+/*global Uint8Array*/
+
 (function () {
     'use strict';
 
@@ -196,9 +198,9 @@
             var y = sp[1] + (of * dy);
             for (var i=0; i<wl; i++) {
                 // don't change a letter that belongs to an answer.
-                if (agrid.grid[y][x] === ' ') {
+                if (agrid.get(x, y) === ' ') {
                     var ch = Random.pick(puz.rng, consts.ALPHABET);
-                    puz.grid.grid[y][x] = ch;
+                    puz.grid.set(x, y, ch);
                     changed = true;
                 }
                 x += dx;
@@ -211,6 +213,18 @@
 
         var fscan = function(puz) {
             var hits = [];
+            var fcheck = function(s, di, sl, of, wl) {
+                var w = s.substring(of, of+wl);
+                if (puz.containsWord(w) && !puz.isAnswer(w, di, sl, of, wl)) {
+                    //util.log('dup', di, sl, of, wl, w);
+                    hits.push([di, sl, of, wl]);
+                }
+                if (blacklist.indexOf(w) !== -1) {
+                    //util.log('blk', di, sl, of, wl, w);
+                    hits.push([di, sl, of, wl]);
+                }
+            };
+
             for (var direction=0; direction<8; direction++) {
                 var nslices = puz.size;
                 if (direction%2 === 1) {
@@ -220,15 +234,7 @@
                     var cut = puz.grid.cutSlice(direction, slice);
                     for (var offset=0; offset<cut.length; offset++) {
                         for (var wlen=1; wlen<cut.length-offset+1; wlen++) {
-                            var candidate = cut.substring(offset, offset+wlen);
-                            if (puz.containsWord(candidate) && !puz.isAnswer(candidate, direction, slice, offset, wlen)) {
-                                //util.log('W', direction, slice, offset, wlen, candidate);
-                                hits.push([direction, slice, offset, wlen]);
-                            }
-                            if (blacklist.indexOf(candidate) !== -1) {
-                                //util.log('B', direction, slice, offset, wlen, candidate);
-                                hits.push([direction, slice, offset, wlen]);
-                            }
+                            fcheck(cut, direction, slice, offset, wlen);
                         }
                     }
                 }
@@ -347,10 +353,10 @@
         bs.writeBits(so[0], NLEN_SEED_HI);
         bs.writeBits(so[1], NLEN_SEED_LO);
 
-        for (var r=0; r<this.grid.size; r++) {
-            for (var c=0; c<this.grid.size; c++) {
+        for (var y=0; y<this.grid.size; y++) {
+            for (var x=0; x<this.grid.size; x++) {
                 // A = 1, Z = 26
-                var n = this.grid.grid[r][c].charCodeAt(0) - 64;
+                var n = this.grid.get(x, y).charCodeAt(0) - 64;
                 bs.writeBits(n, NLEN_LETTER);
             }
         }
@@ -379,8 +385,8 @@
 
         var puz = new Puzzle(size, seed);
         var gs = '';
-        for (var r=0; r<size; r++) {
-            for (var c=0; c<size; c++) {
+        for (var y=0; y<size; y++) {
+            for (var x=0; x<size; x++) {
                 gs += String.fromCharCode(bs.readBits(NLEN_LETTER) + 64);
             }
         }
