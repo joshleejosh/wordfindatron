@@ -58,6 +58,7 @@
         inputDisabled = false;
         toolbar.enable();
         editor.enable();
+        toolbar.setUndoable(rings.length > 0);
     }
 
     // ==================================================================
@@ -77,12 +78,14 @@
         }
         var r = rings.pop();
         r.destroy(tween);
+        toolbar.setUndoable(rings.length > 0);
     }
 
     function clearRings(tween) {
         while (rings.length > 0) {
             popRing(tween);
         }
+        toolbar.setUndoable(rings.length > 0);
     }
 
     // ==================================================================
@@ -279,7 +282,9 @@
             return;
         }
         drag.cancelDrag(true);
-        drag.createDrag(d, true);
+        drag.createDrag(d, true, function() {
+            toolbar.setUndoable(rings.length > 0);
+        });
     }
 
     function onDragMoveLetter() {
@@ -309,6 +314,7 @@
         if (r) {
             rings.push(r);
         }
+        toolbar.setUndoable(rings.length > 0);
         checkAnswers();
     }
 
@@ -526,11 +532,29 @@
             onHint: function() {
                 showHint();
             },
+            onShuffle: function() {
+                drag.cancelDrag(false);
+                clearRings(false);
+                var newPuzzle = cbCommitEdit(
+                    thePuzzle.size,
+                    0,
+                    thePuzzle.answers.map(function(a) {
+                        return a.word;
+                    }));
+                if (newPuzzle) {
+                    displayPuzzle(newPuzzle, cbNewPuzzle, cbCommitEdit);
+                    checkAnswers();
+                }
+            },
             onNew: function() {
                 drag.cancelDrag(false);
                 clearRings(false);
-                cbNewPuzzle(getGridSize(), getNumWords());
-                checkAnswers();
+                hideGame(function() {
+                    cbNewPuzzle(getGridSize(), getNumWords());
+                    showGame(function() {
+                        checkAnswers();
+                    });
+                });
             },
             onEdit: function() {
                 disableInput();
@@ -552,12 +576,20 @@
                 autosolve();
             }
         });
+        toolbar.setUndoable(rings.length > 0);
 
         if (thePuzzle.seed) {
             var u = '?p=' + thePuzzle.serialize();
-            d3.select('#permalink').html('').append('a')
-                .attr('href', u)
-                .text('permalink');
+            var link = d3.select('#permalink>a');
+            if (link.empty()) {
+                var towrap = d3.select('#permalink').html();
+                d3.select('#permalink').html('').append('a')
+                    .attr('href', u)
+                    .attr('target', '_blank')
+                    .html(towrap);
+            } else {
+                link.attr('href', u);
+            }
         } else {
             d3.select('#permalink').html('');
         }

@@ -5,7 +5,7 @@
     var snapAngle = require('../util').snapAngle;
     var ring = require('./ring');
 
-    var dragRing;
+    var dragRing, onChange;
 
     function dragging() {
         return (dragRing !== null && dragRing !== undefined);
@@ -24,11 +24,14 @@
             } else {
                 kill();
             }
+            if (onChange) {
+                onChange();
+            }
         }
     }
 
-    function createDrag(c, t) {
-        dragRing = new ring.Ring(c);
+    function createDrag(cell, t, cb) {
+        dragRing = new ring.Ring(cell);
         dragRing.ring = d3.select('#playField').append('div').html('&nbsp;')
             .classed('ring', true)
             .classed('ringsolved', false)
@@ -36,6 +39,10 @@
         dragRing.resize(t);
         if (t) {
             dragRing.transitionIn(true, null);
+        }
+        onChange = cb;
+        if (onChange) {
+            onChange();
         }
         return dragRing;
     }
@@ -83,6 +90,9 @@
         dragRing.ring.style('z-index', '-1');
         var rv = dragRing;
         dragRing = null;
+        if (onChange) {
+            onChange();
+        }
         return rv;
     }
 

@@ -5,33 +5,38 @@
     var consts = require('../consts');
     var editorfield = require('./editorfield');
 
-    var scratchPuzzle, fields;
+    var fields;
 
     // ==================================================================
 
     function updateBindings() {
+        var gsize = parseInt(d3.select('#editGridSize').property('value'), 10);
         var list = d3.select('#editorlist');
         var lis = list.selectAll('li').data(fields);
         lis.enter()
             .append('li')
                 .classed('editoritem', true)
                 .attr('id', function(ef) { return ef.id(); })
-                .style('width', '' + scratchPuzzle.size + 'em')
+                .style('width', '' + gsize + 'em')
                 .append('input')
                     .attr('type', 'text')
                     .attr('value', function(ef) { return ef.word; })
-                    .attr('maxLength', scratchPuzzle.size)
-                    .style('width', '' + scratchPuzzle.size + 'em')
+                    .attr('maxlength', gsize)
+                    .style('width', '' + gsize + 'em')
                     .on('change', function(ef) { return ef.onInput(); })
                     .on('input', function(ef) { return ef.onInput(); })
         ;
         lis.exit().remove();
+        d3.select('.editoritem').each(function (ef) {
+            ef.minlen = 3;
+            ef.maxlen = gsize;
+        });
     }
 
     function updateButtons() {
         d3.select('#editAdd').attr('disabled', (fields.length >= consts.MAX_GRID_SIZE)?true:null);
         d3.select('#editDelete').attr('disabled', (fields.length <= 1)?true:null);
-        var invalid = d3.selectAll('#editorlist>li')
+        var invalid = d3.selectAll('.editoritem')
             .filter(function (ef) {
                 return !ef.validate();
             });
@@ -65,26 +70,42 @@
         }
     }
 
-    function onGridSize() {
+    function updateGridSizeLabel() {
         var v = parseInt(d3.select('#editGridSize').property('value'), 10);
-        d3.select('#labEditGridSize').html(v + ' &mdash; Grid Size');
+        d3.select('#labEditGridSize').html('<i class="fa fa-th fa-fw"></i> ' + v);
+        return v;
+    }
+
+    function onGridSize() {
+        var gsize = updateGridSizeLabel();
+        d3.selectAll('.editoritem>input')
+            .attr('maxlength', gsize)
+            .style('width', '' + gsize + 'em')
+        ;
+        d3.selectAll('.editoritem>label')
+            .style('right', '0')
+        ;
+        d3.selectAll('.editoritem').each(function (ef) {
+            ef.minlen = 3;
+            ef.maxlen = gsize;
+            ef.validate();
+        });
     }
 
     // ==================================================================
 
     function wipe() {
-        d3.selectAll('#editorlist>li').remove();
+        d3.selectAll('.editoritem').remove();
         d3.select('#editCommit').on('click', null);
         d3.select('#editQuit').on('click', null);
         d3.select('#editAdd').on('click', null);
         d3.select('#editDelete').on('click', null);
         d3.select('#editGridSize').on('click', null);
-        scratchPuzzle = null;
         fields = [];
     }
 
     function init(puzzle, callbacks) {
-        scratchPuzzle = puzzle.copy();
+        var scratchPuzzle = puzzle.copy();
         var tb = d3.select('#editTools');
         tb.select('#editCommit').on('click', function () {
             var sz = parseInt(d3.select('#editGridSize').property('value'), 10);
@@ -98,8 +119,11 @@
 
         tb.select('#editAdd').on('click', onAdd);
         tb.select('#editDelete').on('click', onDelete);
-        tb.select('#editGridSize').on('input', onGridSize).on('change', onGridSize);
-        onGridSize();
+        tb.select('#editGridSize')
+            .property('value', scratchPuzzle.size)
+            .on('input', onGridSize)
+            .on('change', onGridSize);
+        updateGridSizeLabel();
 
         fields = [];
         for (var i=0; i<scratchPuzzle.answers.length; i++) {

@@ -47,6 +47,11 @@
         d3.selectAll('#toolbar input').attr('disabled', true);
     }
 
+    function setUndoable(t) {
+        d3.select('#tbUndo').attr('disabled', (t)?null:true);
+        d3.select('#tbReset').attr('disabled', (t)?null:true);
+    }
+
     // ==================================================================
 
     function updateLabel(id, v, suffix) {
@@ -57,6 +62,7 @@
         d3.select('#tbUndo').on('click', null);
         d3.select('#tbReset').on('click', null);
         d3.select('#tbHint').on('click', null);
+        d3.select('#tbShuffle').on('click', null);
         d3.select('#tbNew').on('click', null);
         d3.select('#tbEdit').on('click', null);
         d3.select('#tbShowAdv').on('click', null);
@@ -68,6 +74,7 @@
         theToolbar.select('#tbUndo').on('click', callbacks.onUndo);
         theToolbar.select('#tbReset').on('click', callbacks.onReset);
         theToolbar.select('#tbHint').on('click', callbacks.onHint);
+        theToolbar.select('#tbShuffle').on('click', callbacks.onShuffle);
         theToolbar.select('#tbNew').on('click', callbacks.onNew);
         theToolbar.select('#tbEdit').on('click', callbacks.onEdit);
 
@@ -84,7 +91,7 @@
                         d3.select(this).style('display', b).style('height', null);
                     })
                 ;
-                d3.select(this).text('options');
+                d3.select('#tbShowAdv').classed('button-reverse', false);
             } else {
                 a
                     .style('display', b)
@@ -94,7 +101,7 @@
                         .ease(d3.easeSinIn)
                         .style('height', null)
                 ;
-                d3.select(this).text('(hide)');
+                d3.select('#tbShowAdv').classed('button-reverse', true);
             }
         });
 
@@ -126,6 +133,7 @@
                 ;
             }
             if (d3.select('#labTbSeed').empty()) {
+                a.append('span').text(' ');
                 a.append('label')
                     .attr('id', 'labTbSeed')
                     .attr('for', 'tbSeed')
@@ -135,13 +143,13 @@
         }
 
         if (consts.CHEAT && d3.select('#tbSolve').empty()) {
-            theToolbar.insert('button', '#tbNew')
+            theToolbar.insert('button', '#permalink')
                 .attr('id', 'tbSolve')
                 .attr('type', 'button')
-                .text('Solve')
+                .html('<i class="fa fa-birthday-cake fa-fw"></i>')
                 .on('click', callbacks.onSolve)
             ;
-            theToolbar.insert('span', '#tbNew').text(' ');
+            theToolbar.insert('span', '#permalink').text('\n');
         }
 
         theToolbar.on('submit', function() {
@@ -192,6 +200,7 @@
         show: show,
         enable: enable,
         disable: disable,
+        setUndoable: setUndoable,
         getGridSize: getGridSize,
         getNumWords: getNumWords,
         getSeed: getSeed,

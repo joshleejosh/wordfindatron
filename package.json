@@ -25,10 +25,11 @@
   "main": "main.js",
   "dependencies": {
     "d3": "^4.4.1",
+    "font-awesome": "^4.7.0",
     "random-js": "^1.0.8"
   },
   "scripts": {
-    "test": "node_modules/nodeunit/bin/nodeunit tests"
+    "test": "node tests/runTests.js"
   },
   "author": "joshleejosh",
   "license": "ISC",

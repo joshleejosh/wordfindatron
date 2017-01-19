@@ -17,6 +17,7 @@ UNITTEST=tests/runTests.js
 ESLINT=node_modules/eslint/bin/eslint.js
 ISTANBUL=node_modules/istanbul/lib/cli.js
 RSYNC=rsync -azv
+FONT_PATH=node_modules/font-awesome/fonts
 
 build: $(WORDS) $(JS) $(CSS)
 
@@ -39,6 +40,8 @@ dist: UGLIFY=-g uglifyify
 dist: clean build
 	mkdir -p dist
 	cp $(HTML) $(JS) $(CSS) $(WORDS) dist
+	mkdir -p dist/$(FONT_PATH)
+	cp $(FONT_PATH)/* dist/$(FONT_PATH)/
 
 # Must define DEPLOYPATH at command line, don't leave real paths floating around in the makefile
 deploy: dist

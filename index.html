@@ -12,16 +12,36 @@
     <h1><a href="http://floor.is/lava/wordfindatron">WORDFINDATRON</a></h1>
 
     <form id="toolbar">
-        <button type="button" id="tbUndo">Undo</button>
-        <button type="button" id="tbReset">Reset</button>
-        <button type="button" id="tbHint">Hint</button>
-        <button type="button" id="tbNew">Random</button>
-        <button type="button" id="tbEdit">Edit</button>
-        <button type="button" id="tbShowAdv">options</button>
-        <span id="permalink">permalink</span>
+        <button id="tbUndo"
+                type="button"
+                title="Erase your last ring"><i class="fa fa-backward fa-fw"></i></button>
+        <button id="tbReset"
+                type="button"
+                title="Erase all rings"><i class="fa fa-fast-backward fa-fw"></i></button>
+        <button id="tbHint"
+                type="button"
+                title="Get a Hint"><i class="fa fa-lightbulb-o fa-fw"></i></button>
+        <button id="tbShuffle"
+                type="button"
+                title="Make a new grid with the same words"><i class="fa fa-random fa-fw"></i></button>
+        <button id="tbNew"
+                type="button"
+                title="Make a new puzzle from scratch"><i class="fa fa-eject fa-fw"></i></button>
+        <button id="tbShowAdv"
+                type="button"
+                title="See more options for new puzzles"><i class="fa fa-sliders fa-fw"></i></button>
+        <span id="permalink"><i class="fa fa-share-square-o fa-fw"></i></span>
+        <span class="tbseparator"></span>
+        <button id="tbEdit"
+                class="button-reverse"
+                type="button"
+                title="Make your own puzzle!"><i class="fa fa-edit fa-fw"></i></button>
         <div id="tbadvanced">
-            <input type="range" id="tbSize" min="6" max="16" value="8" />
-            <label for="tbSize" id="labTbSize">Grid Size</label>
+            <h3>Options for new puzzles (<i class="fa fa-eject"></i>):</h3>
+            <input type="range" id="tbSize" min="6" max="16" value="8" title="Change the size of the grid" />
+            <label id="labTbSize"
+                   for="tbSize"
+                   title="Change the size of the grid"><i class="fa fa-th fa-fw"></i></label>
             <br />
             <input type="range" id="tbWords" min="6" max="16" value="8" />
             <label for="tbWords" id="labTbWords"># Words</label>
@@ -45,13 +65,30 @@
 
     <div id="editor">
         <form id="editTools">
-            <button type="button" id="editCommit">Make a Puzzle!</button>
-            <button type="button" id="editQuit">Quit Editing</button>
-            <br />
-            <button type="button" id="editAdd">Add Word</button>
-            <button type="button" id="editDelete">Delete Word</button>
-            <input type="range" id="editGridSize" min="6" max="16" value="8" />
-            <label for="editGridSize" id="labEditGridSize">Grid Size</label>
+            <button id="editAdd"
+                    type="button"
+                    title="Add a word to the list"><i class="fa fa-plus fa-fw"></i></button>
+            <button id="editDelete"
+                    type="button"
+                    title="Remove a word from the list"><i class="fa fa-minus fa-fw"></i></button>
+
+            <label id="labEditGridSize"
+                   for="editGridSize"
+                   title="Change the size of the grid"><i class="fa fa-th fa-fw"></i></label>
+            <input id="editGridSize"
+                   type="range"
+                   min="6" max="16"
+                   value="8"
+                   title="Change the size of the grid" />
+
+            <button id="editCommit"
+                    type="button"
+                    title="Make a puzzle!"><i class="fa fa-check fa-fw"></i></button>
+            <span class="tbseparator"></span>
+            <button id="editQuit"
+                    class="button-reverse"
+                    type="button"
+                    title="Quit editing and go back to playing"><i class="fa fa-sign-out fa-fw"></i></button>
         </form>
 
         <form id="editorlist">
@@ -63,7 +100,8 @@
 
     <div id="playHelp" class="help">
         <p>WORDFINDATRON generates random word find puzzles for you to solve. Play a while; play forever!</p>
-        <p>DRAG to circle words. UNDO to remove your last circle. CLEAR to start over. Hit RANDOM to create a new puzzle.</p>
+        <p>DRAG to circle words. UNDO to remove your last circle. CLEAR to start over.</p>
+        <p>SHUFFLE to make a new grid with the same words. NEW to make a whole new random puzzle.</p>
     </div>
 
     <div id="editHelp" class="help">
