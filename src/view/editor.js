@@ -6,6 +6,7 @@
     var editorfield = require('./editorfield');
 
     var fields;
+    var onChange;
 
     // ==================================================================
 
@@ -41,6 +42,9 @@
                 return !ef.validate();
             });
         d3.select('#editCommit').attr('disabled', (invalid.empty())?null:true);
+        if (onChange) {
+            onChange();
+        }
     }
 
     function enable() {
@@ -90,6 +94,7 @@
             ef.maxlen = gsize;
             ef.validate();
         });
+        updateButtons();
     }
 
     // ==================================================================
@@ -106,6 +111,8 @@
 
     function init(puzzle, callbacks) {
         var scratchPuzzle = puzzle.copy();
+        onChange = callbacks.onChange;
+
         var tb = d3.select('#editTools');
         tb.select('#editCommit').on('click', function () {
             var sz = parseInt(d3.select('#editGridSize').property('value'), 10);

@@ -5,7 +5,7 @@
         Math.TAU = Math.PI * 2;
     }
 
-    exports.CHEAT = true;
+    exports.CHEAT = require('./_generated').CHEAT;
     exports.ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     exports.ALPHABET64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 

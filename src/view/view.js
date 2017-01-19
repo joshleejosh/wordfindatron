@@ -14,29 +14,39 @@
     var toolbar = require('./toolbar');
     var editor = require('./editor');
 
-    var thePuzzle, theTable, theWordlist;
+    var thePuzzle, theTable, theWords;
     var rings = [];
-    var inputDisabled = false;
+    var inputDisabled = false, doingVictory = false;
     var hintWords;
     var rng = Random.engines.mt19937();
     rng.seed(new Date().getTime());
 
     // ==================================================================
 
-    function getGridSize() {
-        return toolbar.getGridSize();
+    function failureClear() {
+        d3.select('#error').style('display', 'none').style('position', 'relative');
     }
-    function getNumWords() {
-        return toolbar.getNumWords();
-    }
-    function getSeed() {
-        return toolbar.getSeed();
-    }
+    function msgFailure(msg) {
+        var errblk = d3.select('#error');
+        errblk.style('display', 'block').style('position', 'relative');
+        errblk.append('span').html(msg + '<br/>');
+        var firstWord = d3.select('.editoritem');
 
-    // ==================================================================
+        if (d3.select('#editorlist').style('display') !== 'none' && !firstWord.empty()) {
+            var bFirstWord = firstWord.select('input').node().getBoundingClientRect();
+            var x = bFirstWord.right + parseInt(errblk.style('font-size'), 10);
+            var y = bFirstWord.top;
+            errblk.style('position', 'absolute')
+                .style('top', '' + y + 'px')
+                .style('left', '' + x + 'px')
+            ;
+        }
+    }
 
     function msgClear() {
         d3.selectAll('#message span').remove();
+        d3.selectAll('#error span').remove();
+        failureClear();
     }
     function msgWrite() {
         var s = '';
@@ -91,17 +101,55 @@
     // ==================================================================
 
     function doVictory() {
+        if (doingVictory) {
+            return;
+        }
+        doingVictory = true;
+        var tweent = consts.FADE_TIME;
         d3.selectAll('.cell')
             .filter(function() { return !d3.select(this).classed('cellsolved'); })
             .transition('victory')
-            .duration(consts.FADE_TIME * thePuzzle.answers.length * 2)
-            .ease(d3.easeQuadOut)
+            .duration(tweent)
+            .delay(function() {
+                return tweent * Random.integer(0, thePuzzle.answers.length*2)(rng);
+            })
+            .ease(d3.easeSinOut)
             .style('color', colors.bodyBg)
         ;
         d3.selectAll('.ring').style('z-index', -3);
-        for (var i=0; i<theWordlist.length; i++) {
-            theWordlist[i].doVictory(i, consts.FADE_TIME);
-            ringForAnswer(theWordlist[i].answer).doVictory(i, consts.FADE_TIME);
+        for (var wordi=0; wordi<theWords.length; wordi++) {
+            theWords[wordi].doVictory(wordi, tweent);
+            ringForAnswer(theWords[wordi].answer).doVictory(wordi, tweent,
+                function(ring) {
+                    var coordlist = ring.answer.getCellCoordinates();
+                    var celltweent = tweent / ring.answer.word.length;
+                    d3.selectAll('.cell')
+                        .filter(function(d) {
+                            for (var i=0; i<coordlist.length; i++) {
+                                if (coordlist[i].x===d.x && coordlist[i].y===d.y) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        })
+                        .transition('victory')
+                            .duration(celltweent)
+                            .delay(function(d) { 
+                                for (var i=0; i<coordlist.length; i++) {
+                                    if (coordlist[i].x===d.x && coordlist[i].y===d.y) {
+                                        return (celltweent * i);
+                                    }
+                                }
+                                return 0;
+                            })
+                            .ease(d3.easeSinIn)
+                            .style('color', colors.bodyText)
+                        .transition('victory')
+                            .duration(celltweent)
+                            .ease(d3.easeSinOut)
+                            .style('color', null)
+                    ;
+                });
         }
     }
 
@@ -120,6 +168,7 @@
         d3.selectAll('.ringsolved')
             .style('background-color', colors.bodyText)
             .style('border-color', colors.bodyText);
+        doingVictory = false;
     }
 
     function hideGame(cb) {
@@ -204,24 +253,27 @@
         return null;
     }
 
-    function checkAnswers() {
+    function checkAnswers(checkVictory, tweent) {
+        if (tweent === true) {
+            tweent = consts.FADE_TIME;
+        }
         var answered = 0;
         var awords = [], marked = [];
         for (var ri=0; ri<rings.length; ri++) {
             var answer = checkWord(rings[ri].startCell, rings[ri].endCell, rings[ri].word);
             if (!answer) {
-                // FIXME: will break on unicode
-                var revword = rings[ri].word.split('').reverse().join('');
-                answer = checkWord(rings[ri].endCell, rings[ri].startCell, revword);
+                // FIXME? will break on unicode
+                var reversed = rings[ri].word.split('').reverse().join('');
+                answer = checkWord(rings[ri].endCell, rings[ri].startCell, reversed);
             }
 
             if (answer) {
-                rings[ri].mark(answer, consts.FADE_TIME, true);
+                rings[ri].mark(answer, tweent, true);
                 marked = marked.concat(theTable.markAnswer(answer, true));
                 awords.push(answer.word);
                 answered++;
             } else {
-                rings[ri].mark(consts.FADE_TIME, false);
+                rings[ri].mark(tweent, false);
             }
         }
 
@@ -235,11 +287,11 @@
             }
         });
 
-        for (var wi=0; wi<theWordlist.length; wi++) {
-            theWordlist[wi].mark((awords.indexOf(theWordlist[wi].word) !== -1));
+        for (var wi=0; wi<theWords.length; wi++) {
+            theWords[wi].mark((awords.indexOf(theWords[wi].word) !== -1));
         }
 
-        if (answered === thePuzzle.answers.length) {
+        if (checkVictory && answered === thePuzzle.answers.length) {
             doVictory();
         }
     }
@@ -278,7 +330,7 @@
     // ==================================================================
 
     function onDragStartLetter(d) {
-        if (inputDisabled) {
+        if (inputDisabled || doingVictory) {
             return;
         }
         drag.cancelDrag(true);
@@ -288,7 +340,7 @@
     }
 
     function onDragMoveLetter() {
-        if (inputDisabled) {
+        if (inputDisabled || doingVictory) {
             return;
         }
         if (!drag.dragging()) {
@@ -304,7 +356,7 @@
     }
 
     function onDragEndLetter() {
-        if (inputDisabled) {
+        if (inputDisabled || doingVictory) {
             return;
         }
         if (!drag.dragging()) {
@@ -315,7 +367,7 @@
             rings.push(r);
         }
         toolbar.setUndoable(rings.length > 0);
-        checkAnswers();
+        checkAnswers(true, true);
     }
 
     // ==================================================================
@@ -346,7 +398,7 @@
                     if (r) {
                         rings.push(r);
                     }
-                    checkAnswers();
+                    checkAnswers(true, true);
                     fanswer(i+1);
                 };
                 drag.continueDrag(theTable, cpos.x+dragRing.size, cpos.y+dragRing.size, consts.TWEEN_TIME, transitcb);
@@ -383,7 +435,7 @@
 
     function rebindWordList() {
         var ul = d3.select('#wflist');
-        var lis = ul.selectAll('li').data(theWordlist);
+        var lis = ul.selectAll('li').data(theWords);
         lis.enter()
             .append('li')
             .attr('id', function(d) { return d.id(); })
@@ -397,6 +449,12 @@
         ;
     }
 
+    function onReset(tweent) {
+        drag.cancelDrag(tweent);
+        cancelVictory();
+        clearRings(tweent);
+        checkAnswers(tweent, tweent);
+    }
 
     function displayPuzzle(puz, cbNewPuzzle, cbCommitEdit) {
         thePuzzle = puz;
@@ -464,8 +522,8 @@
 
             cells.call(d3.drag()
                 .on('start', onDragStartLetter)
-                    .on('drag', onDragMoveLetter)
-                    .on('end', onDragEndLetter)
+                .on('drag', onDragMoveLetter)
+                .on('end', onDragEndLetter)
             );
             cells.append('div')
                 .classed('gc', true)
@@ -479,14 +537,18 @@
             });
         }
 
-        theWordlist = [];
+        theWords = [];
         for (var i=0; i<thePuzzle.answers.length; i++) {
-            theWordlist.push(new listword.ListWord(i, thePuzzle.answers[i]));
+            theWords.push(new listword.ListWord(i, thePuzzle.answers[i]));
         }
         rebindWordList();
 
         editor.init(thePuzzle, {
+            onChange: function() { // misc edits
+                failureClear();
+            },
             onQuit: function() {
+                msgClear();
                 disableInput();
                 editor.hide(function() {
                     toolbar.show(function() {
@@ -497,6 +559,7 @@
                 });
             },
             onCommit: function(csz, csd, cwl) {
+                msgClear();
                 if (cbCommitEdit) {
                     var newPuzzle = cbCommitEdit(csz, csd, cwl);
                     if (newPuzzle) {
@@ -521,20 +584,17 @@
             onUndo: function() {
                 popRing(true);
                 cancelVictory();
-                checkAnswers();
+                checkAnswers(false, true);
             },
             onReset: function() {
-                drag.cancelDrag(true);
-                clearRings(true);
-                cancelVictory();
-                checkAnswers();
+                onReset(true);
             },
             onHint: function() {
                 showHint();
             },
             onShuffle: function() {
-                drag.cancelDrag(false);
-                clearRings(false);
+                msgClear();
+                onReset(false);
                 var newPuzzle = cbCommitEdit(
                     thePuzzle.size,
                     0,
@@ -543,24 +603,22 @@
                     }));
                 if (newPuzzle) {
                     displayPuzzle(newPuzzle, cbNewPuzzle, cbCommitEdit);
-                    checkAnswers();
+                    checkAnswers(false, true);
                 }
             },
             onNew: function() {
-                drag.cancelDrag(false);
-                clearRings(false);
+                msgClear();
+                onReset(false);
                 hideGame(function() {
-                    cbNewPuzzle(getGridSize(), getNumWords());
+                    cbNewPuzzle(toolbar.getGridSize(), toolbar.getNumWords());
                     showGame(function() {
-                        checkAnswers();
+                        checkAnswers(false, true);
                     });
                 });
             },
             onEdit: function() {
                 disableInput();
-                clearRings(false);
-                cancelVictory();
-                checkAnswers();
+                onReset(false);
                 toolbar.hide(function() {
                     hideGame(function() {
                         editor.show(function() {
@@ -570,9 +628,7 @@
                 });
             },
             onSolve: function() {
-                drag.cancelDrag(true);
-                clearRings(false);
-                checkAnswers();
+                onReset(false);
                 autosolve();
             }
         });
@@ -604,10 +660,11 @@
         displayPuzzle: displayPuzzle,
         msgClear: msgClear,
         msgWrite: msgWrite,
-        getGridSize: getGridSize,
-        getNumWords: getNumWords,
-        getSeed: getSeed,
+        msgFailure: msgFailure,
         disableInput: disableInput,
-        enableInput: enableInput
+        enableInput: enableInput,
+        getGridSize: toolbar.getGridSize,
+        getNumWords: toolbar.getNumWords,
+        getSeed: toolbar.getSeed
     };
 }());

@@ -1,13 +1,16 @@
 BASENAME=wordfindatron
-SRC=src
+
 WORDS=wordlists.txt
 JS=$(BASENAME).js
 CSS=$(BASENAME).css
 SCSS=$(BASENAME).scss
 HTML=index.html
-DATA=data
 
-JSFILES=src/*.js src/**/*.js
+SRC=src
+DATA=data
+GENERATEDJS=$(SRC)/_generated.js
+JSFILES=$(SRC)/*.js $(SRC)/**/*.js $(GENERATEDJS)
+FONTS=node_modules/font-awesome/fonts
 
 DEBUG=--debug
 UGLIFY=
@@ -17,12 +20,29 @@ UNITTEST=tests/runTests.js
 ESLINT=node_modules/eslint/bin/eslint.js
 ISTANBUL=node_modules/istanbul/lib/cli.js
 RSYNC=rsync -azv
-FONT_PATH=node_modules/font-awesome/fonts
 
-build: $(WORDS) $(JS) $(CSS)
+# ################################################################# #
+
+build: $(WORDS) $(JS) $(CSS) $(HTML)
+
+dist: DEBUG=
+dist: UGLIFY=-g uglifyify
+dist: clean build
+	@mkdir -p dist
+	cp $(HTML) $(JS) $(CSS) $(WORDS) dist
+	@mkdir -p dist/$(FONTS)
+	cp $(FONTS)/* dist/$(FONTS)/
 
 $(JS): $(JSFILES)
 	$(BROWSERIFY) $(DEBUG) $(UGLIFY) $(SRC)/main.js -o $(JS)
+
+$(GENERATEDJS):
+	@echo "[$(DEBUG)]"
+	@if [ -z "$(DEBUG)" ]; then \
+		echo "exports.CHEAT=false;" > $(GENERATEDJS); \
+	else \
+		echo "exports.CHEAT=true;" > $(GENERATEDJS); \
+	fi
 
 $(CSS): wordfindatron.scss
 	sass $(SCSS) $(CSS)
@@ -35,20 +55,9 @@ $(WORDS): data/*.txt
 	@echo '### BLACKLIST ###' >> $(WORDS)
 	cat data/graylist.txt >> $(WORDS)
 
-dist: DEBUG=
-dist: UGLIFY=-g uglifyify
-dist: clean build
-	mkdir -p dist
-	cp $(HTML) $(JS) $(CSS) $(WORDS) dist
-	mkdir -p dist/$(FONT_PATH)
-	cp $(FONT_PATH)/* dist/$(FONT_PATH)/
-
 # Must define DEPLOYPATH at command line, don't leave real paths floating around in the makefile
 deploy: dist
 	(test -z '$(DEPLOYPATH)' && echo 'Set DEPLOYPATH when calling deploy!') || (test '$(DEPLOYPATH)' && $(RSYNC) dist/ $(DEPLOYPATH)/$(BASENAME)/)
-	
-lint:
-	$(ESLINT) src
 
 test: $(JSFILES) $(WORDS)
 	node $(UNITTEST)
@@ -56,7 +65,11 @@ test: $(JSFILES) $(WORDS)
 coverage: $(JSFILES) $(WORDS)
 	$(ISTANBUL) cover $(UNITTEST)
 
+lint:
+	$(ESLINT) src
+
 clean:
 	rm -rf dist/*
-	rm -f $(WORDS) $(JS) $(CSS) $(CSS).map
+	rm -rf coverage_report
+	rm -f $(WORDS) $(JS) $(CSS) $(CSS).map $(GENERATEDJS)
 

@@ -43,7 +43,7 @@
             if (e instanceof puzzle.PuzzleConflictError) {
                 util.log(e.message);
                 view.msgClear();
-                view.msgWrite('Couldn\'t fit these words into a puzzle.');
+                view.msgFailure('I couldn\'t fit these words into a puzzle. Maybe change the words (fewer words, shorter words, etc.), or choose a larger grid size.');
             } else {
                 throw e;
             }
