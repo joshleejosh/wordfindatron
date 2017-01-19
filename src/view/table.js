@@ -1,6 +1,7 @@
 (function() {
     'use strict';
 
+    var Random = require('random-js');
     var d3 = require('d3');
     var consts = require('../consts');
     var colors = require('./colors');
@@ -53,17 +54,70 @@
         var cell = this.getCell(answer.startLocation.x, answer.startLocation.y);
         var cw = parseInt(cell.selection.style('width'), 10);
         cell.selection
+            .style('border-radius', cw + 'px')
             .transition('hintflash')
                 .duration(tweent)
                 .ease(d3.easeSinOut)
                 .style('background-color', colors.bodyText)
                 .style('color', colors.bodyBg)
-                .style('border-radius', cw + 'px')
             .transition('hintflash')
                 .ease(d3.easeSinIn)
                 .style('background-color', null)
                 .style('color', null)
-                .style('border-radius', null)
+                .on('end', function() {
+                    d3.select(this).style('border-radius', null);
+                })
+        ;
+    };
+
+    Table.prototype.flashVictory = function(ring, tweent) {
+        if (tweent === true) {
+            tweent = consts.FADE_TIME;
+        }
+        var coordlist = ring.answer.getCellCoordinates();
+        d3.selectAll('.cell')
+            .filter(function(d) {
+                for (var i=0; i<coordlist.length; i++) {
+                    if (coordlist[i].x===d.x && coordlist[i].y===d.y) {
+                        return true;
+                    }
+                }
+                return false;
+            })
+            .transition('victory')
+                .duration(tweent)
+                .delay(function(d) {
+                    for (var i=0; i<coordlist.length; i++) {
+                        if (coordlist[i].x===d.x && coordlist[i].y===d.y) {
+                            return ((tweent / ring.answer.word.length) * i);
+                        }
+                    }
+                    return 0;
+                })
+                .ease(d3.easeSinIn)
+                .style('color', colors.bodyText)
+            .transition('victory')
+                .duration(tweent)
+                .ease(d3.easeSinOut)
+                .style('color', null)
+        ;
+    };
+
+    Table.prototype.fadeUnsolved = function(nwords, rng, tweent) {
+        if (tweent === true) {
+            tweent = consts.FADE_TIME;
+        }
+        d3.selectAll('.cell')
+            .filter(function() {
+                return !d3.select(this).classed('cellsolved');
+            })
+            .transition('victory')
+                .duration(tweent)
+                .delay(function() {
+                    return tweent * Random.integer(0, nwords*2)(rng);
+                })
+                .ease(d3.easeSinOut)
+                .style('color', colors.bodyBg)
         ;
     };
 

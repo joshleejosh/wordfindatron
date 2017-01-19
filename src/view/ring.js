@@ -183,7 +183,7 @@
     };
 
     Ring.prototype.doVictory = function(i, tweent, onStart) {
-        var ring = this;
+        var that = this;
         var r = this.ring;
         r.transition('victory')
             .duration(tweent)
@@ -193,8 +193,7 @@
             .on('start', function() {
                 d3.select(this).style('z-index', -1);
                 if (onStart) {
-                    console.log();
-                    onStart(ring);
+                    onStart(that);
                 }
             })
          .transition('victory')

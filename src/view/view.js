@@ -105,52 +105,15 @@
             return;
         }
         doingVictory = true;
-        var tweent = consts.FADE_TIME;
-        d3.selectAll('.cell')
-            .filter(function() { return !d3.select(this).classed('cellsolved'); })
-            .transition('victory')
-            .duration(tweent)
-            .delay(function() {
-                return tweent * Random.integer(0, thePuzzle.answers.length*2)(rng);
-            })
-            .ease(d3.easeSinOut)
-            .style('color', colors.bodyBg)
-        ;
         d3.selectAll('.ring').style('z-index', -3);
+        var ftable = function(r) {
+            theTable.flashVictory(r, true);
+        };
         for (var wordi=0; wordi<theWords.length; wordi++) {
-            theWords[wordi].doVictory(wordi, tweent);
-            ringForAnswer(theWords[wordi].answer).doVictory(wordi, tweent,
-                function(ring) {
-                    var coordlist = ring.answer.getCellCoordinates();
-                    var celltweent = tweent / ring.answer.word.length;
-                    d3.selectAll('.cell')
-                        .filter(function(d) {
-                            for (var i=0; i<coordlist.length; i++) {
-                                if (coordlist[i].x===d.x && coordlist[i].y===d.y) {
-                                    return true;
-                                }
-                            }
-                            return false;
-                        })
-                        .transition('victory')
-                            .duration(celltweent)
-                            .delay(function(d) { 
-                                for (var i=0; i<coordlist.length; i++) {
-                                    if (coordlist[i].x===d.x && coordlist[i].y===d.y) {
-                                        return (celltweent * i);
-                                    }
-                                }
-                                return 0;
-                            })
-                            .ease(d3.easeSinIn)
-                            .style('color', colors.bodyText)
-                        .transition('victory')
-                            .duration(celltweent)
-                            .ease(d3.easeSinOut)
-                            .style('color', null)
-                    ;
-                });
+            theWords[wordi].doVictory(wordi, consts.FADE_TIME);
+            ringForAnswer(theWords[wordi].answer).doVictory(wordi, consts.FADE_TIME, ftable);
         }
+        theTable.fadeUnsolved(theWords.length, rng, consts.FADE_TIME);
     }
 
     function cancelVictory() {
