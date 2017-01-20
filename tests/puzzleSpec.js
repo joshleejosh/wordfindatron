@@ -154,10 +154,7 @@ describe('Test Puzzle', function(){
             puz.generate(16);
             var s = puz.serialize();
 
-            // the base64 string contained multiple '+' characters, which we
-            // should replace with '_' so that they don't get turned into
-            // spaces by a browser.
-            expect(s).toBe('AVcABWaRBeA5EYDaqZSBmKMZSRfJ3slR5qrSoQowPp9RSyIQxZtWgzFoGmLhlppZpaUkFDoUI7JtJM0EDLK6GceeXUCdspuPNM4VZSqAqCMNanfUtBrm-mjyfibaSshYUTo6L4PKEtrMjNMhBY2xcDnMz7ncEKZBROjXBoV6KTJeF4wg0DkZqDcwRaUEkMEZphPTRGqgD0QJEEMnSEVlBPxQFagTAYx4IMw=');
+            expect(s).toBe('AVcABWaRBeA7Lb1aFt6phMJbyJU9jvzR84MQkpdGo09gwKODyL1rBXMcczrJSQNYIS61xaEqidCa6bYqDFhR4LAMxNw-jKMQ5GTkhNs8lSorgpqHF4ElmQ9DhUpchDUtpvE10AhcWiowpQRgzqiUGujJJ3JoZLAsaOWWYc11QjbDOhng0DE5pCMwJiUYsMMfpgPTUGqgCEQBUEMrSETlAKxQE6gDwZJQIM4=');
 
             var quz = puzzle.deserialize(s);
             expect(quz.size).toEqual(14);
@@ -260,7 +257,7 @@ describe('Test Puzzle', function(){
         it('fixes duplicate or blacklisted words in the grid fill', function(done) {
             /*
              * REGGIW
-             * GHIJKL
+             * KHIJKL
              * ENOPQR
              * FTUVGX
              * GZABCD
@@ -273,7 +270,7 @@ describe('Test Puzzle', function(){
              * Palindrome GBG should pass in both directions
              */
             var puz = new puzzle.Puzzle(6, 54321);
-            var g = new grid.Grid(6).fromString('REGGIWGHIJKLENOPQRFTUVGXGZABCDEFGHIJ');
+            var g = new grid.Grid(6).fromString('REGGIWKHIJKLENOPQRFTUVGXGZABCDEFGHIJ');
             puz.setGrid(g);
             puz.addAnswer(new grid.GridWord(6, g.readWord(3,7,1,3), 3, 7, 1));
             puz.addAnswer(new grid.GridWord(6, g.readWord(6,2,2,2), 6, 2, 2));
@@ -281,10 +278,10 @@ describe('Test Puzzle', function(){
             puz.addAnswer(new grid.GridWord(6, g.readWord(4,5,3,3), 4, 5, 3));
             expect(puz.answers[0]).toMatchGridWord(3, 7, 1, 'GBG',   4, 3, 2, 5);
             expect(puz.answers[1]).toMatchGridWord(6, 2, 2, 'UO',    2, 3, 2, 2);
-            expect(puz.answers[2]).toMatchGridWord(1, 4, 0, 'GNUBI', 0, 1, 4, 5);
+            expect(puz.answers[2]).toMatchGridWord(1, 4, 0, 'KNUBI', 0, 1, 4, 5);
             expect(puz.answers[3]).toMatchGridWord(4, 5, 3, 'GFE',   2, 5, 0, 5);
             puz.scanConflicts();
-            expect(puz.grid.toString()).toBe('SAWKMX\nGHIJKL\nLNOPQR\nPTUVGX\nEZABCD\nEFGHIJ\n')
+            expect(puz.grid.toString()).toBe('SAWKMX\nKHIJKL\nLNOPQR\nPTUVGX\nEZABCD\nEFGHIJ\n')
             done();
         });
 
@@ -348,9 +345,9 @@ describe('Test Puzzle', function(){
             expect(puz.answers[1]).toMatchGridWord(2, 2, 1, 'GOOP', 2, 1, 2, 4);
             expect(puz.answers[2]).toMatchGridWord(5, 8, 1, 'GRIZ', 5, 3, 2, 0);
             // generated one
-            expect(puz.answers[3]).toMatchGridWord(0, 4, 0, 'UNPAVED', 0, 4, 6, 4);
-            expect(puz.answers[4]).toMatchGridWord(5, 5, 0, 'MIAOWS', 5, 6, 0, 1);
-            expect(puz.grid.toString()).toBe('LIZYUNK\nSTGIQQZ\nJWOFRPE\nKIOMIGQ\nUNPAVED\nRWUPIUH\nADOGJMD\n');
+            expect(puz.answers[3]).toMatchGridWord(0, 4, 2, 'PILOT', 2, 4, 6, 4);
+            expect(puz.answers[4]).toMatchGridWord(5, 5, 0, 'UNION', 5, 6, 1, 2);
+            expect(puz.grid.toString()).toBe('EDZCXIL\nPBGIPJL\nNNOXRBB\nKVOUNGY\nFNPILOT\nADUZNJZ\nJAXGLUB\n');
         });
 
         it('does nothing if you generate() fewer words than you fed in', function() {

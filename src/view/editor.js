@@ -4,9 +4,11 @@
     var d3 = require('d3');
     var consts = require('../consts');
     var editorfield = require('./editorfield');
+    var bubble = require('./bubble');
 
     var fields;
     var onChange;
+    var bubbleHelp;
 
     // ==================================================================
 
@@ -35,6 +37,7 @@
     }
 
     function updateButtons() {
+        bubbleHelp.hide(false);
         d3.select('#editAdd').attr('disabled', (fields.length >= consts.MAX_GRID_SIZE)?true:null);
         d3.select('#editDelete').attr('disabled', (fields.length <= 1)?true:null);
         var invalid = d3.selectAll('.editoritem')
@@ -71,6 +74,14 @@
             fields.pop();
             updateBindings();
             updateButtons();
+        }
+    }
+
+    function onHelp() {
+        if (bubbleHelp.isVisible()) {
+            bubbleHelp.hide(d3.select(this), true);
+        } else {
+            bubbleHelp.show(d3.select(this), true);
         }
     }
 
@@ -120,9 +131,14 @@
             var wl = fields.map(function(f) {
                 return f.word;
             });
+            bubbleHelp.hide(false);
             callbacks.onCommit(sz, sd, wl);
         });
-        tb.select('#editQuit').on('click', callbacks.onQuit);
+        tb.select('#editQuit').on('click', function() {
+            bubbleHelp.hide(false);
+            callbacks.onQuit();
+        }
+        );
 
         tb.select('#editAdd').on('click', onAdd);
         tb.select('#editDelete').on('click', onDelete);
@@ -131,6 +147,10 @@
             .on('input', onGridSize)
             .on('change', onGridSize);
         updateGridSizeLabel();
+
+        tb.select('#editShowHelp').on('click', onHelp);
+        bubbleHelp = new bubble.Bubble('editHelp');
+        bubbleHelp.below = true;
 
         fields = [];
         for (var i=0; i<scratchPuzzle.answers.length; i++) {
@@ -178,14 +198,6 @@
                         return null;
                     })
                 ;
-                d3.select('#editHelp')
-                    .style('height', '0px')
-                    .style('display', 'block')
-                    .transition('edit')
-                    .duration(consts.FADE_TIME)
-                    .ease(d3.easeQuadIn)
-                    .style('height', null)
-                ;
             })
         ;
     }
@@ -213,18 +225,6 @@
                 d3.select(this)
                     .style('height', null)
                     .style('display', 'none')
-                ;
-                d3.select('#editHelp')
-                    .transition('edit')
-                    .duration(consts.FADE_TIME)
-                    .ease(d3.easeQuadOut)
-                    .style('height', '0px')
-                    .on('end', function() {
-                        d3.select(this)
-                            .style('display', 'none')
-                            .style('height', null)
-                        ;
-                    })
                 ;
                 d3.select('#editorlist')
                     .transition('edit')

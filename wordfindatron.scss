@@ -1,5 +1,5 @@
 @import "node_modules/font-awesome/scss/font-awesome.scss";
-@import url('https://fonts.googleapis.com/css?family=Assistant:300');
+//@import url('https://fonts.googleapis.com/css?family=Assistant:300');
 
 $fGame: 'Times', 'Times New Roman', serif;
 $fDisplay: 'Assistant', sans-serif;
@@ -11,8 +11,11 @@ $cBgSolved: $cTextBody;
 $cTextSolved: $cBgBody;
 
 $wCell: 12mm;
+
+$fsTextBody: 1em;
 $fsCell: $wCell / 2;
 $fsButton: $fsCell;
+$fsBubble: $fsTextBody * 0.800;
 
 $fsWordlist: $fsCell * 1.333;
 $margin: $fsWordlist;
@@ -30,8 +33,10 @@ $cWarning: #c66;
 body {
 	background-color: $cBgBody;
 	color: $cTextBody;
+	font-size: $fsTextBody;
 }
 #main {
+	position: relative;
 	margin: 0;
 	padding: 0 $margin;
 	border: 0;
@@ -139,9 +144,9 @@ td.cellsolved {
 
 button {
 	margin: 1mm;
-	padding: 0.2em 0.5em;
+	padding: 0.167em 0.333em;
 	border: solid 1px $cRing;
-	border-radius: $fsButton;
+	border-radius: 0.500em;
 	background-color: $cBgBody;
 	color: $cTextBody;
 	font-size: $fsButton;
@@ -161,7 +166,9 @@ button {
 }
 
 .tbseparator {
-	margin: 0 1em;
+	margin: 0 $fsButton;
+	padding: 0 0.333em;
+	border: 0;
 }
 
 #tbEdit {
@@ -174,6 +181,7 @@ button {
 	h3 {
 		margin: 0;
 		font-size: 1em;
+		white-space: nowrap;
 	}
 }
 
@@ -201,7 +209,7 @@ button {
 
 #wflist {
 	position: relative;
-	margin: 1em auto;
+	margin: 2mm auto 1em auto;
 	padding: 0;
 	text-align: left;
 
@@ -307,15 +315,29 @@ button {
 
 /* ========================================================================== */
 
-.help {
-	margin: 0;
-	font-family: $fDisplay;
+.bubble {
+	position: absolute;
 	overflow: hidden;
+	margin: 0;
+	width: 72mm;
+	padding: 1em;
+	border: solid 1px $cRing;
+	border-radius: $fsBubble;
+	background-color: $cBgBody;
+	color: $cTextBody;
+	font-family: $fDisplay;
+	font-size: $fsBubble;
+
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+.help {
 }
 #playHelp {
-	display: block;
 }
 #editHelp {
-	display: none;
 }
 

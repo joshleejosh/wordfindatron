@@ -62,9 +62,11 @@
         d3.select('#tbUndo').on('click', null);
         d3.select('#tbReset').on('click', null);
         d3.select('#tbHint').on('click', null);
+        d3.select('#tbHelp').on('click', null);
         d3.select('#tbShuffle').on('click', null);
         d3.select('#tbNew').on('click', null);
         d3.select('#tbEdit').on('click', null);
+        d3.select('#tbShare').on('click', null);
         d3.select('#tbShowAdv').on('click', null);
     }
 
@@ -74,9 +76,11 @@
         theToolbar.select('#tbUndo').on('click', callbacks.onUndo);
         theToolbar.select('#tbReset').on('click', callbacks.onReset);
         theToolbar.select('#tbHint').on('click', callbacks.onHint);
+        theToolbar.select('#tbHelp').on('click', callbacks.onHelp);
         theToolbar.select('#tbShuffle').on('click', callbacks.onShuffle);
         theToolbar.select('#tbNew').on('click', callbacks.onNew);
         theToolbar.select('#tbEdit').on('click', callbacks.onEdit);
+        theToolbar.select('#tbShare').on('click', callbacks.onShare);
 
         theToolbar.select('#tbShowAdv').on('click', function() {
             var a = theToolbar.select('#tbadvanced');
@@ -143,13 +147,12 @@
         }
 
         if (consts.CHEAT && d3.select('#tbSolve').empty()) {
-            theToolbar.insert('button', '#permalink')
+            theToolbar.append('button')
                 .attr('id', 'tbSolve')
                 .attr('type', 'button')
                 .html('<i class="fa fa-birthday-cake fa-fw"></i>')
                 .on('click', callbacks.onSolve)
             ;
-            theToolbar.insert('span', '#permalink').text('\n');
         }
 
         theToolbar.on('submit', function() {

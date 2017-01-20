@@ -13,8 +13,9 @@
     var table = require('./table');
     var toolbar = require('./toolbar');
     var editor = require('./editor');
+    var bubble = require('./bubble');
 
-    var thePuzzle, theTable, theWords;
+    var thePuzzle, theTable, theWords, bubbleHelp;
     var rings = [];
     var inputDisabled = false, doingVictory = false;
     var hintWords;
@@ -156,15 +157,6 @@
                     });
             })
         ;
-        d3.select('#playHelp')
-            .transition('game')
-                .duration(consts.FADE_TIME)
-                .ease(d3.easeQuadOut)
-                .style('height', '0px')
-            .on('end', function() {
-                d3.select(this).style('height', null).style('display', 'none');
-            })
-        ;
     }
 
     function showGame(cb) {
@@ -184,14 +176,6 @@
                         .ease(d3.easeQuadIn)
                         .style('width', null)
                     .on('end', function () {
-                        d3.select('#playHelp')
-                                .style('display', 'block')
-                                .style('height', '0px')
-                            .transition('game')
-                                .duration(consts.FADE_TIME)
-                                .ease(d3.easeQuadIn)
-                                .style('height', null)
-                        ;
                         if (cb) {
                             return cb();
                         }
@@ -371,31 +355,6 @@
         fanswer(0);
     }
 
-    // the info column should be skinny if it's next to the grid, but wide if it's below it.
-    //var infoWidthState;
-    function setInfoWidth() {
-        /*
-        var g = d3.select('#wfgrid');
-        var i = d3.select('#info');
-        var grect = g.node().getBoundingClientRect();
-        var gw = g.style('width');
-        var irect = i.node().getBoundingClientRect();
-        if (irect.top === grect.top) {
-            if (infoWidthState !== 2) {
-                i.style('width', null);
-                i.style('min-width', null);
-                i.style('max-width', gw);
-                infoWidthState = 2;
-            }
-        } else if (infoWidthState !== 1) {
-            i.style('width', gw);
-            i.style('min-width', gw);
-            i.style('max-width', gw);
-            infoWidthState = 1;
-        }
-        */
-    }
-
     function rebindWordList() {
         var ul = d3.select('#wflist');
         var lis = ul.selectAll('li').data(theWords);
@@ -413,6 +372,7 @@
     }
 
     function onReset(tweent) {
+        bubbleHelp.hide(tweent);
         drag.cancelDrag(tweent);
         cancelVictory();
         clearRings(tweent);
@@ -437,7 +397,6 @@
             d3.select('#wfgrid')
                 .style('width', cw + 'px')
                 .style('min-width', cw + 'px');
-            d3.selectAll('.help').style('width', cw + 'px');
             dummy.remove();
 
             dummy = body.append('div').classed('ring', true);
@@ -506,6 +465,8 @@
         }
         rebindWordList();
 
+        bubbleHelp = new bubble.Bubble('playHelp');
+
         editor.init(thePuzzle, {
             onChange: function() { // misc edits
                 failureClear();
@@ -540,9 +501,6 @@
             }
         });
 
-        setInfoWidth();
-        d3.select(window).on('resize', setInfoWidth);
-
         toolbar.init({
             onUndo: function() {
                 popRing(true);
@@ -554,6 +512,13 @@
             },
             onHint: function() {
                 showHint();
+            },
+            onHelp: function() {
+                if (bubbleHelp.isVisible()) {
+                    bubbleHelp.hide(d3.select(this), true);
+                } else {
+                    bubbleHelp.show(d3.select(this), true);
+                }
             },
             onShuffle: function() {
                 msgClear();
@@ -593,25 +558,13 @@
             onSolve: function() {
                 onReset(false);
                 autosolve();
+            },
+            onShare: function() {
+                var serialized = thePuzzle.serialize();
+                window.open('?p='+serialized, '_blank');
             }
         });
         toolbar.setUndoable(rings.length > 0);
-
-        if (thePuzzle.seed) {
-            var u = '?p=' + thePuzzle.serialize();
-            var link = d3.select('#permalink>a');
-            if (link.empty()) {
-                var towrap = d3.select('#permalink').html();
-                d3.select('#permalink').html('').append('a')
-                    .attr('href', u)
-                    .attr('target', '_blank')
-                    .html(towrap);
-            } else {
-                link.attr('href', u);
-            }
-        } else {
-            d3.select('#permalink').html('');
-        }
 
         enableInput();
         theTable = new table.Table(thePuzzle);
