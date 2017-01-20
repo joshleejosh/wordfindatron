@@ -49,11 +49,9 @@ $(CSS): wordfindatron.scss
 
 $(WORDS): data/*.txt
 	@echo '### WORDLIST ###' > $(WORDS)
-	cat data/words7.txt >> $(WORDS)
+	cat data/wordlist.txt >> $(WORDS)
 	@echo '### BLACKLIST ###' >> $(WORDS)
 	cat data/blacklist.txt >> $(WORDS)
-	@echo '### BLACKLIST ###' >> $(WORDS)
-	cat data/graylist.txt >> $(WORDS)
 
 # Must define DEPLOYPATH at command line, don't leave real paths floating around in the makefile
 deploy: dist

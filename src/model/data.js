@@ -41,21 +41,30 @@
             }
 
             if (curlist === wordlist) {
-                wordlist[line.length].push(line);
+                if (wordlist.length < line.length+1) {
+                    for (var j=wordlist.length; j<line.length+1; j++) {
+                        wordlist.push([]);
+                    }
+                }
+                wordlist[line.length].push(line.trim());
             } else if (curlist === blacklist) {
                 curlist.push(line);
             }
         }
+
+        /*
+        for (i=0; i<wordlist.length; i++) {
+            console.log(i, wordlist[i].length, wordlist[i][0]);
+        }
+        console.log('B', blacklist.length);
+        */
     }
 
     function load(view, callback) {
         if (wordlist && blacklist) {
             return callback();
         }
-        wordlist = {};
-        for (var i=0; i<20; i++) {
-            wordlist[i] = [];
-        }
+        wordlist = [];
         blacklist = [];
 
         if (view) {

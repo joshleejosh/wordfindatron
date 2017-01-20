@@ -219,10 +219,11 @@
         }
 
         var candidates = [];
-        var wordlist = data.getWordlist(wordlen), blacklist = data.getBlacklist();
+        // ASSERTION: wordlist has been pre-stripped of blacklist words, so we don't need to check against it.
+        var wordlist = data.getWordlist(wordlen);
         for (var i=0; i<wordlist.length; i++) {
             var w = wordlist[i];
-            if (w.length === wordlen && blacklist.indexOf(w) === -1 && !this.containsWord(w)) {
+            if (w.length === wordlen && !this.containsWord(w)) {
                 var f = this.fitWord(w, rack);
                 if (f !== -1) {
                     candidates.push([w, f]);
