@@ -122,17 +122,17 @@
     // ===================================================================
 
     function i2hex(i,r) {
-        var buf = '';
-        for (var j=0; j<r; j++) {
-            buf += '0';
+        var rv = i.toString(16);
+        for (var j=rv.length; j<r; j++) {
+            rv = '0' + rv;
         }
-        return (buf + i.toString(16)).substr(-r);
+        return rv;
     }
 
     function i2binary(i, bits) {
-        var rv = '';
-        for (var j=0; j<bits; j++) {
-            rv = '' + ((i>>j)&1) + rv;
+        var rv = i.toString(2);
+        for (var j=rv.length; j<bits; j++) {
+            rv = '0' + rv;
         }
         return rv;
     }

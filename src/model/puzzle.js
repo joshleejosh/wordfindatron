@@ -9,22 +9,12 @@
     var util = require('../util');
     var grid = require('./grid');
     var data = require('./data');
+    var conflictscan = require('./conflictscan');
 
     function isPalindrome(w) {
         var x = w.split('').reverse().join(''); // FIXME: fails on unicode
         return (w === x);
     }
-
-    function PuzzleConflictError(di, si, of, wl, word) {
-        if (typeof di === 'string') {
-            this.message = di;
-        } else {
-            this.message = 'Failed to fix conflict at ['+di+']['+si+']['+of+']['+wl+'] ['+word+']';
-        }
-    }
-    PuzzleConflictError.prototype = Object.create(Error.prototype);
-    PuzzleConflictError.prototype.name = 'PuzzleConflictError';
-    PuzzleConflictError.prototype.constructor = PuzzleConflictError;
 
     // ==================================================================
 
@@ -150,7 +140,7 @@
                 return gw;
             }
         }
-        throw new PuzzleConflictError('makeAnswer: Couldn\'t fit ['+word+']!');
+        throw new conflictscan.PuzzleConflictError('makeAnswer: Couldn\'t fit ['+word+']!');
     };
 
     Puzzle.prototype.containsWord = function(w) {
@@ -186,7 +176,7 @@
             return -1;
         }
         var offsets = util.range(0, rack.length - word.length + 1);
-        Random.shuffle(this.rng, offsets);
+        util.sloppyShuffle(this.rng, offsets);
         for (var i=0; i<offsets.length; i++) {
             var offset = offsets[i];
             var wi = 0, ti = offset;
@@ -240,86 +230,15 @@
     };
 
     Puzzle.prototype.scanConflicts = function() {
-        var agrid = this.answerGrid();
-        var blacklist = data.getBlacklist();
-
-        var ffix = function(puz, di, si, of, wl) {
-            var badWord = puz.grid.readWord(di, si, of, wl);
-            // if we've been fixing intersecting bad words, this might already
-            // be okay, so double check.
-            if (!puz.containsWord(badWord) && blacklist.indexOf(badWord)===-1) {
-                return true;
-            }
-
-            var changed = false;
-            var sp = grid.sliceParams(puz.size, di, si);
-            var dx = sp[2];
-            var dy = sp[3];
-            var x = sp[0] + (of * dx);
-            var y = sp[1] + (of * dy);
-            for (var i=0; i<wl; i++) {
-                // don't change a letter that belongs to an answer.
-                if (agrid.get(x, y) === ' ') {
-                    var ch = Random.pick(puz.rng, consts.ALPHABET);
-                    puz.grid.set(x, y, ch);
-                    changed = true;
-                }
-                x += dx;
-                y += dy;
-            }
-            //var newWord = puz.grid.readWord(di, si, of, wl);
-            //util.log('ffix', badWord, newWord);
-            return changed;
-        };
-
-        var fscan = function(puz) {
-            var hits = [];
-            var fcheck = function(s, di, sl, of, wl) {
-                var w = s.substring(of, of+wl);
-                if (puz.containsWord(w) && !puz.isAnswer(w, di, sl, of, wl)) {
-                    //util.log('dup', di, sl, of, wl, w);
-                    hits.push([di, sl, of, wl]);
-                }
-                if (blacklist.indexOf(w) !== -1) {
-                    //util.log('blk', di, sl, of, wl, w);
-                    hits.push([di, sl, of, wl]);
-                }
-            };
-
-            for (var direction=0; direction<8; direction++) {
-                var nslices = puz.size;
-                if (direction%2 === 1) {
-                    nslices = (puz.size * 2) - 1;
-                }
-                for (var slice=0; slice<nslices; slice++) {
-                    var cut = puz.grid.cutSlice(direction, slice);
-                    for (var offset=0; offset<cut.length; offset++) {
-                        for (var wlen=1; wlen<cut.length-offset+1; wlen++) {
-                            fcheck(cut, direction, slice, offset, wlen);
-                        }
-                    }
-                }
-            }
-
-            for (var hi=0; hi<hits.length; hi++) {
-                var h = hits[hi];
-                var fixed = ffix(puz, h[0], h[1], h[2], h[3]);
-                if (!fixed) {
-                    throw new PuzzleConflictError(h[0], h[1], h[2], h[3], puz.grid.readWord(h[0], h[1], h[2], h[3]));
-                }
-            }
-            return hits.length;
-        };
-
         // when we find and fix bad words, we have to do another scan to make
         // sure we didn't replace them with other bad words.
         for (var rescans=0; rescans<=consts.MAX_CONFLICT_RETRIES; rescans++) {
-            var foundConflicts = fscan(this);
+            var foundConflicts = conflictscan.scan(this);
             if (!foundConflicts) {
                 return;
             }
         }
-        throw new PuzzleConflictError(0, 0, 0, 0, 'TOOMANYRETRIES');
+        throw new conflictscan.PuzzleConflictError(0, 0, 0, 0, 'TOOMANYRETRIES');
     };
 
     /* Make a puzzle! */
@@ -453,7 +372,7 @@
 
     module.exports = {
         Puzzle: Puzzle,
-        PuzzleConflictError: PuzzleConflictError,
+        PuzzleConflictError: conflictscan.PuzzleConflictError,
         deserialize: deserialize
     };
 

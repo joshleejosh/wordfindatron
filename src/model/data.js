@@ -27,16 +27,16 @@
         for (var i=0; i<lines.length; i++) {
             var line = lines[i];
 
-            if (line.startsWith(consts.WORDLIST_TAG_WORDLIST)) {
+            if (line.lastIndexOf(consts.WORDLIST_TAG_WORDLIST) === 0) {
                 curlist = wordlist;
-            } else if (line.startsWith(consts.WORDLIST_TAG_BLACKLIST)) {
+            } else if (line.lastIndexOf(consts.WORDLIST_TAG_BLACKLIST) === 0) {
                 curlist = blacklist;
             }
 
             if (line.length === 0) {
                 continue;
             }
-            if (line.startsWith('#')) {
+            if (line[0] === '#') {
                 continue;
             }
 

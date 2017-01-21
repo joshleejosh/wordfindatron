@@ -17,13 +17,30 @@ if (process.argv.length > 4) {
 }
 
 data.load(null, function() {
-    var p = new puzzle.Puzzle(gridSize, seed);
-    p.generate(numWords);
-    console.log(p.answerGrid().toString());
-    // just making sure serialization works.
-    var s = p.serialize();
-    var q = puzzle.deserialize(s);
-    console.log(q.answers.map(function (a) { return a.word; }).join(' '));
-    console.log(q.grid.toString());
+    var p;
+    for (var i=0; i<10; i++) {
+        try {
+            p = new puzzle.Puzzle(gridSize, seed);
+            p.generate(numWords);
+            break;
+        } catch (e) {
+            if (e instanceof puzzle.PuzzleConflictError) {
+                console.log(e.message + ', retrying')
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    if (p) {
+        //console.log(p.answerGrid().toString());
+        // do a serialization roundtrip, to make sure it's clean.
+        var s = p.serialize();
+        var q = puzzle.deserialize(s);
+        console.log(q.answers.map(function (a) { return a.word; }).join(' '));
+        console.log(q.grid.toString());
+    } else {
+        console.log('catastrophic!');
+    }
 });
 

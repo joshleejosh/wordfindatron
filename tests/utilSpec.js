@@ -1,5 +1,7 @@
 describe('Test Util', function(){
+    var Random = require('random-js');
     util = require('../src/util');
+    consts = require('../src/consts');
 
     describe('range()', function() {
         it('makes [0,max) from a single arg', function() {
@@ -38,6 +40,25 @@ describe('Test Util', function(){
         });
     });
 
+    describe('clamp()', function() {
+        it('clamps a value to [min,max]', function() {
+            expect(util.clamp(1.1, 0, 2)).toBe(1.1);
+            expect(util.clamp(-0.1, 0, 2)).toBe(0);
+            expect(util.clamp(2.1, 0, 2)).toBe(2);
+            expect(util.clamp(7.0015, 7.001, 7.002)).toBe(7.0015);
+            expect(util.clamp(7.0009, 7.001, 7.002)).toBe(7.001);
+            expect(util.clamp(7.0021, 7.001, 7.002)).toBe(7.002);
+            expect(util.clamp(-301, -600, -2)).toBe(-301);
+            expect(util.clamp(-601, -600, -2)).toBe(-600);
+            expect(util.clamp(-1, -600, -2)).toBe(-2);
+        });
+        it('switch min/max if they\'re the wrong way around', function() {
+            expect(util.clamp(-301, -2, -600)).toBe(-301);
+            expect(util.clamp(-601, -2, -600)).toBe(-600);
+            expect(util.clamp(-1, -2, -600)).toBe(-2);
+        });
+    });
+
     describe('snapAngle', function() {
         var τ = Math.TAU;
 
@@ -73,6 +94,57 @@ describe('Test Util', function(){
             check3(15, 7, 7, 0);
         });
 
+    });
+
+    describe('calcTweenTime', function() {
+        it('translates a boolean into a time for animation', function() {
+            expect(util.calcTweenTime(false)).toBe(0);
+            expect(util.calcTweenTime(true)).toBe(consts.TWEEN_TIME);
+        });
+    });
+
+    describe('bIndexOf', function() {
+        it('binary searches a sorted list', function() {
+            var a = [-20, -7, 0, 5, 8, 12, 13, 2603];
+            expect(util.bIndexOf(a, -20)).toBe(0);
+            expect(util.bIndexOf(a, -7)).toBe(1);
+            expect(util.bIndexOf(a, 0)).toBe(2);
+            expect(util.bIndexOf(a, 5)).toBe(3);
+            expect(util.bIndexOf(a, 8)).toBe(4);
+            expect(util.bIndexOf(a, 12)).toBe(5);
+            expect(util.bIndexOf(a, 13)).toBe(6);
+            expect(util.bIndexOf(a, 2603)).toBe(7);
+            expect(util.bIndexOf(a, -20.1)).toBe(-1);
+            expect(util.bIndexOf(a, 1)).toBe(-1);
+            expect(util.bIndexOf(a, 2604)).toBe(-1);
+        });
+        it('binary searches a list of strings', function() {
+            var a = [
+                'ABACI',
+                'ABACUS',
+                'ABRAXAS',
+                'AZAZAEL',
+            ];
+            expect(util.bIndexOf(a, 'ABACI')).toBe(0);
+            expect(util.bIndexOf(a, 'ABACUS')).toBe(1);
+            expect(util.bIndexOf(a, 'ABRAXAS')).toBe(2);
+            expect(util.bIndexOf(a, 'AZAZAEL')).toBe(3);
+            expect(util.bIndexOf(a, 'ABAC')).toBe(-1);
+            expect(util.bIndexOf(a, 'ABACIZE')).toBe(-1);
+        });
+    });
+
+    describe('sloppyShuffle', function() {
+        it('does a quick and dirty in place shuffle', function() {
+            var rng = Random.engines.mt19937();
+            rng.seed(-2314);
+            var a = util.range(6);
+            util.sloppyShuffle(rng, a);
+            expect(a).toEqual([3, 4, 0, 2, 1, 5]);
+            a = util.range(9);
+            util.sloppyShuffle(rng, a);
+            expect(a).toEqual([2, 0, 7, 4, 5, 1, 6, 3, 8]);
+        });
     });
 
 });

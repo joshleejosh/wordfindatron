@@ -114,7 +114,7 @@
             .transition('victory')
                 .duration(tweent)
                 .delay(function() {
-                    return tweent * Random.integer(0, nwords*2)(rng);
+                    return Random.integer(0, tweent*nwords*2)(rng);
                 })
                 .ease(d3.easeSinOut)
                 .style('color', colors.bodyBg)

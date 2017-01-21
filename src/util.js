@@ -3,6 +3,7 @@
 (function() {
     'use strict';
 
+    var Random = require('random-js');
     var consts = require('./consts');
 
     function log() {
@@ -24,6 +25,11 @@
     }
 
     function clamp(i, imin, imax) {
+        if (imin > imax) {
+            var t = imin;
+            imin = imax;
+            imax = t;
+        }
         return Math.max(imin, Math.min(imax, i));
     }
 
@@ -58,6 +64,34 @@
         return rv;
     }
 
+    // same as indexOf, but does a binary search.
+    function bIndexOf(a, w) {
+        var imin = 0,
+            imax = a.length;
+        while (imin < imax) {
+            var i = Math.floor((imin + imax) / 2);
+            var b = a[i];
+            if (b > w) {
+                imax = i;
+            } else if (b < w) {
+                imin = i + 1;
+            } else {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    // Do a quick and dirty Fisher-Yates shuffle. For when the results don't need to be good, just ok
+    function sloppyShuffle(rng, a) {
+        for (var i=a.length-1; i>=1; i--) {
+            var j = Random.integer(0, i)(rng);
+            var t = a[i];
+            a[i] = a[j];
+            a[j] = t;
+        }
+    }
+
     // Given dx,dy, find the angle and snap it to one of the 8 directions.
     function snapAngle(dx, dy) {
         var angle = Math.atan2(dy, dx);
@@ -85,6 +119,8 @@
         sign: sign,
         clamp: clamp,
         range: range,
+        bIndexOf: bIndexOf,
+        sloppyShuffle: sloppyShuffle,
         snapAngle: snapAngle,
         calcTweenTime: calcTweenTime
     };

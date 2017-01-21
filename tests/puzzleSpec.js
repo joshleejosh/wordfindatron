@@ -149,12 +149,17 @@ describe('Test Puzzle', function(){
             done();
         });
 
-        it('replaces non-url-friendy punctuation in its base64 output', function (done) {
-            puz = new puzzle.Puzzle(14, 1484519471118);
+        it('outputs url-friendly base64 strings', function (done) {
+            puz = new puzzle.Puzzle(14, 1484958199922);
             puz.generate(16);
             var s = puz.serialize();
 
-            expect(s).toBe('AVcABWaRBeA7Lb1aFt6phMJbyJU9jvzR84MQkpdGo09gwKODyL1rBXMcczrJSQNYIS61xaEqidCa6bYqDFhR4LAMxNw-jKMQ5GTkhNs8lSorgpqHF4ElmQ9DhUpchDUtpvE10AhcWiowpQRgzqiUGujJJ3JoZLAsaOWWYc11QjbDOhng0DE5pCMwJiUYsMMfpgPTUGqgCEQBUEMrSETlAKxQE6gDwZJQIM4=');
+            // string should use '-' and '_' for values 62 and 63; base64
+            // commonly uses '+' and '/', which are terrible for urls.
+            expect(s.indexOf('-')).not.toBe(-1);
+            expect(s.indexOf('_')).not.toBe(-1);
+            expect(s.indexOf('+')).toBe(-1);
+            expect(s.indexOf('/')).toBe(-1);
 
             var quz = puzzle.deserialize(s);
             expect(quz.size).toEqual(14);
@@ -214,7 +219,7 @@ describe('Test Puzzle', function(){
     describe('containsWord()', function() {
         it('checks to see if the word is one of the puzzle\'s answers', function() {
             var puz = new puzzle.Puzzle(6, 54321);
-            var g = new grid.Grid(6).fromString('ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJ');
+            var g = new grid.Grid(6).fromString('ABCDEFKHIJKLMNOPQRSTUVWXYZABCDEFGHIJ');
             puz.setGrid(g);
             puz.addAnswer(new grid.GridWord(6, g.readWord(3,7,1,3), 3, 7, 1));
             puz.addAnswer(new grid.GridWord(6, g.readWord(6,2,2,2), 6, 2, 2));
@@ -223,7 +228,7 @@ describe('Test Puzzle', function(){
 
             expect(puz.containsWord('WBG')).toBe(true);
             expect(puz.containsWord('UO')).toBe(true);
-            expect(puz.containsWord('GNUBI')).toBe(true);
+            expect(puz.containsWord('KNUBI')).toBe(true);
             expect(puz.containsWord('GFE')).toBe(true);
             expect(puz.containsWord('GF')).not.toBe(true);
             expect(puz.containsWord('GFF')).not.toBe(true);

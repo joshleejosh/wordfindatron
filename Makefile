@@ -55,7 +55,8 @@ $(WORDS): data/*.txt
 
 # Must define DEPLOYPATH at command line, don't leave real paths floating around in the makefile
 deploy: dist
-	(test -z '$(DEPLOYPATH)' && echo 'Set DEPLOYPATH when calling deploy!') || (test '$(DEPLOYPATH)' && $(RSYNC) dist/ $(DEPLOYPATH)/$(BASENAME)/)
+	(test -z '$(DEPLOYPATH)' && echo 'Set DEPLOYPATH when calling deploy!') \
+		|| (test '$(DEPLOYPATH)' && $(RSYNC) dist/ $(DEPLOYPATH)/$(BASENAME)/)
 
 test: $(JSFILES) $(WORDS)
 	node $(UNITTEST)
