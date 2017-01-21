@@ -90,15 +90,46 @@
                 type="button"
                 title="Make your own puzzle!"><i class="fa fa-edit fa-fw"></i></button>
         <div id="tbadvanced">
-            <h3>Options for new puzzles (<i class="fa fa-eject"></i>):</h3>
-            <input type="range" id="tbSize" min="6" max="16" value="8" title="Change the size of the grid" />
-            <label id="labTbSize"
-                   for="tbSize"
-                   title="Change the size of the grid"><i class="fa fa-th fa-fw"></i></label>
-            <br />
-            <input type="range" id="tbWords" min="6" max="16" value="8" />
-            <label for="tbWords" id="labTbWords"># Words</label>
-            <br />
+            <h3>Options for new puzzles (<i class="fa fa-eject"></i>)</h3>
+            <!-- I'm so, so sorry. -->
+            <table id="options" cellpadding="0" cellspacing="0">
+                <tbody>
+                    <tr>
+                        <th>
+                            <label id="labTbSize"
+                                   for="tbSize"
+                                   title="Change the size of the grid">Grid Size</label>
+                        </th>
+                        <td class="scale">small</td>
+                        <td>
+                            <input type="range"
+                                   id="tbSize"
+                                   min="8"
+                                   max="20"
+                                   step="2"
+                                   value="8"
+                                   title="Change the size of the grid" />
+                        </td>
+                        <td class="scale">large</td>
+                    </tr>
+                    <tr>
+                        <th>
+                            <label for="tbDensity" id="labTbDensity"># Words</label>
+                        </th>
+                        <td class="scale">fewer</td>
+                        <td>
+                            <input type="range"
+                                   id="tbDensity"
+                                   min="0.300"
+                                   max="0.700"
+                                   step="0.100"
+                                   value="0.500"
+                                   title="Set how full the grid is" />
+                        </td>
+                        <td class="scale">more</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </form>
 

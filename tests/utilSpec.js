@@ -52,10 +52,37 @@ describe('Test Util', function(){
             expect(util.clamp(-601, -600, -2)).toBe(-600);
             expect(util.clamp(-1, -600, -2)).toBe(-2);
         });
-        it('switch min/max if they\'re the wrong way around', function() {
+        it('switches min/max if they\'re the wrong way around', function() {
             expect(util.clamp(-301, -2, -600)).toBe(-301);
             expect(util.clamp(-601, -2, -600)).toBe(-600);
             expect(util.clamp(-1, -2, -600)).toBe(-2);
+        });
+    });
+
+    describe('scale()', function() {
+        it('maps a value on [imin,imax] to [omin,omax]', function() {
+            expect(util.scale(0, 0, 1, 0, 100)).toBe(0);
+            expect(util.scale(.5, 0, 1, 0, 100)).toBe(50);
+            expect(util.scale(1, 0, 1, 0, 100)).toBe(100);
+            expect(util.scale(.003, .003, .114, 1942.45, 2764.11)).toBe(1942.45);
+            expect(util.scale(.077, .003, .114, 1942.45, 2764.11)).toBeCloseTo(2490.2233333);
+            expect(util.scale(.114, .003, .114, 1942.45, 2764.11)).toBe(2764.11);
+            expect(util.scale(17, 17, 23, 19, 37)).toBe(19);
+            expect(util.scale(20, 17, 23, 19, 37)).toBe(28);
+            expect(util.scale(23, 17, 23, 19, 37)).toBe(37);
+        });
+        it('does NOT clamp output', function() {
+            expect(util.scale(-226, -107, 12, 71, 449)).toBe(-307);
+            expect(util.scale( 131, -107, 12, 71, 449)).toBe(827);
+        });
+        it('still works if min/max values are switched', function() {
+            expect(util.scale(-107, -107, -191, 71, 113)).toBe(71);
+            expect(util.scale(-149, -107, -191, 71, 113)).toBe(92);
+            expect(util.scale(-191, -107, -191, 71, 113)).toBe(113);
+
+            expect(util.scale(-107, -191, -107, 113, 71)).toBe(71);
+            expect(util.scale(-149, -191, -107, 113, 71)).toBe(92);
+            expect(util.scale(-191, -191, -107, 113, 71)).toBe(113);
         });
     });
 

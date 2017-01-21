@@ -538,7 +538,8 @@
                 msgClear();
                 onReset(false);
                 hideGame(function() {
-                    cbNewPuzzle(toolbar.getGridSize(), toolbar.getNumWords());
+                    console.log(toolbar.getGridSize(), toolbar.getDensity());
+                    cbNewPuzzle();
                     showGame(function() {
                         checkAnswers(false, true);
                     });
@@ -580,7 +581,7 @@
         disableInput: disableInput,
         enableInput: enableInput,
         getGridSize: toolbar.getGridSize,
-        getNumWords: toolbar.getNumWords,
+        getDensity: toolbar.getDensity,
         getSeed: toolbar.getSeed
     };
 }());

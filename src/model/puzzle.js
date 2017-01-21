@@ -5,10 +5,8 @@
 
     var Random = require('random-js');
     var bstream = require('./bstream');
-    var consts = require('../consts');
-    var util = require('../util');
     var grid = require('./grid');
-    var data = require('./data');
+    var puzgen = require('./puzgen');
     var conflictscan = require('./conflictscan');
 
     function isPalindrome(w) {
@@ -18,17 +16,17 @@
 
     // ==================================================================
 
-    function Puzzle(size, seedv, wordlist) {
+    function Puzzle(size, seedv, initWords) {
         if (size === undefined) {
             size = 8;
         }
         if (size < 0) {
             throw new RangeError('size ['+size+']');
         }
-        if (wordlist) {
-            for (var mi=0; mi<wordlist.length; mi++) {
-                if (wordlist[mi].length > size) {
-                    size = wordlist[mi].length;
+        if (initWords) {
+            for (var mi=0; mi<initWords.length; mi++) {
+                if (initWords[mi].length > size) {
+                    size = initWords[mi].length;
                 }
             }
         }
@@ -45,10 +43,11 @@
         this.size = size;
         this.grid = new grid.Grid(this.size);
         this.setSeed(seedv);
+        this.tmpWordlists = {};
 
-        if (wordlist) {
-            for (var i=0; i<wordlist.length; i++) {
-                this.makeAnswer(wordlist[i]);
+        if (initWords) {
+            for (var i=0; i<initWords.length; i++) {
+                puzgen.makeAnswer(this, initWords[i]);
             }
         }
 
@@ -120,169 +119,46 @@
         return false;
     };
 
-    /*
-     * Find a place for the given word in the grid and make it an answer..
-     */
-    Puzzle.prototype.makeAnswer = function(word) {
-        var sa = this.shuffleSlices(this.size);
-        for (var i=0; i<sa.length; i++) {
-            var direction = sa[i][0], slicei = sa[i][1];
-            // flip it?
-            if (Random.bool()(this.rng)) {
-                direction = (direction + 4) % 8;
-            }
-
-            var rack = this.grid.cutSlice(direction, slicei);
-            var offset = this.fitWord(word, rack);
-            if (offset !== -1) {
-                var gw = new grid.GridWord(this.size, word, direction, slicei, offset);
-                this.addAnswer(gw);
-                return gw;
-            }
-        }
-        throw new conflictscan.PuzzleConflictError('makeAnswer: Couldn\'t fit ['+word+']!');
-    };
-
     Puzzle.prototype.containsWord = function(w) {
-        return (this.words.indexOf(w) !== -1);
+        if (this.words.indexOf(w) !== -1) {
+            return true;
+        }
+        // also check substrings
+        for (var i=0; i<this.words.length; i++) {
+            if (this.words[i].lastIndexOf(w) !== -1) {
+                return true;
+            }
+            // also check the inverse
+            if (w.lastIndexOf(this.words[i]) !== -1) {
+                return true;
+            }
+        }
+        return false;
     };
 
-    /*
-     * Build array of slices to pick from.
-     * But only do half the directions; we'll handle mirrors below, but we
-     * don't want any reverse collisions while looking for slots.
-     */
-    Puzzle.prototype.shuffleSlices = function(size) {
-        var sa = [];
-        for (var d=0; d<4; d++) {
-            var a = 0, b = size;
-            if (d%2 === 1) {
-                a = consts.MIN_WORDLEN - 1;
-                b = (size*2) - consts.MIN_WORDLEN;
-            }
-            for (var s=a; s<b; s++) {
-                sa.push([d, s]);
-            }
-        }
-        Random.shuffle(this.rng, sa);
-        return sa;
-    };
-
-    /*
-     * Try to lay the given word into the rack string, working around existing characters.
-     */
-    Puzzle.prototype.fitWord = function(word, rack) {
-        if (!word || !rack) {
-            return -1;
-        }
-        var offsets = util.range(0, rack.length - word.length + 1);
-        util.sloppyShuffle(this.rng, offsets);
-        for (var i=0; i<offsets.length; i++) {
-            var offset = offsets[i];
-            var wi = 0, ti = offset;
-            while (wi < word.length && ti < rack.length) {
-                if (rack[ti] !== ' ' && rack[ti] !== word[wi]) {
-                    break;
-                }
-                wi++;
-                ti++;
-            }
-            // we made it to the end of the word, so it fits.
-            if (wi >= word.length) {
-                return offset;
-            }
-        }
-        return -1;
-    };
-
-    /*
-     * find a word that fits into the rack string, working around any existing letters.
-     */
-    Puzzle.prototype.findFittingWord = function(rack, wordlen) {
-        var tlen = rack.length;
-        if (tlen < consts.MIN_WORDLEN) {
-            util.log('findFittingWord: Bad rack ['+rack+']');
-            return null;
-        }
-        if (wordlen > tlen) {
-            util.log('findFittingWord: bad word length ['+wordlen+'] for ['+rack+']');
-        }
-
-        var candidates = [];
-        // ASSERTION: wordlist has been pre-stripped of blacklist words, so we don't need to check against it.
-        var wordlist = data.getWordlist(wordlen);
-        for (var i=0; i<wordlist.length; i++) {
-            var w = wordlist[i];
-            if (w.length === wordlen && !this.containsWord(w)) {
-                var f = this.fitWord(w, rack);
-                if (f !== -1) {
-                    candidates.push([w, f]);
+    Puzzle.prototype.density = function() {
+        var ag = this.answerGrid();
+        var fillcount = 0;
+        for (var y=0; y<ag.size; y++) {
+            for (var x=0; x<ag.size; x++) {
+                if (ag.grid[y][x] !== ' ') {
+                    fillcount++;
                 }
             }
         }
-
-        if (candidates.length === 0) {
-            return null;
-        }
-
-        var pair = Random.pick(this.rng, candidates);
-        return pair;
+        return fillcount / (ag.size * ag.size);
     };
 
-    Puzzle.prototype.scanConflicts = function() {
-        // when we find and fix bad words, we have to do another scan to make
-        // sure we didn't replace them with other bad words.
-        for (var rescans=0; rescans<=consts.MAX_CONFLICT_RETRIES; rescans++) {
-            var foundConflicts = conflictscan.scan(this);
-            if (!foundConflicts) {
-                return;
-            }
-        }
-        throw new conflictscan.PuzzleConflictError(0, 0, 0, 0, 'TOOMANYRETRIES');
+    Puzzle.prototype.reportStats = function() {
+        return puzgen.reportStats();
     };
 
-    /* Make a puzzle! */
-    Puzzle.prototype.generate = function(nwords) {
-        var sa = this.shuffleSlices(this.size);
-
-        for (var i=0; this.answers.length<nwords && i<sa.length; i++) {
-            var direction = sa[i][0], slicei = sa[i][1];
-            // flip it?
-            if (Random.bool()(this.rng)) {
-                direction = (direction + 4) % 8;
-            }
-
-            var rack = this.grid.cutSlice(direction, slicei);
-            var wordlens = util.range(
-                Math.min(consts.MIN_WORDLEN, rack.length),
-                Math.min(consts.MAX_WORDLEN, rack.length) + 1
-            );
-            Random.shuffle(this.rng, wordlens);
-
-            var p;
-            for (var j=0; j<wordlens.length; j++) {
-                p = this.findFittingWord(rack, wordlens[j]);
-                if (p) {
-                    break;
-                }
-            }
-            if (p) {
-                var gw = new grid.GridWord(this.grid.size, p[0], direction, slicei, p[1]);
-                this.addAnswer(gw);
-            } else {
-                util.log('generate: gave up on ['+direction+'] ['+slicei+'] ['+rack+']');
-            }
-        }
-
-        var rr = this.rng;
-        this.grid.fillJunk(function(a) {
-            return Random.pick(rr, a);
-        });
-
-        this.scanConflicts();
+    Puzzle.prototype.generate = function(a, b) {
+        return puzgen.generate(this, a, b);
     };
 
     // ==================================================================
+    // Puzzle serialization
 
     var DATA_VERSION = 1;
     var NLEN_VERSION = 8,

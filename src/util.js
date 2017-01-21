@@ -33,6 +33,13 @@
         return Math.max(imin, Math.min(imax, i));
     }
 
+    function scale(i, imin, imax, omin, omax) {
+        if (omin === omax) {
+            return omin;
+        }
+        return (((i - imin) / (imax - imin)) * (omax - omin)) + omin;
+    }
+
     function range(start, end, step) {
         if (step === undefined) {
             step = 1;
@@ -117,6 +124,7 @@
     module.exports = {
         log: log,
         sign: sign,
+        scale: scale,
         clamp: clamp,
         range: range,
         bIndexOf: bIndexOf,

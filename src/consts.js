@@ -10,14 +10,17 @@
     exports.ALPHABET64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
     exports.MAX_GRID_SIZE = 16;
-    exports.MIN_WORDLEN = 4;
-    exports.MAX_WORDLEN = 7;
-    exports.MAX_CONFLICT_RETRIES = 20;
+    exports.MAX_CONFLICT_RETRIES = 100;
 
     exports.TWEEN_TIME = (1.0 / 15.0) * 1000;
     exports.FADE_TIME = exports.TWEEN_TIME * 4;
 
     exports.WORDLIST_TAG_WORDLIST = '### WORDLIST ###';
     exports.WORDLIST_TAG_BLACKLIST = '### BLACKLIST ###';
+
+    exports.MIN_MIN_WORDLEN = 4;
+    exports.MAX_MAX_WORDLEN = 9;
+    exports.MIN_DENSITY = .333;
+    exports.MAX_DENSITY = .667;
 
 }());

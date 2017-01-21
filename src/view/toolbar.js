@@ -3,6 +3,7 @@
 
     var d3 = require('d3');
     var consts = require('../consts');
+    var util = require('../util');
 
     var theToolbar;
 
@@ -17,13 +18,15 @@
         d3.select('#tbSize').property('value', v);
     }
 
-    function getNumWords() {
-        var d = d3.select('#tbWords');
-        var rv = parseInt(d.property('value'), 10);
+    function getDensity() {
+        var d = d3.select('#tbDensity');
+        var rv = parseFloat(d.property('value'));
+        //var ratio = parseInt(d.property('value'), 10) / parseInt(d.property('max'), 10);
+        //var rv = util.scale(ratio, 0, 1, consts.MIN_DENSITY, consts.MAX_DENSITY);
         return rv;
     }
-    function writeNumWords(v) {
-        d3.select('#tbWords').property('value', v);
+    function writeDensity(v) {
+        d3.select('#tbDensity').property('value', v);
     }
 
     function getSeed() {
@@ -109,24 +112,7 @@
             }
         });
 
-        updateLabel('labTbSize', getGridSize(), 'Grid Size');
-        theToolbar.select('#tbSize')
-            .on('input', function() {
-                updateLabel('labTbSize', getGridSize(), 'Grid Size');
-            })
-            .on('change', function() {
-                updateLabel('labTbSize', getGridSize(), 'Grid Size');
-            });
-
-        updateLabel('labTbWords', getNumWords(), '# Words');
-        theToolbar.select('#tbWords')
-            .on('input', function() {
-                updateLabel('labTbWords', getNumWords(), '# Words');
-            })
-            .on('change', function() {
-                updateLabel('labTbWords', getNumWords(), '# Words');
-            });
-
+        /*
         if (consts.CHEAT) {
             var a = theToolbar.select('#tbadvanced');
             if (d3.select('#tbSeed').empty()) {
@@ -145,14 +131,16 @@
                 ;
             }
         }
+        */
 
         if (consts.CHEAT && d3.select('#tbSolve').empty()) {
-            theToolbar.append('button')
+            theToolbar.insert('button', '#tbShare')
                 .attr('id', 'tbSolve')
                 .attr('type', 'button')
                 .html('<i class="fa fa-birthday-cake fa-fw"></i>')
                 .on('click', callbacks.onSolve)
             ;
+            theToolbar.insert('span', '#tbShare').text(' ');
         }
 
         theToolbar.on('submit', function() {
@@ -205,10 +193,10 @@
         disable: disable,
         setUndoable: setUndoable,
         getGridSize: getGridSize,
-        getNumWords: getNumWords,
+        getDensity: getDensity,
         getSeed: getSeed,
         writeGridSize: writeGridSize,
-        writeNumWords: writeNumWords,
+        writeDensity: writeDensity,
         writeSeed: writeSeed
     };
 }());

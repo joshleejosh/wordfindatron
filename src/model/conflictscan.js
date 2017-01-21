@@ -26,10 +26,10 @@
 
     function fix(di, si, of, wl) {
         var agrid = scanPuzzle.answerGrid();
-        var badWord = scanPuzzle.grid.readWord(di, si, of, wl);
+        var suspect = scanPuzzle.grid.readWord(di, si, of, wl);
         // if we've been fixing intersecting bad words, this might already
         // be okay, so double check.
-        if (!scanPuzzle.containsWord(badWord) && util.bIndexOf(blacklist, badWord)===-1) {
+        if (scanPuzzle.words.indexOf(suspect)===-1 && util.bIndexOf(blacklist, suspect)===-1) {
             return true;
         }
 
@@ -50,13 +50,13 @@
             y += dy;
         }
         //var newWord = scanPuzzle.grid.readWord(di, si, of, wl);
-        //util.log('fix', badWord, newWord);
+        //util.log('fix', suspect, newWord, changed);
         return changed;
     }
 
     function check(cut, di, sl, of, wl) {
         var w = cut.substring(of, of+wl);
-        if (scanPuzzle.containsWord(w) && !scanPuzzle.isAnswer(w, di, sl, of, wl)) {
+        if (scanPuzzle.words.indexOf(w)!==-1 && !scanPuzzle.isAnswer(w, di, sl, of, wl)) {
             //util.log('dup', di, sl, of, wl, w);
             return true;
         }
@@ -97,7 +97,7 @@
                 throw new PuzzleConflictError(h[0], h[1], h[2], h[3], scanPuzzle.grid.readWord(h[0], h[1], h[2], h[3]));
             }
         }
-        return hits.length;
+        return hits;
     }
 
     // ==================================================================

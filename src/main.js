@@ -64,7 +64,7 @@
                 p = new puzzle.Puzzle(view.getGridSize(), view.getSeed());
                 doGeneration(
                     function() {
-                        return p.generate(view.getNumWords());
+                        return p.generate(view.getDensity());
                     },
                     function() {
                         p.reset(new Date().getTime());
