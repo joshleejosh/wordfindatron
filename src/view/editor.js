@@ -3,6 +3,7 @@
 
     var d3 = require('d3');
     var consts = require('../consts');
+    var util = require('../util');
     var editorfield = require('./editorfield');
     var bubble = require('./bubble');
 
@@ -13,26 +14,25 @@
     // ==================================================================
 
     function updateBindings() {
-        var gsize = parseInt(d3.select('#editGridSize').property('value'), 10);
         var list = d3.select('#editorlist');
         var lis = list.selectAll('li').data(fields);
         lis.enter()
             .append('li')
                 .classed('editoritem', true)
                 .attr('id', function(ef) { return ef.id(); })
-                .style('width', '' + gsize + 'em')
+                .style('width', '' + consts.MAX_MAX_WORDLEN + 'em')
                 .append('input')
                     .attr('type', 'text')
                     .attr('value', function(ef) { return ef.word; })
-                    .attr('maxlength', gsize)
-                    .style('width', '' + gsize + 'em')
+                    .attr('maxlength', consts.MAX_MAX_WORDLEN)
+                    .style('width', '' + consts.MAX_MAX_WORDLEN + 'em')
                     .on('change', function(ef) { return ef.onInput(); })
                     .on('input', function(ef) { return ef.onInput(); })
         ;
         lis.exit().remove();
         d3.select('.editoritem').each(function (ef) {
             ef.minlen = 3;
-            ef.maxlen = gsize;
+            ef.maxlen = consts.MAX_MAX_WORDLEN;
         });
     }
 
@@ -85,39 +85,28 @@
         }
     }
 
-    function updateGridSizeLabel() {
-        var v = parseInt(d3.select('#editGridSize').property('value'), 10);
-        d3.select('#labEditGridSize').html('<i class="fa fa-th fa-fw"></i> ' + v);
-        return v;
-    }
-
-    function onGridSize() {
-        var gsize = updateGridSizeLabel();
-        d3.selectAll('.editoritem>input')
-            .attr('maxlength', gsize)
-            .style('width', '' + gsize + 'em')
-        ;
-        d3.selectAll('.editoritem>label')
-            .style('right', '0')
-        ;
-        d3.selectAll('.editoritem').each(function (ef) {
-            ef.minlen = 3;
-            ef.maxlen = gsize;
-            ef.validate();
-        });
-        updateButtons();
-    }
-
     // ==================================================================
 
     function wipe() {
         d3.selectAll('.editoritem').remove();
-        d3.select('#editCommit').on('click', null);
-        d3.select('#editQuit').on('click', null);
-        d3.select('#editAdd').on('click', null);
-        d3.select('#editDelete').on('click', null);
-        d3.select('#editGridSize').on('click', null);
         fields = [];
+    }
+
+    function setGridSize() {
+        var maxlen = 0, lettersum = 0;
+        for (var i=0; i<fields.length; i++) {
+            var wlen = fields[i].word.length;
+            lettersum += wlen;
+            if (wlen > maxlen) {
+                maxlen = wlen;
+            }
+        }
+
+        var targetRatio = 0.500;
+        var gridsize = Math.max(maxlen, Math.sqrt(lettersum / targetRatio));
+        var rv = Math.floor(util.clamp(gridsize, consts.MIN_GRID_SIZE, consts.MAX_GRID_SIZE));
+        //console.log(maxlen, lettersum, gridsize, rv);
+        return rv;
     }
 
     function init(puzzle, callbacks) {
@@ -126,7 +115,7 @@
 
         var tb = d3.select('#editTools');
         tb.select('#editCommit').on('click', function () {
-            var sz = parseInt(d3.select('#editGridSize').property('value'), 10);
+            var sz = setGridSize();
             var sd = 0;
             var wl = fields.map(function(f) {
                 return f.word;
@@ -142,11 +131,6 @@
 
         tb.select('#editAdd').on('click', onAdd);
         tb.select('#editDelete').on('click', onDelete);
-        tb.select('#editGridSize')
-            .property('value', scratchPuzzle.size)
-            .on('input', onGridSize)
-            .on('change', onGridSize);
-        updateGridSizeLabel();
 
         tb.select('#editShowHelp').on('click', onHelp);
         bubbleHelp = new bubble.Bubble('editHelp');

@@ -18,9 +18,11 @@
     exports.WORDLIST_TAG_WORDLIST = '### WORDLIST ###';
     exports.WORDLIST_TAG_BLACKLIST = '### BLACKLIST ###';
 
+    exports.MIN_GRID_SIZE = 8;
+    exports.MAX_GRID_SIZE = 20;
     exports.MIN_MIN_WORDLEN = 4;
     exports.MAX_MAX_WORDLEN = 9;
-    exports.MIN_DENSITY = .333;
-    exports.MAX_DENSITY = .667;
+    exports.MIN_DENSITY = 0.333;
+    exports.MAX_DENSITY = 0.667;
 
 }());

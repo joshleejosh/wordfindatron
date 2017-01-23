@@ -11,54 +11,6 @@
 <div id="main">
     <h1><a href="http://floor.is/lava/wordfindatron">WORDFINDATRON</a></h1>
 
-    <div id="playField">
-        <table id="wfgrid" cellpadding="0" cellspacing="0" summary="A nice little word find puzzle">
-            <tbody></tbody>
-        </table>
-        <!-- rings spawn here so that they share a parent with the grid -->
-    </div>
-
-    <div id="info">
-        <ul id="wflist">
-        </ul>
-    </div>
-
-    <div id="editor">
-        <form id="editTools">
-            <button id="editAdd"
-                    type="button"
-                    title="Add a word to the list"><i class="fa fa-plus fa-fw"></i></button>
-            <button id="editDelete"
-                    type="button"
-                    title="Remove a word from the list"><i class="fa fa-minus fa-fw"></i></button>
-
-            <label id="labEditGridSize"
-                   for="editGridSize"
-                   title="Change the size of the grid"><i class="fa fa-th fa-fw"></i></label>
-            <input id="editGridSize"
-                   type="range"
-                   min="6" max="16"
-                   value="8"
-                   title="Change the size of the grid" />
-
-            <button id="editCommit"
-                    type="button"
-                    title="Make a puzzle!"><i class="fa fa-check fa-fw"></i></button>
-        <button id="editShowHelp"
-                type="button"
-                title="About WORDEDITATRON"><i class="fa fa-question-circle fa-fw"></i></button>
-            <span class="tbseparator"></span>
-            <button id="editQuit"
-                    class="button-reverse"
-                    type="button"
-                    title="Quit editing and go back to playing"><i class="fa fa-sign-out fa-fw"></i></button>
-        </form>
-
-        <form id="editorlist">
-        </form>
-
-    </div>
-
     <form id="toolbar">
         <button id="tbUndo"
                 type="button"
@@ -133,6 +85,42 @@
         </div>
     </form>
 
+    <div id="playField">
+        <table id="wfgrid" cellpadding="0" cellspacing="0" summary="A nice little word find puzzle">
+            <tbody></tbody>
+        </table>
+        <!-- rings spawn here so that they share a parent with the grid -->
+    </div>
+
+    <div id="info">
+        <ul id="wflist">
+        </ul>
+    </div>
+
+    <div id="editor">
+        <form id="editTools">
+            <button id="editAdd"
+                    type="button"
+                    title="Add a word to the list"><i class="fa fa-plus fa-fw"></i></button>
+            <button id="editDelete"
+                    type="button"
+                    title="Remove a word from the list"><i class="fa fa-minus fa-fw"></i></button>
+            <button id="editCommit"
+                    type="button"
+                    title="Make a puzzle!"><i class="fa fa-check fa-fw"></i></button>
+            <span class="tbseparator"></span>
+        <button id="editShowHelp"
+                type="button"
+                title="About WORDEDITATRON"><i class="fa fa-question-circle fa-fw"></i></button>
+            <button id="editQuit"
+                    class="button-reverse"
+                    type="button"
+                    title="Quit editing and go back to playing"><i class="fa fa-sign-out fa-fw"></i></button>
+        </form>
+        <form id="editorlist">
+        </form>
+    </div>
+
     <p id="error" class="help warning"></p>
     <p id="message">Loading...</p>
 
@@ -144,7 +132,7 @@
 
     <div id="editHelp" class="bubble">
         <p>WORDEDITATRON can make puzzles just for you! Just enter a list of your favorite words, and let WORDEDITATRON take care of the rest.</p>
-        <p><i class="fa fa-plus fa-fw"></i> or <i class="fa fa-minus fa-fw"></i> will add or remove words from the list. Set the size of the puzzle with the <i class="fa fa-th fa-fw"></i> slider. Hit <i class="fa fa-check fa-fw"></i> to create the puzzle. Hit <i class="fa fa-sign-out fa-fw"></i> to go back to just playing.</p>
+        <p><i class="fa fa-plus fa-fw"></i> or <i class="fa fa-minus fa-fw"></i> will add or remove words from the list. Hit <i class="fa fa-check fa-fw"></i> to create the puzzle. Hit <i class="fa fa-sign-out fa-fw"></i> to go back to just playing.</p>
     </div>
 
 </div>

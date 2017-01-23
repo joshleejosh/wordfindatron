@@ -3,7 +3,6 @@
 
     var d3 = require('d3');
     var consts = require('../consts');
-    var util = require('../util');
 
     var theToolbar;
 
@@ -21,8 +20,6 @@
     function getDensity() {
         var d = d3.select('#tbDensity');
         var rv = parseFloat(d.property('value'));
-        //var ratio = parseInt(d.property('value'), 10) / parseInt(d.property('max'), 10);
-        //var rv = util.scale(ratio, 0, 1, consts.MIN_DENSITY, consts.MAX_DENSITY);
         return rv;
     }
     function writeDensity(v) {
@@ -57,20 +54,7 @@
 
     // ==================================================================
 
-    function updateLabel(id, v, suffix) {
-        d3.select('#'+id).html(v + ' &mdash; ' + suffix);
-    }
-
     function wipe() {
-        d3.select('#tbUndo').on('click', null);
-        d3.select('#tbReset').on('click', null);
-        d3.select('#tbHint').on('click', null);
-        d3.select('#tbHelp').on('click', null);
-        d3.select('#tbShuffle').on('click', null);
-        d3.select('#tbNew').on('click', null);
-        d3.select('#tbEdit').on('click', null);
-        d3.select('#tbShare').on('click', null);
-        d3.select('#tbShowAdv').on('click', null);
     }
 
     function init(callbacks) {

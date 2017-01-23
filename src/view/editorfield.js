@@ -2,6 +2,7 @@
     'use strict';
 
     var d3 = require('d3');
+    var consts = require('../consts');
     var data = require('../model/data');
     var colors = require('./colors');
 
@@ -15,8 +16,8 @@
         this.labelPosOffset = 0;
         this.cbPostInput = cbpi;
         // these get set by the editor
-        this.minlen = 3;
-        this.maxlen = 8;
+        this.minlen = consts.MIN_MIN_WORDLEN;
+        this.maxlen = consts.MAX_MAX_WORDLEN;
     }
 
     Field.prototype.id = function() {

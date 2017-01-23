@@ -538,7 +538,6 @@
                 msgClear();
                 onReset(false);
                 hideGame(function() {
-                    console.log(toolbar.getGridSize(), toolbar.getDensity());
                     cbNewPuzzle();
                     showGame(function() {
                         checkAnswers(false, true);
