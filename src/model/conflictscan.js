@@ -94,7 +94,10 @@
             var h = hits[hi];
             var fixed = fix(h[0], h[1], h[2], h[3]);
             if (!fixed) {
-                throw new PuzzleConflictError(h[0], h[1], h[2], h[3], scanPuzzle.grid.readWord(h[0], h[1], h[2], h[3]));
+                var m = 'Failed to fix conflict at [' +
+                    h[0] + '][' + h[1] + '][' + h[2] + '][' + h[3] + ']';
+                    //+ ' [' + scanPuzzle.grid.readWord(h[0], h[1], h[2], h[3]) + ']';
+                throw new PuzzleConflictError(m);
             }
         }
         return hits;

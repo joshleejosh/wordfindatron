@@ -371,6 +371,41 @@
         ;
     }
 
+    function setupSharing() {
+        var f = function(o) {
+            var a = [];
+            for (var i in o) {
+                a.push(encodeURI(i) + '=' + encodeURI(o[i]));
+            }
+            var rv = '?' + a.join('&');
+            return rv;
+        };
+        var link = window.location + '?p=' + thePuzzle.serialize();
+
+        d3.select('#share_link').attr('href', link);
+
+        var url = 'mailto:?subject=WORDFINDATRON&body='+link;
+        d3.select('#share_email').attr('href', url);
+
+        url = 'https://twitter.com/intent/tweet' + f({
+            'original_referrer': window.location,
+            'text': 'WORDFINDATRON',
+            'url': link
+        });
+        d3.select('#share_twitter').attr('href', url);
+
+        url = 'https://www.facebook.com/sharer/sharer.php' + f({
+            'u': link
+        });
+        d3.select('#share_facebook').attr('href', url);
+
+        url = 'http://www.reddit.com/submit' + f({
+            'url': link
+        });
+        d3.select('#share_reddit').attr('href', url);
+
+    }
+
     function onReset(tweent) {
         bubbleHelp.hide(tweent);
         drag.cancelDrag(tweent);
@@ -466,6 +501,7 @@
         rebindWordList();
 
         bubbleHelp = new bubble.Bubble('playHelp');
+        bubbleHelp.below = true;
 
         editor.init(thePuzzle, {
             onChange: function() { // misc edits
@@ -565,6 +601,8 @@
             }
         });
         toolbar.setUndoable(rings.length > 0);
+
+        setupSharing();
 
         enableInput();
         theTable = new table.Table(thePuzzle);

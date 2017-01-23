@@ -67,7 +67,6 @@
         theToolbar.select('#tbShuffle').on('click', callbacks.onShuffle);
         theToolbar.select('#tbNew').on('click', callbacks.onNew);
         theToolbar.select('#tbEdit').on('click', callbacks.onEdit);
-        theToolbar.select('#tbShare').on('click', callbacks.onShare);
 
         theToolbar.select('#tbShowAdv').on('click', function() {
             var a = theToolbar.select('#tbadvanced');
@@ -96,35 +95,14 @@
             }
         });
 
-        /*
-        if (consts.CHEAT) {
-            var a = theToolbar.select('#tbadvanced');
-            if (d3.select('#tbSeed').empty()) {
-                a.append('input')
-                    .attr('id', 'tbSeed')
-                    .attr('type', 'number')
-                    .property('value', 0)
-                ;
-            }
-            if (d3.select('#labTbSeed').empty()) {
-                a.append('span').text(' ');
-                a.append('label')
-                    .attr('id', 'labTbSeed')
-                    .attr('for', 'tbSeed')
-                    .text('Seed #')
-                ;
-            }
-        }
-        */
-
         if (consts.CHEAT && d3.select('#tbSolve').empty()) {
-            theToolbar.insert('button', '#tbShare')
+            theToolbar.insert('button', '#tbShuffle')
                 .attr('id', 'tbSolve')
                 .attr('type', 'button')
                 .html('<i class="fa fa-birthday-cake fa-fw"></i>')
                 .on('click', callbacks.onSolve)
             ;
-            theToolbar.insert('span', '#tbShare').text(' ');
+            theToolbar.insert('span', '#tbShuffle').text(' ');
         }
 
         theToolbar.on('submit', function() {
