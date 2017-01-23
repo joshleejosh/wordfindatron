@@ -161,15 +161,15 @@ describe('Test Util', function(){
         });
     });
 
-    describe('sloppyShuffle', function() {
+    describe('shuffle', function() {
         it('does a quick and dirty in place shuffle', function() {
             var rng = Random.engines.mt19937();
             rng.seed(-2314);
             var a = util.range(6);
-            util.sloppyShuffle(rng, a);
+            util.shuffle(rng, a);
             expect(a).toEqual([3, 4, 0, 2, 1, 5]);
             a = util.range(9);
-            util.sloppyShuffle(rng, a);
+            util.shuffle(rng, a);
             expect(a).toEqual([2, 0, 7, 4, 5, 1, 6, 3, 8]);
         });
     });

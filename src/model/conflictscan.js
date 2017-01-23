@@ -1,8 +1,6 @@
 (function () {
     'use strict';
 
-    var Random = require('random-js');
-    var consts = require('../consts');
     var util = require('../util');
     var data = require('./data');
     var grid = require('./grid');
@@ -24,7 +22,7 @@
 
     // ==================================================================
 
-    function fix(di, si, of, wl) {
+    function fix(di, si, of, wl, fpick) {
         var agrid = scanPuzzle.answerGrid();
         var suspect = scanPuzzle.grid.readWord(di, si, of, wl);
         // if we've been fixing intersecting bad words, this might already
@@ -42,7 +40,7 @@
         for (var i=0; i<wl; i++) {
             // don't change a letter that belongs to an answer.
             if (agrid.get(x, y) === ' ') {
-                var ch = Random.pick(scanPuzzle.rng, consts.ALPHABET);
+                var ch = fpick();
                 scanPuzzle.grid.set(x, y, ch);
                 changed = true;
             }
@@ -67,7 +65,7 @@
         return false;
     }
 
-    function scan(puz) {
+    function scan(puz, fpick) {
         blacklist = data.getBlacklist();
         scanPuzzle = puz;
         var hits = [];
@@ -92,7 +90,7 @@
 
         for (var hi=0; hi<hits.length; hi++) {
             var h = hits[hi];
-            var fixed = fix(h[0], h[1], h[2], h[3]);
+            var fixed = fix(h[0], h[1], h[2], h[3], fpick);
             if (!fixed) {
                 var m = 'Failed to fix conflict at [' +
                     h[0] + '][' + h[1] + '][' + h[2] + '][' + h[3] + ']';

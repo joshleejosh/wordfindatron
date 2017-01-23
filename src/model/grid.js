@@ -1,7 +1,6 @@
 (function() {
     'use strict';
 
-    var consts = require('../consts');
     var util = require('../util');
 
     // ==================================================================
@@ -282,7 +281,8 @@
         for (var y=0; y<this.size; y++) {
             for (var x=0; x<this.size; x++) {
                 if (this.get(x, y) === ' ') {
-                    this.set(x, y, frnd(consts.ALPHABET));
+                    var c = frnd();
+                    this.set(x, y, c);
                 }
             }
         }

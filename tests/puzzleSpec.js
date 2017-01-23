@@ -200,11 +200,11 @@ describe('Test Puzzle', function(){
         });
 
         it('outputs url-friendly base64 strings', function (done) {
-            puz = new puzzle.Puzzle(14, 1485142180793);
-            puz.generate(16);
+            puz = new puzzle.Puzzle(14, 1485201046610);
+            puz.generate(.5, .5);
             var s = puz.serialize();
 
-            // serialized string should use '-' and '_' for values 62 and 63;
+            // serialized string should use '-' and '_' for its last two values;
             // base64 commonly uses '+' and '/', which are terrible for urls.
             expect(s.indexOf('-')).not.toBe(-1);
             expect(s.indexOf('_')).not.toBe(-1);
@@ -214,9 +214,10 @@ describe('Test Puzzle', function(){
             expect(s.indexOf('&')).toBe(-1);
 
             var quz = puzzle.deserialize(s);
-            expect(quz.size).toEqual(14);
+            expect(quz.size).toEqual(puz.size);
+            expect(quz.seed).toEqual(puz.seed);
             expect(quz.grid).toEqual(puz.grid);
-            expect(quz.answers.length).toEqual(16);
+            expect(quz.answers.length).toEqual(puz.answers.length);
             expect(quz.answers).toEqual(puz.answers);
 
             done();

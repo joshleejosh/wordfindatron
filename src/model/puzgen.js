@@ -2,6 +2,7 @@
     'use strict';
 
     var Random = require('random-js');
+    var d3 = require('d3');
     var consts = require('../consts');
     var util = require('../util');
     var data = require('./data');
@@ -29,7 +30,7 @@
                 sa.push([d, s]);
             }
         }
-        util.sloppyShuffle(rng, sa);
+        util.shuffle(rng, sa);
         return sa;
     }
 
@@ -54,7 +55,7 @@
 
     // ==================================================================
 
-    function generateInit() {
+    function init() {
         genstats = {
             rackNoGap: [],
             rackNoFit: [],
@@ -71,52 +72,78 @@
         }
     }
 
-    function generateTeardown() {
+    function teardown() {
         tmpWordlists = {};
     }
 
     // ==================================================================
     // Puzzle analysis
 
-    function scanConflicts() {
+    /*
+     * Do an exhaustive search for duplicate or blacklisted words.
+     */
+    function scanConflicts(fpick) {
         // when we find and fix bad words, we have to do another scan to make
         // sure we didn't replace them with other bad words.
         for (var rescans=0; rescans<=consts.MAX_CONFLICT_RETRIES; rescans++) {
-            var conflicts = conflictscan.scan(thePuzzle);
+            var conflicts = conflictscan.scan(thePuzzle, fpick);
             if (conflicts.length === 0) {
                 return;
             }
-            if (thePuzzle.genstats) {
-                thePuzzle.genstats.conflicts.push(conflicts);
-            }
+            genstats.conflicts.push(conflicts);
         }
         throw new conflictscan.PuzzleConflictError('Too many conflict retries');
     }
 
+    /*
+     */
     function reportStats() {
-        var totalletters = 0;
+        var addLetters = function(fo, fs) {
+            var tot = 0;
+            for (var fi=0; fi<fs.length; fi++) {
+                if (!(fs[fi] in fo)) {
+                    fo[fs[fi]] = 0;
+                }
+                fo[fs[fi]]++;
+                tot++;
+            }
+            return tot;
+        };
+
+        var letterDist = {}, letterCount = 0;
         for (var i=0; i<thePuzzle.words.length; i++) {
-            totalletters += thePuzzle.words[i].length;
+            letterCount += thePuzzle.words[i].length;
+            addLetters(letterDist, thePuzzle.words[i])
         }
         var maxletters = (thePuzzle.size * thePuzzle.size);
         var density = thePuzzle.density();
-        var maxdensity = totalletters / maxletters * 100;
-        util.log('[' + thePuzzle.answers.length + '] words, ' +
-                 'density ' + density + '% ' +
-                 '(out of possible ' + maxdensity + '%)');
+        var maxdensity = letterCount / maxletters * 100;
+        util.log('' + thePuzzle.answers.length + ' words, ' +
+                 'density ' + density.toFixed(4) + '% ' +
+                 '(out of possible ' + maxdensity.toFixed(4)+ '%)');
 
         var s = '';
         var f = function(k) {
-            s += k + ':' + genstats[k].length + ' ';
+            return k + ':' + genstats[k].length + ' ';
         };
-        f('rackNoGap');
-        f('rackNoFit');
-        f('sliceNoFit');
-        f('conflicts');
-        f('failure');
+        s += f('rackNoGap');
+        s += f('rackNoFit');
+        s += f('sliceNoFit');
+        s += f('conflicts');
+        s += f('failure');
         util.log(s);
-        if (genstats.rackNoFit.length > 0) {
-            util.log(genstats.rackNoFit);
+
+        if (false) {
+            var d = {};
+            var dtot = addLetters(d, thePuzzle.grid.toString());
+            for (var c='A'; c<='Z'; c=String.fromCharCode(c.charCodeAt(0) + 1)) {
+                var s = '' + c + '\t' +
+                    d[c] + '\t' +
+                    (d[c]/dtot).toFixed(3) + '\t'+ 
+                    letterDist[c] + '\t' +
+                    (letterDist[c]/letterCount).toFixed(3) + '\t';
+                util.log(s);
+            }
         }
     }
 
@@ -131,7 +158,7 @@
             return -1;
         }
         var offsets = util.range(0, rack.length - word.length + 1);
-        util.sloppyShuffle(rng, offsets);
+        util.shuffle(rng, offsets);
         for (var i=0; i<offsets.length; i++) {
             var offset = offsets[i];
             var wi = 0, ti = offset;
@@ -200,7 +227,7 @@
             Math.min(minWordLen, rack.length),
             Math.min(maxWordLen, rack.length) + 1
         );
-        util.sloppyShuffle(thePuzzle.rng, wordlens);
+        util.shuffle(thePuzzle.rng, wordlens);
 
         var i, p;
         for (i=0; i<wordlens.length; i++) {
@@ -236,7 +263,7 @@
     function generateByWordCount(puz, nwords) {
         minWordLen = consts.MIN_MIN_WORDLEN;
         maxWordLen = Math.min(puz.size, consts.MAX_MAX_WORDLEN);
-        generateInit();
+        init();
 
         for (var i=0; thePuzzle.answers.length<nwords && i<consts.MAX_CONFLICT_RETRIES; i++) {
             var slices = shuffleSlices(thePuzzle.rng, thePuzzle.size);
@@ -272,7 +299,7 @@
                 minWordLen = Math.round(util.scale(wlf, 0.5, 1.0, 4, ceil));
             }
         }
-        generateInit();
+        init();
 
         for (var i=0; thePuzzle.density()<=gd && i<consts.MAX_CONFLICT_RETRIES; i++) {
             var slices = shuffleSlices(thePuzzle.rng, thePuzzle.size);
@@ -308,13 +335,18 @@
             generateByWordCount(puzzle, a);
         }
 
+        // only fill with letters that are in our words.
         var rr = thePuzzle.rng;
-        thePuzzle.grid.fillJunk(function(chars) {
-            return Random.pick(rr, chars);
-        });
+        var glyphset = thePuzzle.words.reduce(function(a,b) { return a.concat(b.split('')); }, []);
+        glyphset = d3.set(glyphset).values(); // uniq
+        //console.log(glyphset.length, glyphset.join(''));
+        var fpick = function() {
+            return Random.pick(rr, glyphset);
+        };
+        thePuzzle.grid.fillJunk(fpick);
 
-        scanConflicts();
-        generateTeardown();
+        scanConflicts(fpick);
+        teardown();
         var t1 = new Date().getTime();
         genstats.genTime = t1 - t0;
         return genstats.genTime;

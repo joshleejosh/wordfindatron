@@ -90,7 +90,7 @@
     }
 
     // Do a quick and dirty Fisher-Yates shuffle. For when the results don't need to be good, just ok
-    function sloppyShuffle(rng, a) {
+    function shuffle(rng, a) {
         for (var i=a.length-1; i>=1; i--) {
             var j = Random.integer(0, i)(rng);
             var t = a[i];
@@ -128,7 +128,7 @@
         clamp: clamp,
         range: range,
         bIndexOf: bIndexOf,
-        sloppyShuffle: sloppyShuffle,
+        shuffle: shuffle,
         snapAngle: snapAngle,
         calcTweenTime: calcTweenTime
     };

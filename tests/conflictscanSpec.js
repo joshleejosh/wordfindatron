@@ -1,4 +1,5 @@
 describe('Test conflictscan', function(){
+    var Random = require('random-js');
     var data = require('../src/model/data');
     var grid = require('../src/model/grid');
     var puzzle = require('../src/model/puzzle');
@@ -37,7 +38,7 @@ describe('Test conflictscan', function(){
             expect(puz.answers[1]).toMatchGridWord(6, 2, 2, 'UO',    2, 3, 2, 2);
             expect(puz.answers[2]).toMatchGridWord(1, 4, 0, 'KNUBI', 0, 1, 4, 5);
             expect(puz.answers[3]).toMatchGridWord(4, 5, 3, 'GFE',   2, 5, 0, 5);
-            conflictscan.scan(puz);
+            conflictscan.scan(puz, function() { return Random.pick(puz.rng, consts.ALPHABET); });
             expect(puz.grid.toString()).toBe('SAWKMX\nKHIJKL\nONOPQR\nUTUVGX\nEZABCD\nEFGHIJ\n')
             done();
         });
@@ -67,7 +68,7 @@ describe('Test conflictscan', function(){
             expect(puz.answers[2]).toMatchGridWord(2, 3, 2, 'ISX',  3, 2, 3, 4);
             expect(puz.answers[3]).toMatchGridWord(2, 4, 1, 'JD',   4, 1, 4, 2);
             try {
-                conflictscan.scan(puz);
+                conflictscan.scan(puz, function() { return Random.pick(puz.rng, consts.ALPHABET); });
             } catch (e) {
                 if (e instanceof puzzle.PuzzleConflictError) {
                     expect(puz.grid.toString()).toBe('ABCDE\nFGHIJ\nKKNID\nPQRST\nUVWXY\n')
