@@ -117,9 +117,6 @@
         var scratchPuzzle = puzzle.copy();
         onChange = callbacks.onChange;
 
-        bubbleHelp = new bubble.Bubble('editHelp');
-        bubbleHelp.below = true;
-
         var tb = d3.select('#editTools');
         viewutil.makeToolbarButton(tb, onAdd, 'editAdd', 'plus', 'Add a word to the list');
         viewutil.makeToolbarButton(tb, onDelete, 'editDelete', 'minus', 'Remove a word from the list');
@@ -133,7 +130,11 @@
         }, 'editCommit', 'check', 'Make a puzzle!');
 
         viewutil.makeToolbarSeparator(tb);
-        viewutil.makeToolbarButton(tb, onHelp, 'editShowHelp', 'question-circle', 'About WORDEDITATRON');
+        var hb = viewutil.makeToolbarButton(tb, onHelp, 'editShowHelp', 'question-circle', 'About WORDEDITATRON');
+
+        bubbleHelp = new bubble.Bubble('editHelp');
+        bubbleHelp.below = true;
+        bubbleHelp.owner = hb;
 
         viewutil.makeToolbarButton(tb, function() {
             bubbleHelp.hide(false);

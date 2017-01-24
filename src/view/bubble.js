@@ -9,6 +9,7 @@
         this.selection = d3.select('#'+this.id);
         this.hide(false);
         this.below = false;
+        this.owner = null;
         var that = this;
         this.selection.on('click', function() {
             that.hide(null, true);
@@ -41,6 +42,7 @@
         var pad = parseInt(this.selection.style('padding-left'), 10) / 2;
         var x = Math.max(0, rCaller.left - rBubble.width - pad);
         var y = (this.below) ? rCaller.bottom + pad : rBubble.bottom - rCaller.top + pad;
+        var that = this;
 
         this.selection
                 .style('display', 'block')
@@ -54,13 +56,36 @@
                 .style('width', null)
                 .style('height', null)
                 .style('left', x + 'px')
+            .on('end', function() {
+                if (that.owner) {
+                    that.owner.classed('button-reverse', true);
+                }
+                d3.select('body').append('div')
+                    .attr('id', 'bubbleBlocker')
+                    .style('position', 'fixed')
+                    .style('top', '0')
+                    .style('left', '0')
+                    .style('bottom', '0')
+                    .style('right', '0')
+                    .style('width', '100%')
+                    .style('height', '100%')
+                    .on('mousedown', function() {
+                        that.hide(null, true);
+                    });
+            })
         ;
+
     };
 
     Bubble.prototype.hide = function(caller, tweent) {
         if (tweent === true) {
             tweent = consts.TWEEN_TIME;
         }
+        d3.select('#bubbleBlocker').remove();
+        if (this.owner) {
+            this.owner.classed('button-reverse', false);
+        }
+
         var rBubble = this.selection.node().getBoundingClientRect();
         this.selection
             .transition('bubble')

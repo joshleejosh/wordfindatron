@@ -502,9 +502,6 @@
         }
         rebindWordList();
 
-        bubbleHelp = new bubble.Bubble('playHelp');
-        bubbleHelp.below = true;
-
         editor.init(thePuzzle, {
             onChange: function() { // misc edits
                 failureClear();
@@ -599,6 +596,10 @@
             }
         });
         toolbar.setUndoable(rings.length > 0);
+
+        bubbleHelp = new bubble.Bubble('playHelp');
+        bubbleHelp.below = true;
+        bubbleHelp.owner = d3.select('#tbHelp');
 
         setupSharing();
 
