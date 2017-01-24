@@ -113,7 +113,7 @@
         var letterDist = {}, letterCount = 0;
         for (var i=0; i<thePuzzle.words.length; i++) {
             letterCount += thePuzzle.words[i].length;
-            addLetters(letterDist, thePuzzle.words[i])
+            addLetters(letterDist, thePuzzle.words[i]);
         }
         var maxletters = (thePuzzle.size * thePuzzle.size);
         var density = thePuzzle.density();
@@ -137,9 +137,9 @@
             var d = {};
             var dtot = addLetters(d, thePuzzle.grid.toString());
             for (var c='A'; c<='Z'; c=String.fromCharCode(c.charCodeAt(0) + 1)) {
-                var s = '' + c + '\t' +
+                s = '' + c + '\t' +
                     d[c] + '\t' +
-                    (d[c]/dtot).toFixed(3) + '\t'+ 
+                    (d[c]/dtot).toFixed(3) + '\t' +
                     letterDist[c] + '\t' +
                     (letterDist[c]/letterCount).toFixed(3) + '\t';
                 util.log(s);
@@ -337,7 +337,9 @@
 
         // only fill with letters that are in our words.
         var rr = thePuzzle.rng;
-        var glyphset = thePuzzle.words.reduce(function(a,b) { return a.concat(b.split('')); }, []);
+        var glyphset = thePuzzle.words.reduce(function(s,t) {
+            return s.concat(t.split(''));
+        }, []);
         glyphset = d3.set(glyphset).values(); // uniq
         //console.log(glyphset.length, glyphset.join(''));
         var fpick = function() {

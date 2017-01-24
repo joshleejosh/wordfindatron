@@ -17,7 +17,7 @@ $fsCell: $wCell / 2;
 $fsButton: $fsCell;
 $fsBubble: $fsTextBody * 0.800;
 
-$fsWordlist: $fsCell * 1.333;
+$fsWordlist: $fsCell * 1.250;
 $margin: $fsWordlist;
 
 $cRing: #999;
@@ -27,6 +27,22 @@ $ringTransformOrigin: $wRing/2 + $ringThickness;
 
 $cBgDisabled: #999;
 $cWarning: #c66;
+
+/* ========================================================================== */
+
+@mixin border-radius($r) {
+	-webkit-border-radius: $r;
+	   -moz-border-radius: $r;
+	    -ms-border-radius: $r;
+	        border-radius: $r;
+}
+
+@mixin user-select($u) {
+	-webkit-user-select: $u;
+	   -moz-user-select: $u;
+	    -ms-user-select: $u;
+	        user-select: $u;
+}
 
 /* ========================================================================== */
 
@@ -75,6 +91,15 @@ input {
 	color: $cWarning;
 }
 
+.right {
+	text-align: right;
+}
+
+.left {
+	text-align: left;
+}
+
+
 /* ========================================================================== */
 
 #playField {
@@ -103,13 +128,9 @@ td.cell {
 	margin: 0;
 	padding: 0;
 	border: 0;
-	//border-radius: $wCell / 2;
 	color: $cTextBody;
 
-	-webkit-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-	user-select: none;
+	@include user-select(none);
 
 	.gc {
 		position: absolute;
@@ -146,7 +167,7 @@ button {
 	margin: 1mm;
 	padding: 0.167em 0.333em;
 	border: solid 1px $cRing;
-	border-radius: 0.500em;
+	@include border-radius(0.500em);
 	background-color: $cBgBody;
 	color: $cTextBody;
 	font-size: $fsButton;
@@ -163,6 +184,11 @@ button {
 		border-color: $cRing;
 		color: $cRing;
 	}
+}
+
+.button-reverse {
+	background-color: $cTextBody;
+	color: $cBgBody;
 }
 
 .tbseparator {
@@ -184,13 +210,41 @@ button {
 		white-space: nowrap;
 	}
 
-	table#options {
-		th {
-			padding: 0 1em 0 0;
-		}
-		td.scale {
-			padding: 0;
-			font-size: 0.8em;
+	div#options {
+		font-size: 0.8em;
+		position: relative;
+		min-width: 20em;
+		width: 60%;
+		.row {
+			position: relative;
+			label.advlbl {
+				position: relative;
+				display: inline-block;
+				width: 20%;
+				margin: 0;
+				padding: 0;
+				font-weight: bold;
+				text-align: left;
+			}
+			.advrange {
+				position: relative;
+				display: inline-block;
+				width: 15%;
+				margin: 0;
+				padding: 0;
+				font-weight: normal;
+			}
+			input.advinp {
+				position: relative;
+				display: inline-block;
+				width: 40%;
+				margin: 0 3%;
+				padding: 0;
+			}
+			input[type=range] {
+				background-color: transparent;
+			}
+
 		}
 	}
 }
@@ -198,11 +252,6 @@ button {
 #permalink {
 	display: inline-block;
 	font-size: $fsButton * 2 / 3;
-}
-
-.button-reverse {
-	background-color: $cTextBody;
-	color: $cBgBody;
 }
 
 /* ========================================================================== */
@@ -235,7 +284,7 @@ button {
 	font-size: $fsWordlist;
 	background-color: $cBgBody;
 	color: $cTextBody;
-	//border-radius: $margin;
+	//@include border-radius($margin);
 }
 
 .wfsolved {
@@ -254,7 +303,7 @@ button {
 	border-style: solid;
 	border-width: $ringThickness;
 	border-color: $cRing;
-	border-radius: 2em;
+	@include border-radius(2em);
 	background-color: transparent;
 	color: $cBgSolved; // HACK: use text color to hide the alt state color for code to peek at (since we never have any text in a ring)
 	height: $wRing;
@@ -263,11 +312,7 @@ button {
 	left: 0;
 	transform-origin: $ringTransformOrigin $ringTransformOrigin;
 	-webkit-backface-visibility: hidden;
-
-	-webkit-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-	user-select: none;
+	@include user-select(none);
 }
 .ringsolved {
 	// set these in js.
@@ -332,7 +377,7 @@ button {
 	width: 72mm;
 	padding: 1em;
 	border: solid 1px $cRing;
-	border-radius: $fsBubble;
+	@include border-radius($fsBubble);
 	background-color: $cBgBody;
 	color: $cTextBody;
 	font-family: $fDisplay;

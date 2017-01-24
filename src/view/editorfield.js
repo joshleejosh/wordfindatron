@@ -24,6 +24,17 @@
         return 'listitem' + this.index;
     };
 
+    Field.prototype.takeFocus = function() {
+        if (!this.selection) {
+            this.selection = d3.select('#'+this.id());
+        }
+        var input = this.selection.select('input');
+        var insertPoint = input.property('value').length;
+        input.node().focus();
+        input.node().selectionStart = insertPoint;
+        input.node().selectionEnd = insertPoint;
+    };
+
     Field.prototype.setValid = function(v, msg) {
         if (!this.selection) {
             this.selection = d3.select('#'+this.id());
@@ -37,17 +48,14 @@
             this.selection.select('input').style('background-color', null);
             this.selection.select('input').style('color', null);
         } else {
+            var that = this;
             this.selection.select('input').style('background-color', colors.warningText);
             this.selection.select('input').style('color', colors.bodyText);
             if (!this.label || this.label.empty()) {
                 this.label = this.selection.append('label')
                     .classed('warning', true)
                     .on('click', function() {
-                        var input = d3.select(this.parentNode).select('input');
-                        var insertPoint = input.property('value').length;
-                        input.node().focus();
-                        input.node().selectionStart = insertPoint;
-                        input.node().selectionEnd = insertPoint;
+                        that.takeFocus();
                     })
                 ;
                 this.labelPosOffset = parseFloat(this.label.style('right'));

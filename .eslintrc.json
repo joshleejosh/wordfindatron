@@ -105,6 +105,7 @@
         "no-catch-shadow": "error",
         "no-confusing-arrow": "error",
         "no-console": "warn",
+        "no-constant-condition": "warn",
         "no-continue": "off",
         "no-div-regex": "error",
         "no-duplicate-imports": "error",

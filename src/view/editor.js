@@ -4,6 +4,7 @@
     var d3 = require('d3');
     var consts = require('../consts');
     var util = require('../util');
+    var viewutil = require('./viewutil');
     var editorfield = require('./editorfield');
     var bubble = require('./bubble');
 
@@ -64,9 +65,11 @@
     // ==================================================================
 
     function onAdd() {
-        fields.push(new editorfield.Field(fields.length, '', updateButtons));
+        var f = new editorfield.Field(fields.length, '', updateButtons);
+        fields.push(f);
         updateBindings();
         updateButtons();
+        f.takeFocus();
     }
 
     function onDelete() {
@@ -90,6 +93,7 @@
     function wipe() {
         d3.selectAll('.editoritem').remove();
         fields = [];
+        d3.select('#editTools').html('');
     }
 
     function setGridSize() {
@@ -113,28 +117,32 @@
         var scratchPuzzle = puzzle.copy();
         onChange = callbacks.onChange;
 
+        bubbleHelp = new bubble.Bubble('editHelp');
+        bubbleHelp.below = true;
+
         var tb = d3.select('#editTools');
-        tb.select('#editCommit').on('click', function () {
+        viewutil.makeToolbarButton(tb, onAdd, 'editAdd', 'plus', 'Add a word to the list');
+        viewutil.makeToolbarButton(tb, onDelete, 'editDelete', 'minus', 'Remove a word from the list');
+        viewutil.makeToolbarButton(tb, function() {
             var sz = setGridSize();
-            var sd = 0;
             var wl = fields.map(function(f) {
                 return f.word;
             });
             bubbleHelp.hide(false);
-            callbacks.onCommit(sz, sd, wl);
-        });
-        tb.select('#editQuit').on('click', function() {
+            callbacks.onCommit(sz, 0, wl);
+        }, 'editCommit', 'check', 'Make a puzzle!');
+
+        viewutil.makeToolbarSeparator(tb);
+        viewutil.makeToolbarButton(tb, onHelp, 'editShowHelp', 'question-circle', 'About WORDEDITATRON');
+
+        viewutil.makeToolbarButton(tb, function() {
             bubbleHelp.hide(false);
             callbacks.onQuit();
-        }
-        );
+        }, 'editQuit', 'sign-out', 'Quit editing and go back to playing').classed('button-reverse', true);
 
-        tb.select('#editAdd').on('click', onAdd);
-        tb.select('#editDelete').on('click', onDelete);
-
-        tb.select('#editShowHelp').on('click', onHelp);
-        bubbleHelp = new bubble.Bubble('editHelp');
-        bubbleHelp.below = true;
+        tb.on('submit', function() {
+            d3.event.preventDefault();
+        });
 
         fields = [];
         for (var i=0; i<scratchPuzzle.answers.length; i++) {

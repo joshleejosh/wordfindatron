@@ -373,14 +373,16 @@
 
     function setupSharing() {
         var f = function(o) {
-            var a = [];
-            for (var i in o) {
-                a.push(encodeURI(i) + '=' + encodeURI(o[i]));
-            }
+            var a = d3.entries(o).map(function (p) {
+                return encodeURI(p.key) + '=' + encodeURI(p.value);
+            });
             var rv = '?' + a.join('&');
             return rv;
         };
-        var link = window.location + '?p=' + thePuzzle.serialize();
+        var link = window.location.protocol + '//' +
+            window.location.hostname +
+            window.location.pathname +
+            '?p=' + thePuzzle.serialize();
 
         d3.select('#share_link').attr('href', link);
 
@@ -594,10 +596,6 @@
             onSolve: function() {
                 onReset(false);
                 autosolve();
-            },
-            onShare: function() {
-                var serialized = thePuzzle.serialize();
-                window.open('?p='+serialized, '_blank');
             }
         });
         toolbar.setUndoable(rings.length > 0);

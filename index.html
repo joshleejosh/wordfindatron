@@ -11,76 +11,7 @@
 <div id="main">
     <h1><a href="http://floor.is/lava/wordfindatron">WORDFINDATRON</a></h1>
 
-    <form id="toolbar">
-        <button id="tbUndo"
-                type="button"
-                title="Erase your last ring"><i class="fa fa-backward fa-fw"></i></button>
-        <button id="tbReset"
-                type="button"
-                title="Erase all rings"><i class="fa fa-fast-backward fa-fw"></i></button>
-        <button id="tbHint"
-                type="button"
-                title="Get a Hint"><i class="fa fa-lightbulb-o fa-fw"></i></button>
-        <button id="tbShuffle"
-                type="button"
-                title="Make a new grid with the same words"><i class="fa fa-random fa-fw"></i></button>
-        <button id="tbNew"
-                type="button"
-                title="Make a new puzzle from scratch"><i class="fa fa-eject fa-fw"></i></button>
-        <button id="tbShowAdv"
-                type="button"
-                title="See more options for new puzzles"><i class="fa fa-sliders fa-fw"></i></button>
-        <span class="tbseparator"></span>
-        <button id="tbHelp"
-                type="button"
-                title="About WORDFINDATRON"><i class="fa fa-question-circle fa-fw"></i></button>
-        <button id="tbEdit"
-                class="button-reverse"
-                type="button"
-                title="Make your own puzzle!"><i class="fa fa-edit fa-fw"></i></button>
-        <div id="tbadvanced">
-            <h3>Options for new puzzles (<i class="fa fa-eject"></i>)</h3>
-            <!-- I'm so, so sorry. -->
-            <table id="options" cellpadding="0" cellspacing="0">
-                <tbody>
-                    <tr>
-                        <th>
-                            <label id="labTbSize"
-                                   for="tbSize"
-                                   title="Change the size of the grid">Grid Size</label>
-                        </th>
-                        <td class="scale">small</td>
-                        <td>
-                            <input type="range"
-                                   id="tbSize"
-                                   min="8"
-                                   max="20"
-                                   step="2"
-                                   value="8"
-                                   title="Change the size of the grid" />
-                        </td>
-                        <td class="scale">large</td>
-                    </tr>
-                    <tr>
-                        <th>
-                            <label for="tbDensity" id="labTbDensity"># Words</label>
-                        </th>
-                        <td class="scale">fewer</td>
-                        <td>
-                            <input type="range"
-                                   id="tbDensity"
-                                   min="0.300"
-                                   max="0.700"
-                                   step="0.100"
-                                   value="0.500"
-                                   title="Set how full the grid is" />
-                        </td>
-                        <td class="scale">more</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </form>
+    <form id="toolbar"></form>
 
     <div id="playField">
         <table id="wfgrid" cellpadding="0" cellspacing="0" summary="A nice little word find puzzle">
@@ -96,23 +27,6 @@
 
     <div id="editor">
         <form id="editTools">
-            <button id="editAdd"
-                    type="button"
-                    title="Add a word to the list"><i class="fa fa-plus fa-fw"></i></button>
-            <button id="editDelete"
-                    type="button"
-                    title="Remove a word from the list"><i class="fa fa-minus fa-fw"></i></button>
-            <button id="editCommit"
-                    type="button"
-                    title="Make a puzzle!"><i class="fa fa-check fa-fw"></i></button>
-            <span class="tbseparator"></span>
-        <button id="editShowHelp"
-                type="button"
-                title="About WORDEDITATRON"><i class="fa fa-question-circle fa-fw"></i></button>
-            <button id="editQuit"
-                    class="button-reverse"
-                    type="button"
-                    title="Quit editing and go back to playing"><i class="fa fa-sign-out fa-fw"></i></button>
         </form>
         <form id="editorlist">
         </form>
@@ -140,6 +54,7 @@
         <a id="share_link" href="" target="_blank"><i class="fa fa-share-alt-square fa-fw"></i></a>
         <span class="tbseparator"></span>
         <a href="http://twitter.com/wordfindatron" target="_blank">@wordfindatron</a>
+        &mdash;
         <a href="http://twitter.com/joshleejosh" target="_blank">@joshleejosh</a>
     </p>
 
