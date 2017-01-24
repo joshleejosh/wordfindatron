@@ -371,6 +371,7 @@ button {
 /* ========================================================================== */
 
 .bubble {
+	display: none;
 	position: absolute;
 	overflow: hidden;
 	margin: 0;
@@ -379,7 +380,6 @@ button {
 	border: solid 1px $cRing;
 	@include border-radius($fsBubble);
 	background-color: $cBgBody;
-	color: $cTextBody;
 	font-family: $fDisplay;
 	font-size: $fsBubble;
 

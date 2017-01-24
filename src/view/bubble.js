@@ -2,7 +2,7 @@
     'use strict';
 
     var d3 = require('d3');
-    var consts = require('../consts');
+    var viewutil = require('./viewutil');
 
     function Bubble(id) {
         this.id = id;
@@ -22,12 +22,14 @@
     };
 
     Bubble.prototype.show = function(caller, tweent) {
-        if (tweent === true) {
-            tweent = consts.TWEEN_TIME;
+        tweent = viewutil.tweenTime(tweent);
+        if (!caller) {
+            caller = d3.select('h1');
         }
 
         var rCaller = caller.node().getBoundingClientRect();
         var side = (this.below)?'top':'bottom';
+        this.selection.interrupt('bubble');
         this.selection
             .style('display', 'block')
             .style('width', null)
@@ -78,13 +80,11 @@
     };
 
     Bubble.prototype.hide = function(caller, tweent) {
-        if (tweent === true) {
-            tweent = consts.TWEEN_TIME;
-        }
-        d3.select('#bubbleBlocker').remove();
+        tweent = viewutil.tweenTime(tweent);
         if (this.owner) {
             this.owner.classed('button-reverse', false);
         }
+        d3.select('#bubbleBlocker').remove();
 
         var rBubble = this.selection.node().getBoundingClientRect();
         this.selection

@@ -4,7 +4,6 @@
     'use strict';
 
     var Random = require('random-js');
-    var consts = require('./consts');
 
     function log() {
         var s = '';
@@ -112,15 +111,6 @@
         return [angle, direction];
     }
 
-    function calcTweenTime(t) {
-        if (!t) {
-            t = 0;
-        } else if (t === true) {
-            t = consts.TWEEN_TIME;
-        }
-        return t;
-    }
-
     module.exports = {
         log: log,
         sign: sign,
@@ -129,8 +119,7 @@
         range: range,
         bIndexOf: bIndexOf,
         shuffle: shuffle,
-        snapAngle: snapAngle,
-        calcTweenTime: calcTweenTime
+        snapAngle: snapAngle
     };
 
 }());

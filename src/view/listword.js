@@ -2,8 +2,7 @@
     'use strict';
 
     var d3 = require('d3');
-    var consts = require('../consts');
-    var util = require('../util');
+    var viewutil = require('./viewutil');
     var colors = require('./colors');
 
     function ListWord(id, gridWord) {
@@ -25,14 +24,12 @@
     };
 
     ListWord.prototype.mark = function(m, tweent) {
-        if (typeof tweent === 'undefined') {
-            tweent = consts.FADE_TIME;
-        }
+        tweent = viewutil.fadeTime(tweent);
         if (!this.selection) {
             this.selection = d3.select('#'+this.id());
         }
         if (!this.selection.empty() && this.selection.classed('wfsolved')!==m) {
-            var tt = util.calcTweenTime(tweent);
+            var tt = viewutil.tweenTime(tweent);
             var bgc = colors.bodyBg,
                 txc = colors.bodyText;
             if (m) {

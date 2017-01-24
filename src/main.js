@@ -54,7 +54,7 @@
     function wordfindatronMain(q) {
         view.disableInput();
         view.msgClear();
-        view.msgWrite('Loading...');
+        view.msgWrite('Thinking&ellip;');
         var p;
 
         try {
@@ -84,6 +84,7 @@
         }
     }
 
+    view.msgClear();
     data.load(view, function() {
         var query = url.parse(window.location.href, true).query;
         wordfindatronMain(query);

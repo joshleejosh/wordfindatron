@@ -3,6 +3,7 @@
 
     var d3 = require('d3');
     var util = require('../util');
+    var viewutil = require('./viewutil');
     var colors = require('./colors');
 
     function Ring(cell) {
@@ -47,7 +48,7 @@
     };
 
     Ring.prototype.resize = function(tween, transitcb) {
-        tween = util.calcTweenTime(tween);
+        tween = viewutil.tweenTime(tween);
 
         // position the ring.
         if (this.startCell) {
@@ -87,7 +88,7 @@
     };
 
     Ring.prototype.transitionIn = function(tween, cb) {
-        tween = util.calcTweenTime(tween);
+        tween = viewutil.tweenTime(tween);
         var pp = d3.select('#playField').node().getBoundingClientRect();
 
         var y = parseInt(this.ring.style('top'), 10);
@@ -117,7 +118,7 @@
     };
 
     Ring.prototype.transitionOut = function(tween, cb) {
-        tween = util.calcTweenTime(tween);
+        tween = viewutil.tweenTime(tween);
         var pp = d3.select('#playField').node().getBoundingClientRect();
         var anchor = this.getAnchor();
 
@@ -138,7 +139,7 @@
     };
 
     Ring.prototype.destroy = function(tween) {
-        tween = util.calcTweenTime(tween);
+        tween = viewutil.tweenTime(tween);
         this.startCell = null;
         this.endCell = null;
         this.answer = null;
@@ -165,7 +166,7 @@
         if (this.ring.classed('ringsolved') === t) {
             return;
         }
-        tween = util.calcTweenTime(tween);
+        tween = viewutil.tweenTime(tween);
         var bgc = this.bgColor;
         var boc = this.borderColor;
         if (t) {

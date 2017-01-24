@@ -1,6 +1,8 @@
 (function() {
     'use strict';
 
+    var consts = require('../consts');
+
     // ==================================================================
 
 
@@ -24,10 +26,33 @@
     }
 
 
+    // if t is undefined, return TWEEN_TIME.
+    // if it's true or false, return either 0 or TWEEN_TIME.
+    // otherwise, assume it's a number overriding the default time value, and return it unchanged.
+    function tweenTime(t) {
+        if (typeof t === 'undefined' || t === true) {
+            t = consts.TWEEN_TIME;
+        } else if (!t) {
+            t = 0;
+        }
+        return t;
+    }
+
+    function fadeTime(t) {
+        if (typeof t === 'undefined' || t === true) {
+            t = consts.FADE_TIME;
+        } else if (!t) {
+            t = 0;
+        }
+        return t;
+    }
+
     // ==================================================================
 
     module.exports = {
         makeToolbarButton: makeToolbarButton,
-        makeToolbarSeparator: makeToolbarSeparator
+        makeToolbarSeparator: makeToolbarSeparator,
+        tweenTime: tweenTime,
+        fadeTime: fadeTime
     };
 }());

@@ -5,6 +5,7 @@
     var d3 = require('d3');
     var consts = require('../consts');
     var util = require('../util');
+    var viewutil = require('./viewutil');
     var colors = require('./colors');
     var cell = require('./cell');
     var ring = require('./ring');
@@ -15,7 +16,8 @@
     var editor = require('./editor');
     var bubble = require('./bubble');
 
-    var thePuzzle, theTable, theWords, bubbleHelp;
+    var thePuzzle, theTable, theWords;
+    var bubbleHelp, bubbleWarning;
     var rings = [];
     var inputDisabled = false, doingVictory = false;
     var hintWords;
@@ -25,34 +27,28 @@
     // ==================================================================
 
     function failureClear() {
-        d3.select('#error').style('display', 'none').style('position', 'relative');
+        if (!bubbleWarning) {
+            return;
+        }
+        bubbleWarning.hide(d3.select('h1'), true);
     }
     function msgFailure(msg) {
-        var errblk = d3.select('#error');
-        errblk.style('display', 'block').style('position', 'relative');
-        errblk.append('span').html(msg + '<br/>');
-        var firstWord = d3.select('.editoritem');
-
-        if (d3.select('#editorlist').style('display') !== 'none' && !firstWord.empty()) {
-            var bFirstWord = firstWord.select('input').node().getBoundingClientRect();
-            var x = bFirstWord.right + parseInt(errblk.style('font-size'), 10);
-            var y = bFirstWord.top;
-            errblk.style('position', 'absolute')
-                .style('top', '' + y + 'px')
-                .style('left', '' + x + 'px')
-            ;
+        if (!bubbleWarning) {
+            return;
         }
+        var errblk = d3.select('#error');
+        errblk.html('').append('span').html(msg + '<br/>');
+        bubbleWarning.show(d3.select('h1'), true);
     }
 
     function msgClear() {
-        d3.selectAll('#message span').remove();
-        d3.selectAll('#error span').remove();
+        d3.select('#message').html('');
         failureClear();
     }
     function msgWrite() {
         var s = '';
         for (var i=0; i<arguments.length; i++) {
-            s += '['+arguments[i]+'] ';
+            s += '[' + arguments[i] + '] ';
         }
         d3.select('#message').append('span').html(s + '<br/>');
     }
@@ -201,9 +197,7 @@
     }
 
     function checkAnswers(checkVictory, tweent) {
-        if (tweent === true) {
-            tweent = consts.FADE_TIME;
-        }
+        tweent = viewutil.fadeTime(tweent);
         var answered = 0;
         var awords = [], marked = [];
         for (var ri=0; ri<rings.length; ri++) {
@@ -255,7 +249,7 @@
         }
         if (!hintWords || hintWords.length === 0) {
             hintWords = d3.selectAll('#wflist>li')
-                .filter(function (d) { return !d.isSolved(); })
+                .filter(function (lw) { return !lw.isSolved(); })
                 .data()
             ;
             Random.shuffle(rng, hintWords);
@@ -409,7 +403,8 @@
     }
 
     function onReset(tweent) {
-        bubbleHelp.hide(tweent);
+        bubbleHelp.hide(null, tweent);
+        bubbleWarning.hide(null, tweent);
         drag.cancelDrag(tweent);
         cancelVictory();
         clearRings(tweent);
@@ -418,9 +413,9 @@
 
     function displayPuzzle(puz, cbNewPuzzle, cbCommitEdit) {
         thePuzzle = puz;
-        util.log(thePuzzle.seed);
+        util.log(thePuzzle.params);
         hintWords = null;
-        d3.select('#message').text('');
+        msgClear();
         d3.selectAll('#wflist li').remove();
         table.wipe();
         toolbar.wipe();
@@ -573,6 +568,8 @@
                 msgClear();
                 onReset(false);
                 hideGame(function() {
+                    msgClear();
+                    msgWrite('Thinking&ellip;');
                     cbNewPuzzle();
                     showGame(function() {
                         checkAnswers(false, true);
@@ -596,10 +593,15 @@
             }
         });
         toolbar.setUndoable(rings.length > 0);
+        toolbar.writeGridSize(thePuzzle.size);
+        toolbar.writeDensity(thePuzzle.density());
 
         bubbleHelp = new bubble.Bubble('playHelp');
         bubbleHelp.below = true;
         bubbleHelp.owner = d3.select('#tbHelp');
+
+        bubbleWarning = new bubble.Bubble('error');
+        bubbleWarning.below = true;
 
         setupSharing();
 

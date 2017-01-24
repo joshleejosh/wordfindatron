@@ -98,6 +98,7 @@
     /*
      */
     function reportStats() {
+        util.log(thePuzzle.params);
         var addLetters = function(fo, fs) {
             var tot = 0;
             for (var fi=0; fi<fs.length; fi++) {
@@ -348,6 +349,7 @@
         thePuzzle.grid.fillJunk(fpick);
 
         scanConflicts(fpick);
+        //thePuzzle.shuffleAnswers();
         teardown();
         var t1 = new Date().getTime();
         genstats.genTime = t1 - t0;

@@ -123,13 +123,6 @@ describe('Test Util', function(){
 
     });
 
-    describe('calcTweenTime', function() {
-        it('translates a boolean into a time for animation', function() {
-            expect(util.calcTweenTime(false)).toBe(0);
-            expect(util.calcTweenTime(true)).toBe(consts.TWEEN_TIME);
-        });
-    });
-
     describe('bIndexOf', function() {
         it('binary searches a sorted list', function() {
             var a = [-20, -7, 0, 5, 8, 12, 13, 2603];

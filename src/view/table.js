@@ -3,7 +3,7 @@
 
     var Random = require('random-js');
     var d3 = require('d3');
-    var consts = require('../consts');
+    var viewutil = require('./viewutil');
     var colors = require('./colors');
     var cid = require('./cell').cid;
 
@@ -48,9 +48,7 @@
      * Flash the first letter of this answer's word.
      */
     Table.prototype.flashHint = function(answer, tweent) {
-        if (typeof tweent === 'undefined') {
-            tweent = consts.FADE_TIME;
-        }
+        tweent = viewutil.fadeTime(tweent);
         var cell = this.getCell(answer.startLocation.x, answer.startLocation.y);
         var cw = parseInt(cell.selection.style('width'), 10);
         cell.selection
@@ -71,9 +69,7 @@
     };
 
     Table.prototype.flashVictory = function(ring, tweent) {
-        if (tweent === true) {
-            tweent = consts.FADE_TIME;
-        }
+        tweent = viewutil.fadeTime(tweent);
         var coordlist = ring.answer.getCellCoordinates();
         d3.selectAll('.cell')
             .filter(function(d) {
@@ -104,9 +100,7 @@
     };
 
     Table.prototype.fadeUnsolved = function(nwords, rng, tweent) {
-        if (tweent === true) {
-            tweent = consts.FADE_TIME;
-        }
+        tweent = viewutil.fadeTime(tweent);
         d3.selectAll('.cell')
             .filter(function() {
                 return !d3.select(this).classed('cellsolved');

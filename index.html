@@ -1,9 +1,10 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
+    <title>WORDFINDATRON</title>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
     <meta name="viewport" content="initial-scale=1.0, width=device-width">
-    <title>WORDFINDATRON</title>
+    <meta name="description" content="WORDFINDATRON makes random word-find puzzles for you to solve, forever.">
     <link rel="shortcut icon" href="/favicon.gif">
     <link href="wordfindatron.css" rel="stylesheet" />
 </head>
@@ -13,6 +14,8 @@
 
     <form id="toolbar"></form>
 
+    <p id="message">WORDFINDATRON makes random word-find puzzles for you to solve, forever.<br/></p>
+
     <div id="playField">
         <table id="wfgrid" cellpadding="0" cellspacing="0" summary="A nice little word find puzzle">
             <tbody></tbody>
@@ -21,7 +24,7 @@
     </div>
 
     <div id="info">
-        <ul id="wflist">
+       <ul id="wflist">
         </ul>
     </div>
 
@@ -32,22 +35,21 @@
         </form>
     </div>
 
-    <p id="error" class="help warning"></p>
-    <p id="message">Loading...</p>
-
-    <div id="playHelp" class="bubble">
-        <p>WORDFINDATRON generates random word find puzzles for you to solve. Play a while; play forever!</p>
-        <p>DRAG to circle words. <i class="fa fa-backward fa-fw"></i> to remove your last circle. <i class="fa fa-fast-backward fa-fw"></i> to start over. <i class="fa fa-lightbulb-o fa-fw"></i> for a hint.</p>
-        <p><i class="fa fa-random fa-fw"></i> to get a new grid with the same words. <i class="fa fa-eject fa-fw"></i> to get a new random puzzle.</p>
-    </div>
+    <div id="error" class="bubble warning"></div>
 
     <div id="editHelp" class="bubble">
         <p>WORDEDITATRON can make puzzles just for you! Just enter a list of your favorite words, and let WORDEDITATRON take care of the rest.</p>
         <p><i class="fa fa-plus fa-fw"></i> or <i class="fa fa-minus fa-fw"></i> will add or remove words from the list. Hit <i class="fa fa-check fa-fw"></i> to create the puzzle. Hit <i class="fa fa-sign-out fa-fw"></i> to go back to just playing.</p>
     </div>
 
+    <div id="playHelp" class="bubble">
+        <p>WORDFINDATRON makes random word-find puzzles for you to solve, forever.</p>
+        <p>DRAG to circle words. <i class="fa fa-backward fa-fw"></i> to remove your last circle. <i class="fa fa-fast-backward fa-fw"></i> to start over. <i class="fa fa-lightbulb-o fa-fw"></i> for a hint.</p>
+        <p><i class="fa fa-random fa-fw"></i> to get a new grid with the same words. <i class="fa fa-eject fa-fw"></i> to get a new random puzzle.</p>
+    </div>
+
     <p id="sharing">
-        <a id="share_email" href="mailto:?body=http://floor.is/lava/wordfindatron" target="_blank"><i class="fa fa-envelope fa-fw"></i></a>
+        <a id="share_email" href="mailto:?subject=WORDFINDATRON&body=http://floor.is/lava/wordfindatron" target="_blank"><i class="fa fa-envelope fa-fw"></i></a>
         <a id="share_twitter" href="https://twitter.com/intent/tweet?url=http://floor.is/lava/wordfindatron" target="_blank"><i class="fa fa-twitter-square fa-fw"></i></a>
         <a id="share_facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://floor.is/lava/wordfindatron" target="_blank"><i class="fa fa-facebook-square fa-fw"></i></a>
         <a id="share_reddit" href="http://www.reddit.com/submit?url=http://floor.is/lava/wordfindatron" target="_blank"><i class="fa fa-reddit-square fa-fw"></i></a>

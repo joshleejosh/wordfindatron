@@ -22,7 +22,9 @@
     exports.MAX_GRID_SIZE = 20;
     exports.MIN_MIN_WORDLEN = 4;
     exports.MAX_MAX_WORDLEN = 9;
-    exports.MIN_DENSITY = 0.333;
-    exports.MAX_DENSITY = 0.667;
+    exports.MIN_DENSITY = 0.300;
+    exports.MAX_DENSITY = 0.700;
+    exports.DEFAULT_GRID_SIZE = 12;
+    exports.DEFAULT_DENSITY = 0.400;
 
 }());

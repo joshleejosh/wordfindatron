@@ -1,1 +1,1 @@
-Wordfindatron - little word find puzzles on demand.
+WORDFINDATRON - little word-find puzzles on demand.

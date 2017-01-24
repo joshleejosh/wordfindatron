@@ -10,7 +10,7 @@
     // ==================================================================
 
     function getGridSize() {
-        var rv = 12;
+        var rv = consts.DEFAULT_GRID_SIZE;
         var d = d3.select('#tbSize');
         if (!d.empty()) {
             rv = parseInt(d.property('value'), 10);
@@ -22,7 +22,7 @@
     }
 
     function getDensity() {
-        var rv = 0.5;
+        var rv = consts.DEFAULT_DENSITY;
         var d = d3.select('#tbDensity');
         if (!d.empty()) {
             rv = parseFloat(d.property('value'));
@@ -141,8 +141,16 @@
         var tba = theToolbar.append('div').attr('id', 'tbadvanced');
         tba.append('h3').html('Options for new puzzles (<i class="fa fa-eject"></i>)');
         var tbo = tba.append('div').attr('id', 'options');
-        mkoptionrow(tbo, 'tbSize', 'labTbSize', 'Grid Size', 'Set the size of the grid', 'small', 'large', '8', '20', '2', '12');
-        mkoptionrow(tbo, 'tbDensity', 'labTbDensity', '# Words', 'Set how full the grid gets', 'fewer', 'more', '0.300', '0.700', '0.100', '0.500');
+        mkoptionrow(tbo,
+            'tbSize', 'labTbSize',
+            'Grid Size', 'Set the size of the grid',
+            'small', 'large',
+            ''+consts.MIN_GRID_SIZE, ''+consts.MAX_GRID_SIZE, '2', ''+consts.DEFAULT_GRID_SIZE);
+        mkoptionrow(tbo,
+            'tbDensity', 'labTbDensity',
+            '# Words', 'Set how full the grid gets',
+            'fewer', 'more',
+            ''+consts.MIN_DENSITY, ''+consts.MAX_DENSITY, '0.100', ''+consts.DEFAULT_DENSITY);
 
         theToolbar.on('submit', function() {
             d3.event.preventDefault();
