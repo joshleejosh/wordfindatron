@@ -53,17 +53,26 @@
 
     // ==================================================================
 
+    function checkInput() {
+        if (inputDisabled) {
+            toolbar.disable();
+            editor.disable();
+        } else {
+            toolbar.enable();
+            editor.enable();
+            toolbar.setUndoable(rings.length > 0);
+            toolbar.setHintable(!doingVictory);
+        }
+    }
+
     function disableInput() {
         inputDisabled = true;
-        toolbar.disable();
-        editor.disable();
+        checkInput();
     }
 
     function enableInput() {
         inputDisabled = false;
-        toolbar.enable();
-        editor.enable();
-        toolbar.setUndoable(rings.length > 0);
+        checkInput();
     }
 
     // ==================================================================
@@ -100,14 +109,26 @@
             return;
         }
         doingVictory = true;
+        disableInput();
         d3.selectAll('.ring').style('z-index', -3);
+
         var ftable = function(r) {
             theTable.flashVictory(r, true);
         };
+        // reenable input after the last ring finishes flashing.
+        var ffLast = function(i, r) {
+            return function(r) {
+                if (i === listwords.length - 1) {
+                    enableInput();
+                }
+            };
+        }
+
         var listwords = wordlist.getListWords();
         for (var wordi=0; wordi<listwords.length; wordi++) {
             listwords[wordi].doVictory(wordi, consts.FADE_TIME);
-            ringForAnswer(listwords[wordi].answer).doVictory(wordi, consts.FADE_TIME, ftable);
+            var r = ringForAnswer(listwords[wordi].answer);
+            r.doVictory(wordi, consts.FADE_TIME, ftable, ffLast(wordi, r));
         }
         theTable.fadeUnsolved(listwords.length, rng, consts.FADE_TIME);
     }
@@ -216,6 +237,7 @@
         if (checkVictory && answered === thePuzzle.answers.length) {
             doVictory();
         }
+        checkInput();
     }
 
     // ==================================================================
@@ -298,7 +320,6 @@
         disableInput();
         var fanswer = function(i) {
             if (i >= thePuzzle.answers.length) {
-                enableInput();
                 return;
             }
             var answer = thePuzzle.answers[i];
@@ -435,12 +456,14 @@
             },
             onNew: function() {
                 msgClear();
+                disableInput();
                 onReset(false);
                 hideGame(function() {
                     msgClear();
                     msgWrite('Thinking&ellip;');
                     cbNewPuzzle();
                     showGame(function() {
+                        enableInput();
                         checkAnswers(false, true);
                     });
                 });

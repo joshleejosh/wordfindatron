@@ -59,6 +59,11 @@
         d3.select('#tbReset').attr('disabled', (t)?null:true);
     }
 
+    function setHintable(t) {
+        d3.select('#tbHint').attr('disabled', (t)?null:true);
+        d3.select('#tbSolve').attr('disabled', (t)?null:true);
+    }
+
     function onShowAdv() {
         var a = theToolbar.select('#tbadvanced');
         var b = (a.style('display') === 'none') ? 'block' : 'none';
@@ -261,6 +266,7 @@
         enable: enable,
         disable: disable,
         setUndoable: setUndoable,
+        setHintable: setHintable,
         getGridSize: getGridSize,
         getDensity: getDensity,
         getSeed: getSeed,

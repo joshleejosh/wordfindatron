@@ -175,10 +175,9 @@
         ;
     };
 
-    Ring.prototype.doVictory = function(i, tweent, onStart) {
+    Ring.prototype.doVictory = function(i, tweent, onStart, onEnd) {
         var that = this;
-        var r = this.ring;
-        r.transition('ring.victory')
+        this.ring.transition('ring.victory')
             .duration(tweent)
             .delay((tweent * 2.5) * i)
             .style('background-color', metrics.color.highlight)
@@ -186,8 +185,9 @@
             .on('start', function() {
                 d3.select(this).style('z-index', -1);
                 if (onStart) {
-                    onStart(that);
+                    return onStart(that);
                 }
+                return null;
             })
          .transition('ring.victory')
             .duration(tweent)
@@ -195,6 +195,10 @@
             .style('border-color', metrics.color.fg)
             .on('end', function() {
                 d3.select(this).style('z-index', -2);
+                if (onEnd) {
+                    return onEnd(that);
+                }
+                return null;
             })
         ;
     };
