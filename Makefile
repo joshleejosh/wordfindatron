@@ -3,7 +3,6 @@ BASENAME=wordfindatron
 WORDS=wordlists.txt
 JS=$(BASENAME).js
 CSS=$(BASENAME).css
-SCSS=$(BASENAME).scss
 HTML=index.html
 
 SRC=src
@@ -44,8 +43,8 @@ $(GENERATEDJS):
 		echo "exports.CHEAT=true;" > $(GENERATEDJS); \
 	fi
 
-$(CSS): wordfindatron.scss
-	sass $(SCSS) $(CSS)
+$(CSS): css/*.scss
+	sass css/$(BASENAME).scss $(CSS)
 
 $(WORDS): data/*.txt
 	@echo '### WORDLIST ###' > $(WORDS)

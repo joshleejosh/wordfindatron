@@ -41,7 +41,7 @@
             .style(side, '0')
         ;
         var rBubble = this.selection.node().getBoundingClientRect();
-        var pad = parseInt(this.selection.style('padding-left'), 10) / 2;
+        var pad = parseFloat(this.selection.style('padding-left')) / 2;
         var x = Math.max(0, rCaller.left - rBubble.width - pad);
         var y = (this.below) ? rCaller.bottom + pad : rBubble.bottom - rCaller.top + pad;
         var that = this;

@@ -4,7 +4,7 @@
     var d3 = require('d3');
     var util = require('../util');
     var viewutil = require('./viewutil');
-    var colors = require('./colors');
+    var metrics = viewutil.metrics;
 
     function Ring(cell) {
         this.ring = null;
@@ -12,52 +12,45 @@
         this.endCell = null;
         this.word = '';
         this.answer = null;
-        this.calculateMetrics();
     }
-
-    Ring.prototype.calculateMetrics = function() {
-        // NOTE: displayPuzzle() sets some properties as defaults on my prototype based on inferred CSS.
-        //this.borderSize = Ring.prototype.borderSize;
-        //this.size = this.startCell.size * 2 / 3;
-    };
 
     Ring.prototype.getAnchor = function() {
         var sp = this.startCell.getPagePosition();
-        var cx = (sp.x + (this.startCell.size / 2));
-        var cy = (sp.y + (this.startCell.size / 2));
+        var cx = (sp.x + (metrics.cell.size / 2));
+        var cy = (sp.y + (metrics.cell.size / 2));
         return {x: cx, y: cy};
-    };
-
-    Ring.prototype.getCellOffset = function() {
-        return ((this.startCell.size - this.size) / 2) - this.borderSize;
     };
 
     Ring.prototype.calcWidth = function() {
         if (!this.startCell || !this.endCell) {
-            return this.size;
+            return metrics.ring.size;
         }
         var sp = this.startCell.getPagePosition();
         var ep = this.endCell.getPagePosition();
         var dx = ep.x - sp.x;
         var dy = ep.y - sp.y;
         if (dx === 0 && dy === 0) {
-            return this.size;
+            return metrics.ring.size;
         }
         var dist = Math.sqrt((dx*dx) + (dy*dy));
-        return dist + this.size;
+        return dist + metrics.ring.size;
     };
 
     Ring.prototype.resize = function(tween, transitcb) {
         tween = viewutil.tweenTime(tween);
+        var cellOffset = ((metrics.cell.size - metrics.ring.size) / 2) - metrics.ring.borderSize;
 
         // position the ring.
         if (this.startCell) {
             var pp = d3.select('#playField').node().getBoundingClientRect();
             var sp = this.startCell.getPagePosition();
-            var y = sp.y - pp.top + this.getCellOffset();
-            var x = sp.x - pp.left + this.getCellOffset();
+            var y = sp.y - pp.top + cellOffset;
+            var x = sp.x - pp.left + cellOffset;
+            var h = metrics.ring.size;
             this.ring.style('top', '' + y + 'px')
                 .style('left', '' + x + 'px')
+                .style('height', '' + h + 'px')
+                .style('transform-origin', '' + metrics.ring.pivot + 'px ' + metrics.ring.pivot + 'px')
             ;
 
             // scale, translate, and rotate the ring.
@@ -65,21 +58,20 @@
                 var wid = this.calcWidth();
                 var ep = this.endCell.getPagePosition();
                 var a = util.snapAngle(ep.x - sp.x, ep.y - sp.y);
-                var rot = a[0] * (360.0/Math.TAU);
-                this.ring.transition('ringresize')
+                var rot = a[0] * (360.0 / Math.TAU);
+                this.ring.transition('ring.resize')
                     .duration(tween)
                     .ease(d3.easeSinOut)
                     .style('width', wid + 'px')
                     .style('transform', 'rotate(' + rot + 'deg)')
                     .on('end', transitcb)
                 ;
-
             } else {
                 // snap back to a single cell.
-                this.ring.transition('ringresize')
+                this.ring.transition('ring.resize')
                     .duration(tween)
                     .ease(d3.easeSinOut)
-                    .style('width', this.size + 'px')
+                    .style('width', metrics.ring.size + 'px')
                     .style('transform', null)
                     .on('end', transitcb)
                 ;
@@ -91,17 +83,17 @@
         tween = viewutil.tweenTime(tween);
         var pp = d3.select('#playField').node().getBoundingClientRect();
 
-        var y = parseInt(this.ring.style('top'), 10);
-        var x = parseInt(this.ring.style('left'), 10);
-        var w = parseInt(this.ring.style('width'), 10);
-        var h = parseInt(this.ring.style('height'), 10);
+        var y = parseFloat(this.ring.style('top'));
+        var x = parseFloat(this.ring.style('left'));
+        var w = parseFloat(this.ring.style('width'));
+        var h = parseFloat(this.ring.style('height'));
         var anchor = this.getAnchor();
         this.ring
             .style('top', (anchor.y-pp.top) + 'px')
             .style('left', (anchor.x-pp.left) + 'px')
             .style('width', '1px')
             .style('height', '1px');
-        this.ring.transition('ringlife')
+        this.ring.transition('ring.transition')
             .duration(tween)
             .ease(d3.easeSinOut)
             .style('top', y + 'px')
@@ -122,7 +114,7 @@
         var pp = d3.select('#playField').node().getBoundingClientRect();
         var anchor = this.getAnchor();
 
-        this.ring.transition('ringlife')
+        this.ring.transition('ring.transition')
             .duration(tween)
             .ease(d3.easeSinIn)
             .style('top', (anchor.y-pp.top) + 'px')
@@ -145,7 +137,7 @@
         this.answer = null;
         if (this.ring) {
             var r = this.ring;
-            this.ring.transition('ringdie')
+            this.ring.transition('ring.destroy')
                 .duration(tween)
                 .style('width', '1px')
                 .on('end', function() {
@@ -167,15 +159,15 @@
             return;
         }
         tween = viewutil.tweenTime(tween);
-        var bgc = this.bgColor;
-        var boc = this.borderColor;
+        var bgc = metrics.color.none;
+        var boc = metrics.color.highlight;
         if (t) {
-            bgc = this.solvedColor;
-            boc = this.solvedColor;
+            bgc = metrics.color.fg;
+            boc = metrics.color.fg;
         }
 
         this.ring.classed('ringsolved', t);
-        this.ring.transition('ringmark')
+        this.ring.transition('ring.mark')
             .duration(tween)
             .ease(d3.easeSinIn)
             .style('background-color', bgc)
@@ -186,21 +178,21 @@
     Ring.prototype.doVictory = function(i, tweent, onStart) {
         var that = this;
         var r = this.ring;
-        r.transition('victory')
+        r.transition('ring.victory')
             .duration(tweent)
             .delay((tweent * 2.5) * i)
-            .style('background-color', colors.ring)
-            .style('border-color', colors.ring)
+            .style('background-color', metrics.color.highlight)
+            .style('border-color', metrics.color.highlight)
             .on('start', function() {
                 d3.select(this).style('z-index', -1);
                 if (onStart) {
                     onStart(that);
                 }
             })
-         .transition('victory')
+         .transition('ring.victory')
             .duration(tweent)
-            .style('background-color', colors.bodyText)
-            .style('border-color', colors.bodyText)
+            .style('background-color', metrics.color.fg)
+            .style('border-color', metrics.color.fg)
             .on('end', function() {
                 d3.select(this).style('z-index', -2);
             })

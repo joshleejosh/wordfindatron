@@ -6,17 +6,15 @@
     var consts = require('../consts');
     var util = require('../util');
     var viewutil = require('./viewutil');
-    var colors = require('./colors');
-    var cell = require('./cell');
-    var ring = require('./ring');
-    var listword = require('./listword');
     var drag = require('./drag');
+    var wordlist = require('./wordlist');
     var table = require('./table');
     var toolbar = require('./toolbar');
     var editor = require('./editor');
     var bubble = require('./bubble');
+    var sharing = require('./sharing');
 
-    var thePuzzle, theTable, theWords;
+    var thePuzzle, theTable;
     var bubbleHelp, bubbleWarning;
     var rings = [];
     var inputDisabled = false, doingVictory = false;
@@ -106,78 +104,60 @@
         var ftable = function(r) {
             theTable.flashVictory(r, true);
         };
-        for (var wordi=0; wordi<theWords.length; wordi++) {
-            theWords[wordi].doVictory(wordi, consts.FADE_TIME);
-            ringForAnswer(theWords[wordi].answer).doVictory(wordi, consts.FADE_TIME, ftable);
+        var listwords = wordlist.getListWords();
+        for (var wordi=0; wordi<listwords.length; wordi++) {
+            listwords[wordi].doVictory(wordi, consts.FADE_TIME);
+            ringForAnswer(listwords[wordi].answer).doVictory(wordi, consts.FADE_TIME, ftable);
         }
-        theTable.fadeUnsolved(theWords.length, rng, consts.FADE_TIME);
+        theTable.fadeUnsolved(listwords.length, rng, consts.FADE_TIME);
     }
 
     function cancelVictory() {
-        d3.selectAll('.cell').interrupt('victory');
-        d3.selectAll('.cell')
-            .filter(function() {
-                return !d3.select(this).classed('cellsolved');
-            })
-            .style('color', null)
-        ;
-        d3.selectAll('#wflist>li').interrupt('victory');
+        d3.selectAll('.cell').interrupt('cell.victory');
+        d3.selectAll('.cell').style('color', null);
+        d3.selectAll('#wflist>li').interrupt('listword.victory');
         d3.selectAll('.wfsolved')
-            .style('background-color', colors.bodyText);
-        d3.selectAll('.ring').interrupt('victory');
+            .style('background-color', viewutil.metrics.color.fg);
+        d3.selectAll('.ring').interrupt('ring.victory');
         d3.selectAll('.ringsolved')
-            .style('background-color', colors.bodyText)
-            .style('border-color', colors.bodyText);
+            .style('background-color', viewutil.metrics.color.fg)
+            .style('border-color', viewutil.metrics.color.fg);
         doingVictory = false;
     }
 
     function hideGame(cb) {
-        d3.select('#info')
-            .transition('game')
+        wordlist.hide(consts.FADE_TIME, function() {
+            d3.select('#playField')
+                .style('overflow', 'hidden')
+                .transition('game')
                 .duration(consts.FADE_TIME)
                 .ease(d3.easeQuadOut)
                 .style('width', '0px')
-            .on('end', function () {
-                d3.select(this).style('display', 'none').style('width', null);
-                d3.select('#playField')
-                    .transition('game')
-                        .duration(consts.FADE_TIME)
-                        .ease(d3.easeQuadOut)
-                        .style('width', '0px')
-                    .on('end', function () {
-                        d3.select(this).style('display', 'none').style('width', null);
-                        if (cb) {
-                            return cb();
-                        }
-                        return null;
-                    });
-            })
-        ;
+                .on('end', function () {
+                    d3.select(this)
+                        .style('display', 'none')
+                        .style('overflow', 'visible')
+                        .style('width', null);
+                    if (cb) {
+                        return cb();
+                    }
+                    return null;
+                });
+        });
     }
 
     function showGame(cb) {
         d3.select('#playField')
                 .style('display', 'inline-block')
+                .style('overflow', 'hidden')
                 .style('width', '0px')
             .transition('game')
                 .duration(consts.FADE_TIME)
                 .ease(d3.easeQuadIn)
                 .style('width', null)
             .on('end', function() {
-                d3.select('#info')
-                        .style('display', 'inline-block')
-                        .style('width', '0px')
-                    .transition('game')
-                        .duration(consts.FADE_TIME)
-                        .ease(d3.easeQuadIn)
-                        .style('width', null)
-                    .on('end', function () {
-                        if (cb) {
-                            return cb();
-                        }
-                        return null;
-                    })
-                ;
+                d3.select(this).style('overflow', 'visible');
+                wordlist.show(consts.FADE_TIME, cb);
             })
         ;
     }
@@ -228,8 +208,9 @@
             }
         });
 
-        for (var wi=0; wi<theWords.length; wi++) {
-            theWords[wi].mark((awords.indexOf(theWords[wi].word) !== -1));
+        var listwords = wordlist.getListWords();
+        for (var wi=0; wi<listwords.length; wi++) {
+            listwords[wi].mark((awords.indexOf(listwords[wi].word) !== -1));
         }
 
         if (checkVictory && answered === thePuzzle.answers.length) {
@@ -322,7 +303,7 @@
             }
             var answer = thePuzzle.answers[i];
             var startCell = theTable.getCell(answer.startLocation.x, answer.startLocation.y);
-            var dragRing = drag.createDrag(startCell, false);
+            drag.createDrag(startCell, false);
             var coords = answer.getCellCoordinates();
             var cooi = -1;
 
@@ -342,64 +323,21 @@
                     checkAnswers(true, true);
                     fanswer(i+1);
                 };
-                drag.continueDrag(theTable, cpos.x+dragRing.size, cpos.y+dragRing.size, consts.TWEEN_TIME, transitcb);
+                drag.continueDrag(theTable, cpos.x+viewutil.metrics.ring.size, cpos.y+viewutil.metrics.ring.size, consts.TWEEN_TIME, transitcb);
             };
             fcell();
         };
         fanswer(0);
     }
 
-    function rebindWordList() {
-        var ul = d3.select('#wflist');
-        var lis = ul.selectAll('li').data(theWords);
-        lis.enter()
-            .append('li')
-            .attr('id', function(d) { return d.id(); })
-            .classed('wfword', true)
-            .classed('wfsolved', false)
-        ;
-        lis.exit().remove();
-        ul.selectAll('li').append('span')
-                .style('display', 'inline')
-                .text(function(d) { return d.word; })
-        ;
-    }
-
-    function setupSharing() {
-        var f = function(o) {
-            var a = d3.entries(o).map(function (p) {
-                return encodeURI(p.key) + '=' + encodeURI(p.value);
-            });
-            var rv = '?' + a.join('&');
-            return rv;
-        };
-        var link = window.location.protocol + '//' +
-            window.location.hostname +
-            window.location.pathname +
-            '?p=' + thePuzzle.serialize();
-
-        d3.select('#share_link').attr('href', link);
-
-        var url = 'mailto:?subject=WORDFINDATRON&body='+link;
-        d3.select('#share_email').attr('href', url);
-
-        url = 'https://twitter.com/intent/tweet' + f({
-            'original_referrer': window.location,
-            'text': 'WORDFINDATRON',
-            'url': link
-        });
-        d3.select('#share_twitter').attr('href', url);
-
-        url = 'https://www.facebook.com/sharer/sharer.php' + f({
-            'u': link
-        });
-        d3.select('#share_facebook').attr('href', url);
-
-        url = 'http://www.reddit.com/submit' + f({
-            'url': link
-        });
-        d3.select('#share_reddit').attr('href', url);
-
+    function resize() {
+        viewutil.initMetrics(thePuzzle);
+        theTable.resize();
+        wordlist.resize();
+        for (var ri=0; ri<rings.length; ri++) {
+            rings[ri].resize();
+        }
+        toolbar.resize();
     }
 
     function onReset(tweent) {
@@ -418,84 +356,15 @@
         msgClear();
         d3.selectAll('#wflist li').remove();
         table.wipe();
-        toolbar.wipe();
         editor.wipe();
-        var body = d3.select('body');
 
         // Create dummy elements to get CSS derived metrics
-        {
-            var dummy = body.append('td').classed('cell', true);
-            var cw = parseInt(dummy.style('width'), 10) * thePuzzle.size;
-            d3.select('#wfgrid')
-                .style('width', cw + 'px')
-                .style('min-width', cw + 'px');
-            dummy.remove();
+        viewutil.initMetrics(thePuzzle);
 
-            dummy = body.append('div').classed('ring', true);
-            ring.Ring.prototype.borderSize = parseInt(dummy.style('border-top-width'), 10);
-            ring.Ring.prototype.size = parseInt(dummy.style('width'), 10);
-            ring.Ring.prototype.solvedColor = dummy.style('color');
-            ring.Ring.prototype.bgColor = dummy.style('background-color');
-            ring.Ring.prototype.borderColor = dummy.style('border-top-color');
-            colors.setColor('ring', dummy.style('border-top-color'));
-            dummy.remove();
+        theTable = new table.Table(thePuzzle);
+        theTable.rebind(onDragStartLetter, onDragMoveLetter, onDragEndLetter);
 
-            dummy = body.append('div').classed('wfword', true);
-            colors.setColor('bodyBg', dummy.style('background-color'));
-            colors.setColor('bodyText', dummy.style('color'));
-            dummy.remove();
-
-            dummy = body.append('div').classed('warning', true);
-            colors.setColor('warningText', dummy.style('color'));
-            dummy.remove();
-        }
-
-        // build the grid
-        {
-            var rows = d3.select('#wfgrid tbody').selectAll('tr')
-                .data(thePuzzle.grid.grid)
-                .enter()
-                .append('tr')
-            ;
-
-            var r = 0;
-            var cells = rows.selectAll('td')
-                .data(function(row) {
-                    var c = 0;
-                    var rv = row.map(function(s) {
-                        return new cell.Cell(s, c++, r);
-                    });
-                    r++;
-                    return rv;
-                })
-                .enter()
-                .append('td')
-                .attr('id', function(d) { return d.id(); })
-                .classed('cell', true)
-            ;
-
-            cells.call(d3.drag()
-                .on('start', onDragStartLetter)
-                .on('drag', onDragMoveLetter)
-                .on('end', onDragEndLetter)
-            );
-            cells.append('div')
-                .classed('gc', true)
-                .text(function(d) { return d.letter; })
-            ;
-
-            cells.each(function(d) {
-                d.element = this;
-                d.selection = d3.select(this);
-                d.size = parseInt(d3.select(this).style('width'), 10);
-            });
-        }
-
-        theWords = [];
-        for (var i=0; i<thePuzzle.answers.length; i++) {
-            theWords.push(new listword.ListWord(i, thePuzzle.answers[i]));
-        }
-        rebindWordList();
+        wordlist.rebind(thePuzzle);
 
         editor.init(thePuzzle, {
             onChange: function() { // misc edits
@@ -603,10 +472,11 @@
         bubbleWarning = new bubble.Bubble('error');
         bubbleWarning.below = true;
 
-        setupSharing();
-
         enableInput();
-        theTable = new table.Table(thePuzzle);
+
+        d3.select(window).on('resize', resize);
+        resize();
+        sharing.setLinks(thePuzzle);
     }
 
     // ==================================================================

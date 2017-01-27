@@ -3,7 +3,6 @@
 
     var d3 = require('d3');
     var viewutil = require('./viewutil');
-    var colors = require('./colors');
 
     function ListWord(id, gridWord) {
         this.lwid = id;
@@ -30,14 +29,14 @@
         }
         if (!this.selection.empty() && this.selection.classed('wfsolved')!==m) {
             var tt = viewutil.tweenTime(tweent);
-            var bgc = colors.bodyBg,
-                txc = colors.bodyText;
+            var bgc = viewutil.metrics.color.bg,
+                txc = viewutil.metrics.color.fg;
             if (m) {
-                bgc = colors.bodyText;
-                txc = colors.bodyBg;
+                bgc = viewutil.metrics.color.fg;
+                txc = viewutil.metrics.color.bg;
             }
             this.selection.classed('wfsolved', m);
-            this.selection.transition('wordmark')
+            this.selection.transition('listword.mark')
                 .duration(tt)
                 .ease(d3.easeQuadIn)
                 .style('background-color', bgc)
@@ -51,12 +50,12 @@
             this.selection = d3.select('#'+this.id());
         }
         var s = this.selection;
-        s.transition('victory')
-            .duration(tweent)
-            .delay((tweent * 2.5) * i)
-            .style('background-color', colors.ring)
-            .transition('victory')
-            .style('background-color', colors.bodyText)
+        s.transition('listword.victory')
+                .duration(tweent)
+                .delay((tweent * 2.5) * i)
+                .style('background-color', viewutil.metrics.color.highlight)
+            .transition('listword.victory')
+                .style('background-color', viewutil.metrics.color.fg)
         ;
     };
 

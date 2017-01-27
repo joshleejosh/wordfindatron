@@ -1,0 +1,52 @@
+
+#playField {
+	clear: both;
+	display: inline-block;
+	vertical-align: top;
+	position: relative;
+	overflow: visible;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+table#wfgrid {
+	position: relative;
+	display: block;
+	margin: 0;
+	padding: 0;
+	cursor: pointer;
+	max-width: $wCell * 20;
+}
+
+td.cell {
+	position: relative;
+	width: $wCell;
+	height: $wCell;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: $fsCell;
+	color: $cTextBody;
+	@include user-select(none);
+
+	.gc {
+		position: absolute;
+		top: 24%;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		text-align: center;
+	}
+
+	&:after {
+		content: '';
+		display: block;
+		margin-top: 100%;
+	}
+}
+
+td.cellsolved {
+	color: $cTextSolved;
+}
+

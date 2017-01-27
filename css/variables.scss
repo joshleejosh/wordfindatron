@@ -1,0 +1,28 @@
+$fGame: 'Times', 'Times New Roman', serif;
+$fDisplay: 'Assistant', sans-serif;
+
+$cBgBody: #f6f6f6;
+$cTextBody: #333;
+$cCellBg: $cBgBody;
+$cBgSolved: $cTextBody;
+$cTextSolved: $cBgBody;
+
+$wCell: 10mm;
+
+$fsTextBody: 1em;
+$fsCell: $wCell / 2;
+$fsButton: $fsCell;
+$fsBubble: $fsTextBody * 0.800;
+
+$fsWordlist: $fsCell * 1.200;
+$margin: $wCell / 2;
+
+$cRing: #999;
+$wRing: $wCell * 2 / 3;
+$ringThickness: 2px;
+$ringTransformOrigin: $wRing / 2 + $ringThickness;
+
+$cBgDisabled: #999;
+$cWarning: #c66;
+
+

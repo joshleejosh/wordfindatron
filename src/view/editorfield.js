@@ -4,7 +4,7 @@
     var d3 = require('d3');
     var consts = require('../consts');
     var data = require('../model/data');
-    var colors = require('./colors');
+    var viewutil = require('./viewutil');
 
     function Field(i, word, cbpi) {
         this.index = i;
@@ -49,8 +49,8 @@
             this.selection.select('input').style('color', null);
         } else {
             var that = this;
-            this.selection.select('input').style('background-color', colors.warningText);
-            this.selection.select('input').style('color', colors.bodyText);
+            this.selection.select('input').style('background-color', viewutil.metrics.color.warning);
+            this.selection.select('input').style('color', viewutil.metrics.color.fg);
             if (!this.label || this.label.empty()) {
                 this.label = this.selection.append('label')
                     .classed('warning', true)

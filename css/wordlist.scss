@@ -1,0 +1,42 @@
+
+#wflist {
+	position: relative;
+	display: inline-block;
+	overflow: hidden;
+	vertical-align: top;
+	margin: 0;
+	text-align: center;
+	padding: 2mm 0 1em 0;
+
+	.wfword {
+		position: relative;
+		display: block;
+		overflow: hidden;
+		list-style: none;
+		margin: 0;
+		padding: 0 $margin;
+		max-width: 9em;
+		font-size: $fsWordlist;
+		background-color: $cBgBody;
+		color: $cTextBody;
+	}
+
+	&.columnar {
+		padding: 1em 0 0 0;
+		@include xbrowser('column-count', 2);
+		@include xbrowser('column-width', 50%);
+		@include xbrowser('column-gap', 1em);
+		@include xbrowser('column-rule', 0);
+
+		.wfword {
+			padding: 0 0.25em;
+		}
+	}
+}
+
+
+.wfsolved {
+	//background-color: $cBgSolved;
+	//color: $cTextSolved;
+}
+

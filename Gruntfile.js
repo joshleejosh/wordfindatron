@@ -25,7 +25,7 @@ module.exports = function(grunt) {
         sass: {
             all: {
                 files: {
-                    'wordfindatron.css' : 'wordfindatron.scss'
+                    'wordfindatron.css' : 'css/wordfindatron.scss'
                 }
             }
         },
@@ -81,7 +81,7 @@ module.exports = function(grunt) {
 
         watch: {
             css: {
-                files: '**/*.scss',
+                files: 'css/**/*.scss',
                 tasks: ['sass']
             },
             js: {
@@ -89,6 +89,7 @@ module.exports = function(grunt) {
                 tasks: ['browserify:dev']
             },
             options: {
+                interval: 2000,
                 forever: false
             }
         }

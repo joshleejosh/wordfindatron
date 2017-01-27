@@ -1,0 +1,29 @@
+
+.ring {
+	display: block;
+	position: absolute;
+	z-index: 1;
+	margin: 0;
+	padding: 0;
+	border-style: solid;
+	border-width: $ringThickness;
+	border-color: $cRing;
+	@include border-radius(2em);
+	background-color: transparent;
+	color: $cBgSolved; // HACK: use text color to hide the alt state color for code to peek at (since we never have any text in a ring)
+	height: $wRing;
+	width: $wRing;
+	top: 0;
+	left: 0;
+	transform-origin: $ringTransformOrigin $ringTransformOrigin;
+	@include user-select(none);
+	-webkit-backface-visibility: hidden;
+}
+
+.ringsolved {
+	// set these in js.
+	//background-color: $cBgSolved;
+	//border-color: $cBgSolved;
+	z-index: -2;
+}
+

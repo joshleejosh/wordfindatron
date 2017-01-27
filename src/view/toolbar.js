@@ -61,11 +61,11 @@
 
     function onShowAdv() {
         var a = theToolbar.select('#tbadvanced');
-        var b = a.style('display');
-        b = (b === 'none') ? 'block' : 'none';
+        var b = (a.style('display') === 'none') ? 'block' : 'none';
+
         if (b === 'none') {
             a.transition('#tbadvanced')
-                .duration(consts.TWEEN_TIME)
+                .duration(consts.FADE_TIME)
                 .ease(d3.easeSinOut)
                 .style('height', '0px')
                 .on('end', function() {
@@ -78,7 +78,7 @@
                 .style('display', b)
                 .style('height', '0px')
                 .transition('#tbadvanced')
-                .duration(consts.TWEEN_TIME)
+                .duration(consts.FADE_TIME)
                 .ease(d3.easeSinIn)
                 .style('height', null)
             ;
@@ -120,37 +120,55 @@
         return row;
     }
 
-    function init(callbacks) {
-        theToolbar = d3.select('#toolbar');
-
-        viewutil.makeToolbarButton(theToolbar, callbacks.onUndo    , 'tbUndo'    , 'backward'        , 'Erase your last ring');
-        viewutil.makeToolbarButton(theToolbar, callbacks.onReset   , 'tbReset'   , 'fast-backward'   , 'Erase all rings');
-        viewutil.makeToolbarButton(theToolbar, callbacks.onHint    , 'tbHint'    , 'lightbulb-o'     , 'Get a hint');
+    function buildToolbar() {
+        viewutil.makeToolbarButton(theToolbar, null, 'tbUndo', 'backward', 'Erase your last ring');
+        viewutil.makeToolbarButton(theToolbar, null, 'tbReset', 'fast-backward', 'Erase all rings');
+        viewutil.makeToolbarButton(theToolbar, null, 'tbHint', 'lightbulb-o', 'Get a hint');
 
         if (consts.CHEAT) {
-            viewutil.makeToolbarButton(theToolbar, callbacks.onSolve, 'tbSolve', 'birthday-cake', 'Cheat, you cheater');
+            viewutil.makeToolbarButton(theToolbar, null, 'tbSolve', 'birthday-cake', 'Cheat, you cheater');
         }
 
-        viewutil.makeToolbarButton(theToolbar, callbacks.onShuffle , 'tbShuffle' , 'random'          , 'Make a new grid with the same words');
-        viewutil.makeToolbarButton(theToolbar, callbacks.onNew     , 'tbNew'     , 'eject'           , 'Make a new puzzle from scratch');
-        viewutil.makeToolbarButton(theToolbar, onShowAdv           , 'tbShowAdv' , 'sliders'         , 'See more options for new puzzles');
-        viewutil.makeToolbarSeparator(theToolbar);
-        viewutil.makeToolbarButton(theToolbar, callbacks.onHelp    , 'tbHelp'    , 'question-circle' , 'About WORDFINDATRON');
-        viewutil.makeToolbarButton(theToolbar, callbacks.onEdit    , 'tbEdit'    , 'edit'            , 'Make your own puzzle!').classed('button-reverse' , true);
+        viewutil.makeToolbarButton(theToolbar, null, 'tbShuffle', 'random', 'Make a new grid with the same words');
+        viewutil.makeToolbarButton(theToolbar, null, 'tbNew', 'eject', 'Make a new puzzle from scratch');
+        viewutil.makeToolbarButton(theToolbar, null, 'tbShowAdv', 'sliders', 'See more options for new puzzles');
+        viewutil.makeToolbarSeparator(theToolbar, 'tbSep');
+        viewutil.makeToolbarButton(theToolbar, null, 'tbHelp', 'question-circle', 'About WORDFINDATRON');
+        viewutil.makeToolbarButton(theToolbar, null, 'tbEdit', 'edit', 'Make your own puzzle!').classed('button-reverse', true);
 
         var tba = theToolbar.append('div').attr('id', 'tbadvanced');
         tba.append('h3').html('Options for new puzzles (<i class="fa fa-eject"></i>)');
-        var tbo = tba.append('div').attr('id', 'options');
-        mkoptionrow(tbo,
+        var opts = tba.append('div').attr('id', 'options');
+        mkoptionrow(opts,
             'tbSize', 'labTbSize',
-            'Grid Size', 'Set the size of the grid',
+            'Size', 'Set the size of the grid',
             'small', 'large',
             ''+consts.MIN_GRID_SIZE, ''+consts.MAX_GRID_SIZE, '2', ''+consts.DEFAULT_GRID_SIZE);
-        mkoptionrow(tbo,
+        mkoptionrow(opts,
             'tbDensity', 'labTbDensity',
-            '# Words', 'Set how full the grid gets',
+            'Words', 'Set how full the grid gets',
             'fewer', 'more',
             ''+consts.MIN_DENSITY, ''+consts.MAX_DENSITY, '0.100', ''+consts.DEFAULT_DENSITY);
+    }
+
+    function rebind(callbacks) {
+        theToolbar.select('#tbUndo').on('click', callbacks.onUndo);
+        theToolbar.select('#tbReset').on('click', callbacks.onReset);
+        theToolbar.select('#tbHint').on('click', callbacks.onHint);
+        theToolbar.select('#tbSolve').on('click', callbacks.onSolve);
+        theToolbar.select('#tbShuffle').on('click', callbacks.onShuffle);
+        theToolbar.select('#tbNew').on('click', callbacks.onNew);
+        theToolbar.select('#tbShowAdv').on('click', onShowAdv);
+        theToolbar.select('#tbHelp').on('click', callbacks.onHelp);
+        theToolbar.select('#tbEdit').on('click', callbacks.onEdit);
+    }
+
+    function init(callbacks) {
+        theToolbar = d3.select('#toolbar');
+        if (theToolbar.node().children.length === 0) {
+            buildToolbar();
+        }
+        rebind(callbacks);
 
         theToolbar.on('submit', function() {
             d3.event.preventDefault();
@@ -191,6 +209,50 @@
         ;
     }
 
+
+    function reparent(child, newParent, newSibling) {
+        if (child && child.node().parentNode !== newParent) {
+            newParent.insertBefore(child.node(), newSibling.node());
+        }
+    }
+
+    // if we've wrapped lines, then move some buttons down into the advanced menu.
+    function reparentButtons(t) {
+        var bEdit = theToolbar.select('#tbEdit');
+        var bNew = theToolbar.select('#tbNew');
+        var bShuffle = theToolbar.select('#tbShuffle');
+        var bCheat = theToolbar.select('#tbSolve');
+        var sep = theToolbar.select('#tbSep');
+        var nToolbar = theToolbar.node();
+
+        if (t) {
+            // move some buttons into the advanced submenu to save width.
+            var tbAdvanced = theToolbar.select('#tbadvanced');
+            var nAdvanced = tbAdvanced.node();
+            reparent(bEdit, nAdvanced, tbAdvanced.select('h3'));
+            reparent(sep, nAdvanced, bEdit);
+            reparent(bNew, nAdvanced, sep);
+            reparent(bShuffle, nAdvanced, bNew);
+            reparent(bCheat, nAdvanced, bShuffle);
+        } else {
+            // move buttons up onto the main toolbar.
+            reparent(bEdit, nToolbar, theToolbar.select('#tbadvanced'));
+            reparent(sep, nToolbar, theToolbar.select('#tbHelp'));
+            reparent(bNew, nToolbar, theToolbar.select('#tbShowAdv'));
+            reparent(bShuffle, nToolbar, bNew);
+            reparent(bCheat, nToolbar, bShuffle);
+        }
+    }
+
+    function resize() {
+        reparentButtons(false);
+        var bb0 = theToolbar.select('#tbUndo').node().getBoundingClientRect();
+        var bb1 = theToolbar.select('#tbEdit').node().getBoundingClientRect();
+        reparentButtons(bb1.top > bb0.top);
+
+        theToolbar.select('#options').style('width', viewutil.metrics.table.size + 'px');
+    }
+
     // ==================================================================
 
     module.exports = {
@@ -198,6 +260,7 @@
         init: init,
         hide: hide,
         show: show,
+        resize: resize,
         enable: enable,
         disable: disable,
         setUndoable: setUndoable,

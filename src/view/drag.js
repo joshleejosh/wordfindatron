@@ -3,6 +3,7 @@
 
     var d3 = require('d3');
     var snapAngle = require('../util').snapAngle;
+    var metrics = require('./viewutil').metrics;
     var ring = require('./ring');
 
     var dragRing, onChange;
@@ -68,8 +69,8 @@
             cell = table.getCell(x, y);
             var fp = cell.getPagePosition();
             var sp = dragRing.startCell.getPagePosition();
-            var cdx = fp.x - sp.x + (dragRing.size*delta[0]);
-            var cdy = fp.y - sp.y + (dragRing.size*delta[1]);
+            var cdx = fp.x - sp.x + (metrics.ring.size * delta[0]);
+            var cdy = fp.y - sp.y + (metrics.ring.size * delta[1]);
             cellDist2 = (cdx*cdx) + (cdy*cdy);
             x += delta[0];
             y += delta[1];
