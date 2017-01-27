@@ -32,11 +32,12 @@ td.cell {
 
 	.gc {
 		position: absolute;
-		top: 24%;
+		top: 28%;
 		bottom: 0;
 		left: 0;
 		right: 0;
 		text-align: center;
+		line-height: 1em;
 	}
 
 	&:after {

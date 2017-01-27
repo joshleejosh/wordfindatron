@@ -36,7 +36,7 @@
         };
         // round off now to make sure table layout doesn't fudge cell sizes
         metrics.cell.size = Math.floor(metrics.table.size / puz.size);
-        metrics.cell.contentOffset = metrics.cell.size * 0.24;
+        metrics.cell.contentOffset = metrics.cell.size * 0.28;
         metrics.table.size = metrics.cell.size * puz.size;
         metrics.cell.fontSize = metrics.cell.size / 2;
         dummy.remove();

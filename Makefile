@@ -7,6 +7,7 @@ HTML=index.html
 
 SRC=src
 DATA=data
+IMG=img
 GENERATEDJS=$(SRC)/_generated.js
 JSFILES=$(SRC)/*.js $(SRC)/**/*.js $(GENERATEDJS)
 FONTS=node_modules/font-awesome/fonts
@@ -29,6 +30,7 @@ dist: UGLIFY=-g uglifyify
 dist: clean build
 	@mkdir -p dist
 	cp $(HTML) $(JS) $(CSS) $(WORDS) dist
+	cp -r $(IMG) dist
 	@mkdir -p dist/$(FONTS)
 	cp $(FONTS)/* dist/$(FONTS)/
 

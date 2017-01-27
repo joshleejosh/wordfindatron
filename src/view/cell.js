@@ -41,7 +41,9 @@
             .style('width', viewutil.metrics.cell.size + 'px')
             .style('height', viewutil.metrics.cell.size + 'px')
         ;
-        this.selection.select('.gc').style('top', viewutil.metrics.cell.contentOffset + 'px');
+        this.selection.select('.gc')
+            .style('top', viewutil.metrics.cell.contentOffset + 'px')
+        ;
     };
 
     Cell.prototype.flashHint = function(tweent) {
