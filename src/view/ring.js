@@ -6,8 +6,8 @@
     var viewutil = require('./viewutil');
     var metrics = viewutil.metrics;
 
-    function Ring(cell) {
-        this.ring = null;
+    function Ring(cell, sel) {
+        this.selection = sel;
         this.startCell = cell;
         this.endCell = null;
         this.word = '';
@@ -47,7 +47,7 @@
             var y = sp.y - pp.top + cellOffset;
             var x = sp.x - pp.left + cellOffset;
             var h = metrics.ring.size;
-            this.ring.style('top', '' + y + 'px')
+            this.selection.style('top', '' + y + 'px')
                 .style('left', '' + x + 'px')
                 .style('height', '' + h + 'px')
                 .style('transform-origin', '' + metrics.ring.pivot + 'px ' + metrics.ring.pivot + 'px')
@@ -59,7 +59,7 @@
                 var ep = this.endCell.getPagePosition();
                 var a = util.snapAngle(ep.x - sp.x, ep.y - sp.y);
                 var rot = a[0] * (360.0 / Math.TAU);
-                this.ring.transition('ring.resize')
+                this.selection.transition('ring.resize')
                     .duration(tween)
                     .ease(d3.easeSinOut)
                     .style('width', wid + 'px')
@@ -68,7 +68,7 @@
                 ;
             } else {
                 // snap back to a single cell.
-                this.ring.transition('ring.resize')
+                this.selection.transition('ring.resize')
                     .duration(tween)
                     .ease(d3.easeSinOut)
                     .style('width', metrics.ring.size + 'px')
@@ -83,23 +83,21 @@
         tween = viewutil.tweenTime(tween);
         var pp = d3.select('#playField').node().getBoundingClientRect();
 
-        var y = parseFloat(this.ring.style('top'));
-        var x = parseFloat(this.ring.style('left'));
-        var w = parseFloat(this.ring.style('width'));
-        var h = parseFloat(this.ring.style('height'));
+        var y = parseFloat(this.selection.style('top'));
+        var x = parseFloat(this.selection.style('left'));
         var anchor = this.getAnchor();
-        this.ring
+        this.selection
             .style('top', (anchor.y-pp.top) + 'px')
             .style('left', (anchor.x-pp.left) + 'px')
             .style('width', '1px')
             .style('height', '1px');
-        this.ring.transition('ring.transition')
+        this.selection.transition('ring.transition')
             .duration(tween)
             .ease(d3.easeSinOut)
             .style('top', y + 'px')
             .style('left', x + 'px')
-            .style('width', w + 'px')
-            .style('height', h + 'px')
+            .style('width', metrics.ring.size + 'px')
+            .style('height', metrics.ring.size + 'px')
             .on('end', function() {
                 if (cb) {
                     return cb();
@@ -114,7 +112,7 @@
         var pp = d3.select('#playField').node().getBoundingClientRect();
         var anchor = this.getAnchor();
 
-        this.ring.transition('ring.transition')
+        this.selection.transition('ring.transition')
             .duration(tween)
             .ease(d3.easeSinIn)
             .style('top', (anchor.y-pp.top) + 'px')
@@ -135,9 +133,9 @@
         this.startCell = null;
         this.endCell = null;
         this.answer = null;
-        if (this.ring) {
-            var r = this.ring;
-            this.ring.transition('ring.destroy')
+        if (this.selection) {
+            var r = this.selection;
+            this.selection.transition('ring.destroy')
                 .duration(tween)
                 .style('width', '1px')
                 .on('end', function() {
@@ -146,16 +144,16 @@
                     }
                 })
             ;
-            this.ring = null;
+            this.selection = null;
         }
     };
 
     Ring.prototype.mark = function(answer, tween, t) {
         this.answer = (t)?answer:null;
         if (t && this.answer) {
-            this.ring.attr('id', 'ring_'+answer.word);
+            this.selection.attr('id', 'ring_'+answer.word);
         }
-        if (this.ring.classed('ringsolved') === t) {
+        if (this.selection.classed('ringsolved') === t) {
             return;
         }
         tween = viewutil.tweenTime(tween);
@@ -166,8 +164,8 @@
             boc = metrics.color.fg;
         }
 
-        this.ring.classed('ringsolved', t);
-        this.ring.transition('ring.mark')
+        this.selection.classed('ringsolved', t);
+        this.selection.transition('ring.mark')
             .duration(tween)
             .ease(d3.easeSinIn)
             .style('background-color', bgc)
@@ -177,7 +175,7 @@
 
     Ring.prototype.doVictory = function(i, tweent, onStart, onEnd) {
         var that = this;
-        this.ring.transition('ring.victory')
+        this.selection.transition('ring.victory')
             .duration(tweent)
             .delay((tweent * 2.5) * i)
             .style('background-color', metrics.color.highlight)

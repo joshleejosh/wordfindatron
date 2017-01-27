@@ -32,11 +32,10 @@
     }
 
     function createDrag(cell, t, cb) {
-        dragRing = new ring.Ring(cell);
-        dragRing.ring = d3.select('#playField').append('div').html('&nbsp;')
+        dragRing = new ring.Ring(cell, d3.select('#playField').append('div').html('&nbsp;')
             .classed('ring', true)
             .classed('ringsolved', false)
-        ;
+        );
         dragRing.resize(t);
         if (t) {
             dragRing.transitionIn(true, null);
@@ -88,7 +87,7 @@
             cancelDrag(tween);
             return null;
         }
-        dragRing.ring.style('z-index', '-1');
+        dragRing.selection.style('z-index', '-1');
         var rv = dragRing;
         dragRing = null;
         if (onChange) {
