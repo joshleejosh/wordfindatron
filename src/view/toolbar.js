@@ -209,10 +209,9 @@
         ;
     }
 
-
     function reparent(child, newParent, newSibling) {
-        if (child && child.node().parentNode !== newParent) {
-            newParent.insertBefore(child.node(), newSibling.node());
+        if (!child.empty() && child.node().parentNode !== newParent.node()) {
+            newParent.node().insertBefore(child.node(), newSibling.node());
         }
     }
 
@@ -223,24 +222,22 @@
         var bShuffle = theToolbar.select('#tbShuffle');
         var bCheat = theToolbar.select('#tbSolve');
         var sep = theToolbar.select('#tbSep');
-        var nToolbar = theToolbar.node();
 
         if (t) {
             // move some buttons into the advanced submenu to save width.
             var tbAdvanced = theToolbar.select('#tbadvanced');
-            var nAdvanced = tbAdvanced.node();
-            reparent(bEdit, nAdvanced, tbAdvanced.select('h3'));
-            reparent(sep, nAdvanced, bEdit);
-            reparent(bNew, nAdvanced, sep);
-            reparent(bShuffle, nAdvanced, bNew);
-            reparent(bCheat, nAdvanced, bShuffle);
+            reparent(bEdit, tbAdvanced, tbAdvanced.select('h3'));
+            reparent(sep, tbAdvanced, bEdit);
+            reparent(bNew, tbAdvanced, sep);
+            reparent(bShuffle, tbAdvanced, bNew);
+            reparent(bCheat, tbAdvanced, bShuffle);
         } else {
             // move buttons up onto the main toolbar.
-            reparent(bEdit, nToolbar, theToolbar.select('#tbadvanced'));
-            reparent(sep, nToolbar, theToolbar.select('#tbHelp'));
-            reparent(bNew, nToolbar, theToolbar.select('#tbShowAdv'));
-            reparent(bShuffle, nToolbar, bNew);
-            reparent(bCheat, nToolbar, bShuffle);
+            reparent(bEdit, theToolbar, theToolbar.select('#tbadvanced'));
+            reparent(sep, theToolbar, theToolbar.select('#tbHelp'));
+            reparent(bNew, theToolbar, theToolbar.select('#tbShowAdv'));
+            reparent(bShuffle, theToolbar, bNew);
+            reparent(bCheat, theToolbar, bShuffle);
         }
     }
 
