@@ -2,6 +2,7 @@
     'use strict';
 
     var url = require('url');
+    var cookies = require('browser-cookies');
     var consts = require('./consts');
     var util = require('./util');
     var data = require('./model/data');
@@ -82,6 +83,15 @@
         if (p) {
             view.displayPuzzle(p, wordfindatronMain, puzzleForWords);
         }
+    }
+
+    var gs = cookies.get('wordfindatron.gridsize');
+    if (gs) {
+        view.writeGridSize(parseInt(gs, 10));
+    }
+    var de = cookies.get('wordfindatron.density');
+    if (de) {
+        view.writeDensity(parseFloat(de));
     }
 
     view.msgClear();

@@ -22,6 +22,7 @@
   },
   "main": "main.js",
   "dependencies": {
+    "browser-cookies": "^1.1.0",
     "d3": "^4.4.1",
     "font-awesome": "^4.7.0",
     "random-js": "^1.0.8"

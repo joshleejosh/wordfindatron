@@ -2,6 +2,7 @@
     'use strict';
 
     var d3 = require('d3');
+    var cookies = require('browser-cookies');
     var consts = require('../consts');
     var viewutil = require('./viewutil');
 
@@ -9,8 +10,14 @@
 
     // ==================================================================
 
+    // we *should* get the values from the form elements, but when we're first
+    // loading, they might not have been created yet. so track them as
+    // variables as well for those situations.
+    var savedGridSize = consts.DEFAULT_GRID_SIZE,
+        savedDensity = consts.DEFAULT_DENSITY;
+
     function getGridSize() {
-        var rv = consts.DEFAULT_GRID_SIZE;
+        var rv = savedGridSize;
         var d = d3.select('#tbSize');
         if (!d.empty()) {
             rv = parseInt(d.property('value'), 10);
@@ -18,11 +25,21 @@
         return rv;
     }
     function writeGridSize(v) {
+        savedGridSize = v;
         d3.select('#tbSize').property('value', v);
+        cookies.set('wordfindatron.gridsize', ''+v);
     }
 
+    // figure out the number of steps in the slider. Do a bunch of extra
+    // multiplaying to avoid float drift
+    var dRangeMax = ((consts.MAX_DENSITY*1000) - (consts.MIN_DENSITY*1000)) / (consts.DENSITY_STEP*1000);
+    var densityMap = d3.scaleLinear()
+        .domain([consts.MIN_DENSITY, consts.MAX_DENSITY])
+        .range([0, dRangeMax])
+    ;
+
     function getDensity() {
-        var rv = consts.DEFAULT_DENSITY;
+        var rv = savedDensity;
         var d = d3.select('#tbDensity');
         if (!d.empty()) {
             rv = parseFloat(d.property('value'));
@@ -30,7 +47,13 @@
         return rv;
     }
     function writeDensity(v) {
-        d3.select('#tbDensity').property('value', v);
+        // snap the value to its nearest step.
+        // do some junk math to prevent floating drift.
+        var w = Math.floor(densityMap(v));
+        var x = Math.round(densityMap.invert(w) * 1000) / 1000;
+        savedDensity = x;
+        d3.select('#tbDensity').property('value', x);
+        cookies.set('wordfindatron.density', ''+x);
     }
 
     function getSeed() {
@@ -43,6 +66,7 @@
     }
     function writeSeed(v) {
         d3.select('#tbSeed').property('value', v);
+        cookies.set('wordfindatron.seed', v);
     }
 
     function enable() {
@@ -153,7 +177,7 @@
             'tbDensity', 'labTbDensity',
             'Words', 'Set how full the grid gets',
             'fewer', 'more',
-            ''+consts.MIN_DENSITY, ''+consts.MAX_DENSITY, '0.100', ''+consts.DEFAULT_DENSITY);
+            ''+consts.MIN_DENSITY, ''+consts.MAX_DENSITY, ''+consts.DENSITY_STEP, ''+consts.DEFAULT_DENSITY);
     }
 
     function rebind(callbacks) {

@@ -112,23 +112,23 @@
         disableInput();
         d3.selectAll('.ring').style('z-index', -3);
 
+        var listwords = wordlist.getListWords();
         var ftable = function(r) {
             theTable.flashVictory(r, true);
         };
         // reenable input after the last ring finishes flashing.
-        var ffLast = function(i, r) {
-            return function(r) {
+        var ffLast = function(i) {
+            return function() {
                 if (i === listwords.length - 1) {
                     enableInput();
                 }
             };
-        }
+        };
 
-        var listwords = wordlist.getListWords();
         for (var wordi=0; wordi<listwords.length; wordi++) {
             listwords[wordi].doVictory(wordi, consts.FADE_TIME);
             var r = ringForAnswer(listwords[wordi].answer);
-            r.doVictory(wordi, consts.FADE_TIME, ftable, ffLast(wordi, r));
+            r.doVictory(wordi, consts.FADE_TIME, ftable, ffLast(wordi));
         }
         theTable.fadeUnsolved(listwords.length, rng, consts.FADE_TIME);
     }
@@ -513,6 +513,9 @@
         enableInput: enableInput,
         getGridSize: toolbar.getGridSize,
         getDensity: toolbar.getDensity,
-        getSeed: toolbar.getSeed
+        getSeed: toolbar.getSeed,
+        writeGridSize: toolbar.writeGridSize,
+        writeDensity: toolbar.writeDensity,
+        writeSeed: toolbar.writeSeed
     };
 }());
