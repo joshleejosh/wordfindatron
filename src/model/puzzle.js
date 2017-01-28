@@ -5,6 +5,8 @@
 
     var Random = require('random-js');
     var bstream = require('./bstream');
+    var consts = require('../consts');
+    var util = require('../util');
     var grid = require('./grid');
     var puzgen = require('./puzgen');
     var conflictscan = require('./conflictscan');
@@ -256,10 +258,65 @@
 
     // ==================================================================
 
+    function makeFromSerialized(ser) {
+        return deserialize(ser);
+    }
+
+    function makeFromParameters(size, density, wlen, seed) {
+        var p;
+        for (var i=0; i<consts.MAX_CONFLICT_RETRIES; i++) {
+            try {
+                p = new Puzzle(size, seed);
+                p.generate(density, wlen);
+                break;
+            } catch (e) {
+                if (e instanceof conflictscan.PuzzleConflictError) {
+                    p = null;
+                    util.log(e.message);
+                    // if we're seeded, it's never going to succeed, so fail fast.
+                    if (seed) {
+                        break;
+                    }
+                } else {
+                    throw e;
+                }
+            }
+        }
+        return p;
+    }
+
+    function makeFromWords(size, seed, words) {
+        var p;
+        for (var i=0; i<consts.MAX_CONFLICT_RETRIES; i++) {
+            try {
+                p = new Puzzle(size, seed, words);
+                p.generate(words.length);
+                break;
+            } catch (e) {
+                if (e instanceof conflictscan.PuzzleConflictError) {
+                    p = null;
+                    util.log(e.message);
+                    // if we're seeded, it's never going to succeed, so fail fast.
+                    if (seed) {
+                        break;
+                    }
+                } else {
+                    throw e;
+                }
+            }
+        }
+        return p;
+    }
+
+    // ==================================================================
+
     module.exports = {
         Puzzle: Puzzle,
         PuzzleConflictError: conflictscan.PuzzleConflictError,
-        deserialize: deserialize
+        deserialize: deserialize,
+        makeFromSerialized: makeFromSerialized,
+        makeFromParameters: makeFromParameters,
+        makeFromWords: makeFromWords
     };
 
 }());

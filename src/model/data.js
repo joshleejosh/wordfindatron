@@ -69,7 +69,6 @@
 
         if (view) {
             // ajax request
-            view.msgWrite('Loading...');
             d3.text('wordlists.txt', function(clob) {
                 if (clob) {
                     buildWordlists(clob);

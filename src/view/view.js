@@ -26,13 +26,15 @@
 
     function failureClear() {
         if (!bubbleWarning) {
-            return;
+            bubbleWarning = new bubble.Bubble('error');
+            bubbleWarning.below = true;
         }
         bubbleWarning.hide(d3.select('h1'), true);
     }
     function msgFailure(msg) {
         if (!bubbleWarning) {
-            return;
+            bubbleWarning = new bubble.Bubble('error');
+            bubbleWarning.below = true;
         }
         var errblk = d3.select('#error');
         errblk.html('').append('span').html(msg + '<br/>');
@@ -416,6 +418,8 @@
                                 });
                             });
                         });
+                    } else {
+                        msgFailure('Couldn\'t create a puzzle');
                     }
                 }
             }
@@ -451,7 +455,8 @@
                     }));
                 if (newPuzzle) {
                     displayPuzzle(newPuzzle, cbNewPuzzle, cbCommitEdit);
-                    checkAnswers(false, true);
+                } else {
+                    msgFailure('Couldn\'t reshuffle');
                 }
             },
             onNew: function() {
@@ -460,12 +465,9 @@
                 onReset(false);
                 hideGame(function() {
                     msgClear();
-                    msgWrite('Thinking&ellip;');
+                    msgWrite('Thinking&hellip;');
                     cbNewPuzzle();
-                    showGame(function() {
-                        enableInput();
-                        checkAnswers(false, true);
-                    });
+                    showGame();
                 });
             },
             onEdit: function() {
@@ -492,8 +494,8 @@
         bubbleHelp.below = true;
         bubbleHelp.owner = d3.select('#tbHelp');
 
-        bubbleWarning = new bubble.Bubble('error');
-        bubbleWarning.below = true;
+        //bubbleWarning = new bubble.Bubble('error');
+        //bubbleWarning.below = true;
 
         enableInput();
 
@@ -513,9 +515,7 @@
         enableInput: enableInput,
         getGridSize: toolbar.getGridSize,
         getDensity: toolbar.getDensity,
-        getSeed: toolbar.getSeed,
         writeGridSize: toolbar.writeGridSize,
-        writeDensity: toolbar.writeDensity,
-        writeSeed: toolbar.writeSeed
+        writeDensity: toolbar.writeDensity
     };
 }());

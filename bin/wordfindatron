@@ -2,60 +2,42 @@
 
 var data = require('../src/model/data');
 var puzzle = require('../src/model/puzzle');
-var puzgen = require('../src/model/puzgen');
 
 var gridSize = 8;
 if (process.argv.length > 2) {
     gridSize = parseInt(process.argv[2], 10);
 }
+
 var density = 0.5;
 if (process.argv.length > 3) {
     density = parseFloat(process.argv[3]);
 }
+
 var wordlen = 0.5;
 if (process.argv.length > 4) {
     wordlen = parseFloat(process.argv[4]);
 }
+
 var seed = 0;
 if (process.argv.length > 5) {
     seed = parseInt(process.argv[5], 10);
 }
 
 var nPuzzles = 1;
-var maxFailures = 100;
 
 data.load(null, function() {
     var times = [];
     for (var i=0; i<nPuzzles; i++) {
-        var p;
-        for (var j=0; j<maxFailures; j++) {
-            try {
-                p = new puzzle.Puzzle(gridSize, seed);
-                var dt = p.generate(density, wordlen);
-                times.push(dt);
-                break;
-            } catch (e) {
-                if (e instanceof puzzle.PuzzleConflictError) {
-                    console.log('rejected: ' + e.message);
-                    p = null;
-                    // we're not going to re-roll, so just bail now.
-                    if (seed !== 0) {
-                        break;
-                    }
-                } else {
-                    throw e;
-                }
-            }
-        }
+        var timea = new Date().getTime();
+        var p = puzzle.makeFromParameters(gridSize, density, wordlen, seed);
+        var timeb = new Date().getTime();
+        times.push((timeb - timea));
 
         if (p) {
             console.log(p.answerGrid().toString());
-            // do a serialization roundtrip, to make sure it's clean.
-            var s = p.serialize();
-            var q = puzzle.deserialize(s);
-            console.log(q.answers.map(function (a) { return a.word; }).join(' '));
+            console.log(p.answers.map(function (a) { return a.word; }).join(' '));
             //console.log(p.size, p.answers.length, s.indexOf('-'), s.indexOf('_'), p.seed);
-            console.log(q.grid.toString());
+            console.log(p.grid.toString());
             p.reportStats();
         } else {
             console.log('catastrophic!');

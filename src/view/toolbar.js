@@ -56,19 +56,6 @@
         cookies.set('wordfindatron.density', ''+x);
     }
 
-    function getSeed() {
-        var rv = 0;
-        var d = d3.select('#tbSeed');
-        if (!d.empty()) {
-            rv = parseInt(d.property('value'), 10);
-        }
-        return rv;
-    }
-    function writeSeed(v) {
-        d3.select('#tbSeed').property('value', v);
-        cookies.set('wordfindatron.seed', v);
-    }
-
     function enable() {
         d3.selectAll('#toolbar button').attr('disabled', null);
         d3.selectAll('#toolbar input').attr('disabled', null);
@@ -293,9 +280,7 @@
         setHintable: setHintable,
         getGridSize: getGridSize,
         getDensity: getDensity,
-        getSeed: getSeed,
         writeGridSize: writeGridSize,
-        writeDensity: writeDensity,
-        writeSeed: writeSeed
+        writeDensity: writeDensity
     };
 }());

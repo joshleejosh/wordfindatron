@@ -134,7 +134,7 @@
         s += f('failure');
         util.log(s);
 
-        if (false) {
+        /*{
             var d = {};
             var dtot = addLetters(d, thePuzzle.grid.toString());
             for (var c='A'; c<='Z'; c=String.fromCharCode(c.charCodeAt(0) + 1)) {
@@ -145,7 +145,7 @@
                     (letterDist[c]/letterCount).toFixed(3) + '\t';
                 util.log(s);
             }
-        }
+        }*/
     }
 
     // ==================================================================
@@ -287,6 +287,9 @@
 
     function generateByDensity(puz, gd, wlf) {
         // scale min and max word lengths based on the given factor
+        // 0 = only short words
+        // .5 = any length
+        // 1 = only long words
         if (typeof wlf !== 'undefined') {
             wlf = util.clamp(wlf, 0, 1);
             var ceil = Math.min(thePuzzle.size, consts.MAX_MAX_WORDLEN);

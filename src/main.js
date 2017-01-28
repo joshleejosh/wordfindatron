@@ -3,85 +3,52 @@
 
     var url = require('url');
     var cookies = require('browser-cookies');
-    var consts = require('./consts');
     var util = require('./util');
     var data = require('./model/data');
     var puzzle = require('./model/puzzle');
     var view = require('./view/view');
 
-    // Keep trying to generate the puzzle until either it succeeds or we exceed the retry limit.
-    function doGeneration(fgen, ferr, caller) {
-        for (var retries=0; retries<consts.MAX_CONFLICT_RETRIES; retries++) {
-            try {
-                return fgen();
-            } catch (e) {
-                if (e instanceof puzzle.PuzzleConflictError) {
-                    util.log(e.message);
-                    if (ferr) {
-                        ferr();
-                    }
-                } else {
-                    throw e;
-                }
-            }
-        }
-        throw new puzzle.PuzzleConflictError(caller+': too many retries');
-    }
-
     function puzzleForWords(size, seed, words) {
+        var p;
         try {
-            var p;
-            doGeneration(
-                function() {
-                    p = new puzzle.Puzzle(size, seed, words);
-                    p.generate(words.length);
-                },
-                null,
-                'puzzleForWords'
-            );
-            return p;
+            p = puzzle.makeFromWords(size, seed, words);
         } catch (e) {
             if (e instanceof puzzle.PuzzleConflictError) {
                 util.log(e.message);
                 view.msgClear();
                 view.msgFailure('I couldn\'t fit these words into a puzzle. Maybe change the words (fewer words, shorter words, etc.), or choose a larger grid size.');
-            } else {
-                throw e;
             }
+            throw e;
         }
-        return null;
+        return p;
     }
 
     function wordfindatronMain(q) {
         view.disableInput();
         view.msgClear();
-        view.msgWrite('Thinking&ellip;');
+        view.msgWrite('Thinking&hellip;');
         var p;
 
         try {
             if (q && q.p) {
-                p = puzzle.deserialize(q.p);
+                p = puzzle.makeFromSerialized(q.p);
             } else {
-                p = new puzzle.Puzzle(view.getGridSize(), view.getSeed());
-                doGeneration(
-                    function() {
-                        return p.generate(view.getDensity());
-                    },
-                    function() {
-                        p.reset(new Date().getTime());
-                    },
-                    'wordfindatronMain');
+                p = puzzle.makeFromParameters(view.getGridSize(), view.getDensity());
             }
         } catch (e) {
-            util.log(e.message);
-            view.msgClear();
-            view.msgWrite(e.message);
-            p = null;
+            if (e instanceof puzzle.PuzzleConflictError) {
+                util.log(e.message);
+                view.msgClear();
+                view.msgFailure('Problem creating a puzzle: ['+e.message+']');
+            }
             throw e;
         }
 
         if (p) {
             view.displayPuzzle(p, wordfindatronMain, puzzleForWords);
+        } else {
+            view.msgClear();
+            view.msgFailure('Couldn\'t create a puzzle?!');
         }
     }
 
@@ -95,8 +62,10 @@
     }
 
     view.msgClear();
+    view.msgWrite('Loading&hellip;');
     data.load(view, function() {
         var query = url.parse(window.location.href, true).query;
         wordfindatronMain(query);
     });
+
 }());
