@@ -7,6 +7,10 @@
 	font-family: $fDisplay;
 	font-size: $fsButton;
 	overflow: hidden;
+
+	@media print {
+		display: none;
+	}
 }
 
 button {

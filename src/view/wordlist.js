@@ -2,12 +2,14 @@
     'use strict';
 
     var d3 = require('d3');
+    var printscout = require('printscout');
     var listword = require('./listword');
     var viewutil = require('./viewutil');
 
     var theWords;
     var MAX_COLUMNS = 4;
     var WORDS_PER_COLUMN = 8;
+    var printing = false;
 
     function getListWords() {
         return theWords;
@@ -39,17 +41,24 @@
             return;
         }
 
-        ul.classed('columnar', false).style('display', 'inline-block').style('clear', null);
+        ul.classed('columnar', false)
+            .style('display', null)
+            .style('column-count', null)
+            .style('-moz-column-count', null)
+            .style('clear', null)
+            .style('width', null)
+        ;
         //var bb = ul.node().getBoundingClientRect();
         var tb = d3.select('#playField').node().getBoundingClientRect();
         var tooWide = (viewutil.metrics.main.width - tb.right) < viewutil.metrics.wordlist.width;
 
-        ul.classed('columnar', tooWide);
-        if (tooWide) {
+        if (tooWide || printing) {
             var ncols = Math.min(MAX_COLUMNS, Math.ceil(theWords.length / WORDS_PER_COLUMN));
-            ul.style('display', 'block')
+            ul.classed('columnar', true)
+                .style('display', 'block')
                 .style('clear', 'both')
-                .style('column-count', ncols)
+                .style('column-count', ''+ncols)
+                .style('-moz-column-count', ''+ncols)
                 .style('width', tb.width + 'px')
             ;
             var r = Math.min(1, tb.width / ncols / viewutil.metrics.wordlist.width);
@@ -58,14 +67,37 @@
                 .style('font-size', fsize + 'px');
 
         } else {
-            ul.style('display', null)
+            ul.classed('columnar', false)
+                .style('display', null)
                 .style('clear', null)
                 .style('column-count', null)
+                .style('-moz-column-count', null)
                 .style('width', null);
             ul.selectAll('.wfword')
                 .style('font-size', null);
 
         }
+    }
+
+    {
+        // if we're printing, do a resize and force the wordlist into columns below the grid.
+        /*
+        window.matchMedia('print').addListener(function (ql) {
+            printing = ql.matches;
+            resize();
+        });
+        */
+        var scout = new printscout();
+        scout.addListener('before', function() {
+            console.log('before');
+            printing = true;
+            resize();
+        });
+        scout.addListener('after', function() {
+            console.log('after');
+            printing = false;
+            resize();
+        });
     }
 
     function show(tweent, onEnd) {

@@ -125,10 +125,18 @@ input {
 #sharing {
 	float: left;
 	padding-right: 1em;
+	@media print {
+		display: none;
+	}
 }
 #credit {
 	float: right;
 	padding-left: 1em;
+
+	@media print {
+		float: none;
+		padding: 0;
+	}
 }
 
 #metricsDummy {
