@@ -12,9 +12,11 @@
     var toolbar = require('./toolbar');
     var editor = require('./editor');
     var bubble = require('./bubble');
+    var keys = require('./keys');
     var sharing = require('./sharing');
 
     var thePuzzle, theTable;
+    var cbNewPuzzle, cbCommitEdit;
     var bubbleHelp, bubbleWarning;
     var rings = [];
     var inputDisabled = false, doingVictory = false;
@@ -318,7 +320,112 @@
 
     // ==================================================================
 
-    function autosolve() {
+    function onReset(tweent) {
+        if (typeof tweent === 'undefined') {
+            tweent = true;
+        }
+        bubbleHelp.hide(null, tweent);
+        bubbleWarning.hide(null, tweent);
+        drag.cancelDrag(tweent);
+        cancelVictory();
+        clearRings(tweent);
+        checkAnswers(tweent, tweent);
+    }
+
+    function onUndo() {
+        popRing(true);
+        cancelVictory();
+        checkAnswers(false, true);
+    }
+
+    function onHelp(caller) {
+        caller = d3.select('#tbHelp');
+        if (caller.empty()) {
+            caller = d3.select('h1');
+        }
+        if (bubbleHelp.isVisible()) {
+            bubbleHelp.hide(caller, true);
+        } else {
+            bubbleHelp.show(caller, true);
+        }
+    }
+
+    function onShuffle() {
+        msgClear();
+        onReset(false);
+        var newPuzzle = cbCommitEdit(
+            thePuzzle.size,
+            0,
+            thePuzzle.answers.map(function(a) {
+                return a.word;
+            }));
+        if (newPuzzle) {
+            displayPuzzle(newPuzzle, cbNewPuzzle, cbCommitEdit);
+        } else {
+            msgFailure('Couldn\'t reshuffle');
+        }
+    }
+
+    function onNew() {
+        msgClear();
+        disableInput();
+        onReset(false);
+        hideGame(function() {
+            msgClear();
+            msgWrite('Thinking&hellip;');
+            cbNewPuzzle();
+            showGame();
+        });
+    }
+
+    function onEdit() {
+        disableInput();
+        onReset(false);
+        toolbar.hide(function() {
+            hideGame(function() {
+                editor.show(function() {
+                    enableInput();
+                });
+            });
+        });
+    }
+
+    function onEditorQuit() {
+        msgClear();
+        disableInput();
+        editor.hide(function() {
+            toolbar.show(function() {
+                showGame(function() {
+                    enableInput();
+                });
+            });
+        });
+    }
+
+    function onEditorCommit(csz, csd, cwl) {
+        msgClear();
+        if (cbCommitEdit) {
+            var newPuzzle = cbCommitEdit(csz, csd, cwl);
+            if (newPuzzle) {
+                disableInput();
+                editor.hide(function() {
+                    displayPuzzle(newPuzzle, cbNewPuzzle, cbCommitEdit);
+                    toolbar.show(function() {
+                        showGame(function() {
+                            enableInput();
+                        });
+                    });
+                });
+            } else {
+                msgFailure('Couldn\'t create a puzzle');
+            }
+        }
+    }
+
+    // ==================================================================
+
+    function onSolve() {
+        onReset(false);
         disableInput();
         var fanswer = function(i) {
             if (i >= thePuzzle.answers.length) {
@@ -353,6 +460,8 @@
         fanswer(0);
     }
 
+    // ==================================================================
+
     function resize() {
         viewutil.initMetrics(thePuzzle);
         theTable.resize();
@@ -363,17 +472,10 @@
         toolbar.resize();
     }
 
-    function onReset(tweent) {
-        bubbleHelp.hide(null, tweent);
-        bubbleWarning.hide(null, tweent);
-        drag.cancelDrag(tweent);
-        cancelVictory();
-        clearRings(tweent);
-        checkAnswers(tweent, tweent);
-    }
-
-    function displayPuzzle(puz, cbNewPuzzle, cbCommitEdit) {
+    function displayPuzzle(puz, cbnew, cbcommit) {
         thePuzzle = puz;
+        cbNewPuzzle = cbnew;
+        cbCommitEdit = cbcommit;
         util.log(thePuzzle.params);
         hintWords = null;
         msgClear();
@@ -393,98 +495,19 @@
             onChange: function() { // misc edits
                 failureClear();
             },
-            onQuit: function() {
-                msgClear();
-                disableInput();
-                editor.hide(function() {
-                    toolbar.show(function() {
-                        showGame(function() {
-                            enableInput();
-                        });
-                    });
-                });
-            },
-            onCommit: function(csz, csd, cwl) {
-                msgClear();
-                if (cbCommitEdit) {
-                    var newPuzzle = cbCommitEdit(csz, csd, cwl);
-                    if (newPuzzle) {
-                        disableInput();
-                        editor.hide(function() {
-                            displayPuzzle(newPuzzle, cbNewPuzzle, cbCommitEdit);
-                            toolbar.show(function() {
-                                showGame(function() {
-                                    enableInput();
-                                });
-                            });
-                        });
-                    } else {
-                        msgFailure('Couldn\'t create a puzzle');
-                    }
-                }
-            }
+            onQuit: onEditorQuit,
+            onCommit: onEditorCommit
         });
 
         toolbar.init({
-            onUndo: function() {
-                popRing(true);
-                cancelVictory();
-                checkAnswers(false, true);
-            },
-            onReset: function() {
-                onReset(true);
-            },
-            onHint: function() {
-                showHint();
-            },
-            onHelp: function() {
-                if (bubbleHelp.isVisible()) {
-                    bubbleHelp.hide(d3.select(this), true);
-                } else {
-                    bubbleHelp.show(d3.select(this), true);
-                }
-            },
-            onShuffle: function() {
-                msgClear();
-                onReset(false);
-                var newPuzzle = cbCommitEdit(
-                    thePuzzle.size,
-                    0,
-                    thePuzzle.answers.map(function(a) {
-                        return a.word;
-                    }));
-                if (newPuzzle) {
-                    displayPuzzle(newPuzzle, cbNewPuzzle, cbCommitEdit);
-                } else {
-                    msgFailure('Couldn\'t reshuffle');
-                }
-            },
-            onNew: function() {
-                msgClear();
-                disableInput();
-                onReset(false);
-                hideGame(function() {
-                    msgClear();
-                    msgWrite('Thinking&hellip;');
-                    cbNewPuzzle();
-                    showGame();
-                });
-            },
-            onEdit: function() {
-                disableInput();
-                onReset(false);
-                toolbar.hide(function() {
-                    hideGame(function() {
-                        editor.show(function() {
-                            enableInput();
-                        });
-                    });
-                });
-            },
-            onSolve: function() {
-                onReset(false);
-                autosolve();
-            }
+            onUndo: onUndo,
+            onReset: onReset,
+            onHint: showHint,
+            onHelp: onHelp,
+            onShuffle: onShuffle,
+            onNew: onNew,
+            onEdit: onEdit,
+            onSolve: onSolve
         });
         toolbar.setUndoable(rings.length > 0);
         toolbar.writeGridSize(thePuzzle.size);
@@ -501,6 +524,19 @@
 
         d3.select(window).on('resize', resize);
         resize();
+        keys.bind({
+            canDo: function() {
+                return (!inputDisabled && !editor.visible());
+            },
+            onUndo: onUndo,
+            onReset: onReset,
+            onHint: showHint,
+            onHelp: onHelp,
+            onShuffle: onShuffle,
+            onNew: onNew,
+            onEdit: onEdit,
+            onSolve: onSolve
+        });
         sharing.setLinks(thePuzzle);
     }
 

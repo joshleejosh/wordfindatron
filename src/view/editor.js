@@ -155,6 +155,10 @@
         tb.style('display', 'none');
     }
 
+    function visible() {
+        return (d3.select('#editorlist').style('display') !== 'none');
+    }
+
     function show(cb) {
         d3.select('h1')
             .transition('edit')
@@ -244,6 +248,7 @@
     // ==================================================================
 
     module.exports = {
+        visible: visible,
         wipe: wipe,
         init: init,
         show: show,

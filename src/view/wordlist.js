@@ -89,12 +89,10 @@
         */
         var scout = new printscout();
         scout.addListener('before', function() {
-            console.log('before');
             printing = true;
             resize();
         });
         scout.addListener('after', function() {
-            console.log('after');
             printing = false;
             resize();
         });
