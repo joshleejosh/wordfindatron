@@ -42,7 +42,7 @@
         dummy.remove();
 
         dummy = body.append('div').classed('ring', true);
-        metrics.color.highlight = dummy.style('border-color');
+        metrics.color.highlight = dummy.style('border-top-color');
         var rs = metrics.cell.size * 2 / 3;
         var bs = parseFloat(dummy.style('border-top-width'));
         metrics.ring = {
