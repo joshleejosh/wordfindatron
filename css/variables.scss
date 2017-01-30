@@ -1,10 +1,15 @@
 $fGame: 'Times', 'Times New Roman', serif;
 $fDisplay: 'Assistant', sans-serif;
 
-$cBgBody: #f6f6f6;
+$cBgBody: #f9f9f9;
 $cTextBody: #333;
+$cLowlight: #333;
+$cHighlight: #dcdcdc;
+$cDisabled: #999;
+$cWarning: #c66;
+
 $cCellBg: $cBgBody;
-$cBgSolved: $cTextBody;
+$cBgSolved: $cLowlight;
 $cTextSolved: $cBgBody;
 
 $wCell: 10mm;
@@ -17,12 +22,8 @@ $fsBubble: $fsTextBody * 0.800;
 $fsWordlist: $fsCell * 1.200;
 $margin: $wCell / 2;
 
-$cRing: #999;
+$cRing: $cLowlight;
 $wRing: $wCell * 2 / 3;
 $ringThickness: 2px;
 $ringTransformOrigin: $wRing / 2 + $ringThickness;
-
-$cBgDisabled: #999;
-$cWarning: #c66;
-
 

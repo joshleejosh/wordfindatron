@@ -158,18 +158,18 @@
         }
         tween = viewutil.tweenTime(tween);
         var bgc = metrics.color.none;
-        var boc = metrics.color.highlight;
+        var boc = metrics.color.disabled;
         if (t) {
-            bgc = metrics.color.fg;
-            boc = metrics.color.fg;
+            bgc = metrics.color.lowlight;
+            boc = metrics.color.lowlight;
         }
 
-        this.selection.classed('ringsolved', t);
-        this.selection.transition('ring.mark')
-            .duration(tween)
-            .ease(d3.easeSinIn)
-            .style('background-color', bgc)
-            .style('border-color', boc)
+        this.selection.classed('ringsolved', t)
+            .transition('ring.mark')
+                .duration(tween)
+                .ease(d3.easeSinIn)
+                .style('background-color', bgc)
+                .style('border-color', boc)
         ;
     };
 
@@ -189,8 +189,8 @@
             })
          .transition('ring.victory')
             .duration(tweent)
-            .style('background-color', metrics.color.fg)
-            .style('border-color', metrics.color.fg)
+            .style('background-color', metrics.color.lowlight)
+            .style('border-color', metrics.color.lowlight)
             .on('end', function() {
                 d3.select(this).style('z-index', -2);
                 if (onEnd) {

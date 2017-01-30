@@ -32,15 +32,15 @@
             var bgc = viewutil.metrics.color.bg,
                 txc = viewutil.metrics.color.fg;
             if (m) {
-                bgc = viewutil.metrics.color.fg;
+                bgc = viewutil.metrics.color.lowlight;
                 txc = viewutil.metrics.color.bg;
             }
-            this.selection.classed('wfsolved', m);
-            this.selection.transition('listword.mark')
-                .duration(tt)
-                .ease(d3.easeQuadIn)
-                .style('background-color', bgc)
-                .style('color', txc)
+            this.selection.classed('wfsolved', m)
+                .transition('listword.mark')
+                    .duration(tt)
+                    .ease(d3.easeQuadIn)
+                    .style('background-color', bgc)
+                    .style('color', txc)
             ;
         }
     };
@@ -55,7 +55,7 @@
                 .delay((tweent * 2.5) * i)
                 .style('background-color', viewutil.metrics.color.highlight)
             .transition('listword.victory')
-                .style('background-color', viewutil.metrics.color.fg)
+                .style('background-color', viewutil.metrics.color.lowlight)
         ;
     };
 

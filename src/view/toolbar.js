@@ -137,8 +137,8 @@
     }
 
     function buildToolbar() {
-        viewutil.makeToolbarButton(theToolbar, null, 'tbUndo', 'backward', 'Erase your last ring');
-        viewutil.makeToolbarButton(theToolbar, null, 'tbReset', 'fast-backward', 'Erase all rings');
+        viewutil.makeToolbarButton(theToolbar, null, 'tbUndo', 'backward', 'Erase your last circle');
+        viewutil.makeToolbarButton(theToolbar, null, 'tbReset', 'fast-backward', 'Erase all circles');
         viewutil.makeToolbarButton(theToolbar, null, 'tbHint', 'lightbulb-o', 'Get a hint');
 
         if (consts.CHEAT) {
@@ -236,7 +236,6 @@
         var bNew = theToolbar.select('#tbNew');
         var bShuffle = theToolbar.select('#tbShuffle');
         var bCheat = theToolbar.select('#tbSolve');
-        var sep = theToolbar.select('#tbSep');
 
         if (t) {
             // move some buttons into the advanced submenu to save width.

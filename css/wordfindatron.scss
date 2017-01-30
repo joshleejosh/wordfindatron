@@ -49,11 +49,13 @@ a {
 }
 
 h1 {
-	margin: 0;
+	margin: 0 0 0 2mm;
 	padding: 0;
 	overflow: hidden;
 	font-family: $fDisplay;
 	font-size: $fsWordlist;
+	font-weight: bold;
+	letter-spacing: 0.05em;
 	a:hover {
 		text-decoration: none;
 	}
@@ -143,5 +145,12 @@ input {
 	position: relative;
 	width: $wCell;
 	font-size: $fsCell;
+	border-width: $ringThickness;
+	border-top-color: $cHighlight;
+	border-bottom-color: $cLowlight;
+	border-left-color: $cWarning;
+	border-right-color: $cDisabled;
+	background-color: $cBgBody;
+	color: $cTextBody;
 }
 

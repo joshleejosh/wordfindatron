@@ -16,7 +16,7 @@
 button {
 	margin: 1mm;
 	padding: 0.167em 0.333em;
-	border: solid 1px $cRing;
+	border: solid 1px $cTextBody;
 	@include border-radius(0.500em);
 	background-color: $cBgBody;
 	color: $cTextBody;
@@ -26,13 +26,13 @@ button {
 		cursor: pointer;
 	}
 	&:active {
-		background-color: $cRing;
-		color: $cBgBody;
+		background-color: $cHighlight;
+		color: $cTextBody;
 	}
 	&:disabled {
 		background-color: $cBgBody;
-		border-color: $cRing;
-		color: $cRing;
+		border-color: $cDisabled;
+		color: $cDisabled;
 	}
 }
 

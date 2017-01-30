@@ -142,11 +142,11 @@
         d3.selectAll('.cell').style('color', null);
         d3.selectAll('#wflist>li').interrupt('listword.victory');
         d3.selectAll('.wfsolved')
-            .style('background-color', viewutil.metrics.color.fg);
+            .style('background-color', viewutil.metrics.color.lowlight);
         d3.selectAll('.ring').interrupt('ring.victory');
         d3.selectAll('.ringsolved')
-            .style('background-color', viewutil.metrics.color.fg)
-            .style('border-color', viewutil.metrics.color.fg);
+            .style('background-color', viewutil.metrics.color.lowlight)
+            .style('border-color', viewutil.metrics.color.lowlight);
         doingVictory = false;
     }
 
