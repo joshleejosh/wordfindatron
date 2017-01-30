@@ -92,6 +92,9 @@
             var h = hits[hi];
             var fixed = fix(h[0], h[1], h[2], h[3], fpick);
             if (!fixed) {
+                if (scanPuzzle.statKeeper) {
+                    scanPuzzle.statKeeper.add('failureConflict', h);
+                }
                 var m = 'Failed to fix conflict at [' +
                     h[0] + '][' + h[1] + '][' + h[2] + '][' + h[3] + ']';
                     //+ ' [' + scanPuzzle.grid.readWord(h[0], h[1], h[2], h[3]) + ']';

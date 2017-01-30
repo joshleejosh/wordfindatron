@@ -362,7 +362,7 @@
         if (newPuzzle) {
             displayPuzzle(newPuzzle, cbNewPuzzle, cbCommitEdit);
         } else {
-            msgFailure('Couldn\'t reshuffle');
+            msgFailure(consts.MSG_SHUFFLE_FAIL);
         }
     }
 
@@ -476,7 +476,11 @@
         thePuzzle = puz;
         cbNewPuzzle = cbnew;
         cbCommitEdit = cbcommit;
-        util.log(thePuzzle.params);
+        if (puz && puz.statKeeper) {
+            puz.statKeeper.report();
+        } else {
+            util.log('' + puz.size + ' ' + puz.seed);
+        }
         hintWords = null;
         msgClear();
         d3.selectAll('#wflist li').remove();

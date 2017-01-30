@@ -13,50 +13,28 @@ if (process.argv.length > 3) {
     density = parseFloat(process.argv[3]);
 }
 
-var wordlen = 0.5;
+var wordlen = undefined;
 if (process.argv.length > 4) {
     wordlen = parseFloat(process.argv[4]);
 }
 
-var seed = 0;
+var seed = undefined;
 if (process.argv.length > 5) {
     seed = parseInt(process.argv[5], 10);
 }
 
-var nPuzzles = 1;
-if (seed !== 0) {
-    nPuzzles = 1;
-}
-var nShuffles = 0;
-var arrows = '→↘↓↙←↖↑↗';
-
 function printPuzzle(p) {
     console.log(p.answerGrid().toString());
     console.log(p.answers.map(function (a) { return a.word; }).join(' '));
-    //console.log(p.answers.map(function (a) { return arrows[a.direction]; }).join(' '));
-    //var s = p.serialize();
-    //console.log(p.size, p.answers.length, s.indexOf('-'), s.indexOf('_'), p.seed);
     console.log(p.grid.toString());
-    p.generator.reportStats();
 }
 
 data.load(null, function() {
-    for (var i=0; i<nPuzzles; i++) {
-        var p = puzzle.makeFromParameters(gridSize, density, wordlen, seed);
-        if (p) {
-            printPuzzle(p);
-        } else {
-            console.log('catastrophic!');
-        }
-
-        for (var j=0; j<nShuffles; j++) {
-            var q = puzzle.makeFromWords(gridSize, seed, p.answers.map(function(a) { return a.word; }));
-            if (q) {
-                printPuzzle(q);
-            } else {
-                console.log('catastrophic!');
-            }
-        }
+    var p = puzzle.makeFromParameters(gridSize, density, wordlen, seed);
+    if (p) {
+        printPuzzle(p);
+    } else {
+        console.log('catastrophic!');
     }
 });
 

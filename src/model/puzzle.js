@@ -5,7 +5,6 @@
 
     var bstream = require('./bstream');
     var consts = require('../consts');
-    var util = require('../util');
     var grid = require('./grid');
     var puzgen = require('./puzgen');
     var conflictscan = require('./conflictscan');
@@ -17,13 +16,14 @@
 
     // ==================================================================
 
-    function Puzzle(size, seedv, initWords) {
+    function Puzzle(size, seedv) {
         if (size === undefined) {
             size = 8;
         }
         if (size < 0) {
             throw new RangeError('size ['+size+']');
         }
+        /*
         if (initWords) {
             for (var mi=0; mi<initWords.length; mi++) {
                 if (initWords[mi].length > size) {
@@ -31,6 +31,7 @@
                 }
             }
         }
+        */
         this.size = size;
 
         if (!seedv) {
@@ -44,17 +45,18 @@
         this.answers = [];
         this.words = [];
         this.grid = new grid.Grid(this.size);
-        this.params = '' + this.seed;
-
-        if (initWords) {
-            var gen = new puzgen.Generator(this);
-            for (var i=0; i<initWords.length; i++) {
-                gen.applyAnswer(initWords[i]);
-            }
-        }
-
         return this;
     }
+
+    // we have too many cross-references. :(
+    Puzzle.prototype.destroy = function() {
+        if (this.generator && this.generator.puzzle === this) {
+            this.generator.puzzle = null;
+        }
+        this.generator = null;
+        this.statKeeper = null;
+        return null;
+    };
 
     Puzzle.prototype.reset = function(newseed) {
         this.grid.reset();
@@ -149,12 +151,20 @@
         return fillcount / (ag.size * ag.size);
     };
 
-    Puzzle.prototype.generate = function(a, b) {
-        this.params = '' + this.size + ' ' + this.seed + ' ' +
-            ((typeof a === 'undefined')?'':a) + ' ' +
-            ((typeof b === 'undefined')?'':b);
-        this.generator = new puzgen.Generator(this);
-        return this.generator.generate(a, b);
+    Puzzle.prototype.applyWords = function(words) {
+        if (!this.statKeeper) {
+            this.statKeeper = new puzgen.GenStatKeeper();
+        }
+        this.statKeeper.startPuzzle(this, '(' + words.length+' words)');
+        try {
+            var gen = new puzgen.Generator(this);
+            gen.statKeeper = this.statKeeper;
+            for (var i=0; i<words.length; i++) {
+                gen.applyAnswer(words[i]);
+            }
+        } finally {
+            this.statKeeper.finishPuzzle();
+        }
     };
 
     // ==================================================================
@@ -251,16 +261,21 @@
     }
 
     function makeFromParameters(size, density, wlen, seed) {
+        var sk = new puzgen.GenStatKeeper();
         var p;
         for (var i=0; i<consts.MAX_CONFLICT_RETRIES; i++) {
             try {
                 p = new Puzzle(size, seed);
-                p.generate(density, wlen);
+                p.statKeeper = sk;
+                p.generator = new puzgen.Generator(p);
+                p.generator.statKeeper = sk;
+                p.generator.generate(density, wlen);
                 break;
             } catch (e) {
                 if (e instanceof conflictscan.PuzzleConflictError) {
-                    p = null;
-                    util.log(e.message);
+                    if (p) {
+                        p = p.destroy();
+                    }
                     // if we're seeded, it's never going to succeed, so fail fast.
                     if (seed) {
                         break;
@@ -270,20 +285,32 @@
                 }
             }
         }
+        if (!p) {
+            sk.report();
+        }
         return p;
     }
 
     function makeFromWords(size, seed, words) {
+        // NB: run counts will be wonky for this keeper, b/c we count both word
+        // applications and the final generate, and failures can happen in
+        // either place.
+        var sk = new puzgen.GenStatKeeper();
         var p;
         for (var i=0; i<consts.MAX_CONFLICT_RETRIES; i++) {
             try {
-                p = new Puzzle(size, seed, words);
-                p.generate(words.length);
+                p = new Puzzle(size, seed);
+                p.statKeeper = sk;
+                p.applyWords(words);
+                p.generator = new puzgen.Generator(p);
+                p.generator.statKeeper = sk;
+                p.generator.generate(words.length);
                 break;
             } catch (e) {
                 if (e instanceof conflictscan.PuzzleConflictError) {
-                    p = null;
-                    util.log(e.message);
+                    if (p) {
+                        p = p.destroy();
+                    }
                     // if we're seeded, it's never going to succeed, so fail fast.
                     if (seed) {
                         break;
@@ -292,6 +319,9 @@
                     throw e;
                 }
             }
+        }
+        if (!p) {
+            sk.report();
         }
         return p;
     }

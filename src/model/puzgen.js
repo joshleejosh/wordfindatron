@@ -41,7 +41,6 @@
         this.gridSize = this.generator.puzzle.size;
         this.minLen = this.generator.minWordLen;
 
-        // build and shuffle once
         {
             var dmin = this.minLen - 1;
             var dmax = (this.gridSize * 2) - this.minLen;
@@ -88,6 +87,63 @@
 
     // ==================================================================
 
+    // Accumulates stats (across multiple generation attempts if neccessary)
+    function GenStatKeeper() {
+        this.params = [];
+        this.times = [];
+        this.stats = {
+        };
+    }
+
+    GenStatKeeper.prototype.startPuzzle = function(p, a, b) {
+        this.params.push({
+            size: p.size,
+            seed: p.seed,
+            a: a,
+            b: b
+        });
+        this.startTime = new Date().getTime();
+    };
+
+    GenStatKeeper.prototype.finishPuzzle = function() {
+        if (this.startTime) {
+            this.times.push(new Date().getTime() - this.startTime);
+        }
+    };
+
+    GenStatKeeper.prototype.add = function(k, v) {
+        if (!Object.prototype.hasOwnProperty.call(this.stats, k)) {
+            this.stats[k] = [];
+        }
+        this.stats[k].push(v);
+    };
+
+    GenStatKeeper.prototype.paramString = function(i) {
+        var p = this.params[i];
+        var s = '' + p.size + ' ' + p.seed + ' ' +
+            ((typeof p.a === 'undefined')?'':p.a) + ' ' +
+            ((typeof p.b === 'undefined')?'':p.b);
+        return s;
+    };
+
+    GenStatKeeper.prototype.report = function() {
+        var rpt = 'Tries: [' + this.params.length + '], ' +
+            'Sum time: ['+ (this.times.reduce(function(a,b) { return a+b; }, 0)) +
+            ']\n';
+        rpt += '    Last run: ['+this.paramString(this.params.length-1)+']\n';
+
+        rpt += '    Stats:\n';
+        var that = this;
+        var a = Object.keys(this.stats).sort().map(function(k) {
+            return '        ' + k + ': ' + that.stats[k].length;
+        });
+        rpt += a.join('\n');
+
+        util.log(rpt);
+    };
+
+    // ==================================================================
+
     function Generator(p) {
         this.puzzle = p;
         this.rng = Random.engines.mt19937();
@@ -95,14 +151,6 @@
         this.minWordLen = consts.MIN_MIN_WORDLEN;
         this.maxWordLen = Math.min(this.puzzle.size, consts.MAX_MAX_WORDLEN);
         this.shuffler = new SliceShuffler(this);
-        this.genstats = {
-            rackNoGap: [],
-            rackNoFit: [],
-            sliceNoFit: [],
-            conflicts: [],
-            failure: [],
-            genTime: 0
-        };
         this.tmpWordlists = {};
     }
 
@@ -128,64 +176,16 @@
             if (conflicts.length === 0) {
                 return;
             }
-            this.genstats.conflicts.push(conflicts);
+            if (this.statKeeper) {
+                this.statKeeper.add('conflictCheck', conflicts);
+            }
+        }
+        if (this.statKeeper) {
+            this.statKeeper.add('failureTooManyRetries', 1);
         }
         throw new conflictscan.PuzzleConflictError('Too many conflict retries');
     };
 
-    /*
-     */
-    Generator.prototype.reportStats = function() {
-        util.log(this.puzzle.params);
-        var addLetters = function(fo, fs) {
-            var tot = 0;
-            for (var fi=0; fi<fs.length; fi++) {
-                if (!(fs[fi] in fo)) {
-                    fo[fs[fi]] = 0;
-                }
-                fo[fs[fi]]++;
-                tot++;
-            }
-            return tot;
-        };
-
-        var letterDist = {}, letterCount = 0;
-        for (var i=0; i<this.puzzle.words.length; i++) {
-            letterCount += this.puzzle.words[i].length;
-            addLetters(letterDist, this.puzzle.words[i]);
-        }
-        var maxletters = (this.puzzle.size * this.puzzle.size);
-        var density = this.puzzle.density();
-        var maxdensity = letterCount / maxletters * 100;
-        util.log('' + this.puzzle.answers.length + ' words, ' +
-                 'density ' + density.toFixed(4) + '% ' +
-                 '(out of possible ' + maxdensity.toFixed(4)+ '%)');
-
-        var s = '';
-        var that = this;
-        var f = function(k) {
-            return k + ':' + that.genstats[k].length + ' ';
-        };
-        s += f('rackNoGap');
-        s += f('rackNoFit');
-        s += f('sliceNoFit');
-        s += f('conflicts');
-        s += f('failure');
-        util.log(s);
-
-        /*{
-            var d = {};
-            var dtot = addLetters(d, this.puzzle.grid.toString());
-            for (var c='A'; c<='Z'; c=String.fromCharCode(c.charCodeAt(0) + 1)) {
-                s = '' + c + '\t' +
-                    d[c] + '\t' +
-                    (d[c]/dtot).toFixed(3) + '\t' +
-                    letterDist[c] + '\t' +
-                    (letterDist[c]/letterCount).toFixed(3) + '\t';
-                util.log(s);
-            }
-        }*/
-    };
 
     // ------------------------------------------------------------------
     // Puzzle generation
@@ -260,7 +260,9 @@
         // without excessive overlap? if not, we shouldn't bother trying to
         // cram a word into it.
         if (largestGap(rack) < this.minWordLen-1) {
-            this.genstats.rackNoGap.push([direction, slicei, rack]);
+            if (this.statKeeper) {
+                this.statKeeper.add('rackNoGap', [direction, slicei, rack]);
+            }
             return null;
         }
 
@@ -297,8 +299,8 @@
                 }
             }
 
-        } else {
-            this.genstats.rackNoFit.push([direction, slicei, rack]);
+        } else if (this.statKeeper) {
+            this.statKeeper.add('rackNoFit', [direction, slicei, rack]);
         }
         return w;
     };
@@ -325,13 +327,17 @@
                 }
             }
             if (j >= this.shuffler.length) {
-                this.genstats.sliceNoFit.push(j);
+                if (this.statKeeper) {
+                    this.statKeeper.add('sliceNoFit', j);
+                }
             }
         }
 
         if (this.puzzle.answers.length < nwords) {
-            this.genstats.failure.push(this.puzzle.answers.length);
-            throw new conflictscan.PuzzleConflictError('Failed to generate enough words');
+            if (this.statKeeper) {
+                this.statKeeper.add('failureWordCount', this.puzzle.length.answers);
+            }
+            throw new conflictscan.PuzzleConflictError('Failed to generate enough words: ['+this.puzzle.answers.length+'] out of ['+nwords+']');
         }
     };
 
@@ -344,7 +350,8 @@
         // 0 = only short words
         // .5 = any length
         // 1 = only long words
-        if (typeof wlf !== 'undefined') {
+        wlf = parseFloat(wlf);
+        if (!isNaN(wlf) && isFinite(wlf)) {
             wlf = util.clamp(wlf, 0, 1);
             var ceil = Math.min(this.puzzle.size, consts.MAX_MAX_WORDLEN);
             if (wlf < 0.5) {
@@ -372,13 +379,17 @@
                 }
             }
             if (j >= this.shuffler.length) {
-                this.genstats.sliceNoFit.push(j);
+                if (this.statKeeper) {
+                    this.statKeeper.add('sliceNoFit', j);
+                }
             }
         }
 
         if (this.puzzle.density() < gd) {
-            this.genstats.failure.push(this.puzzle.density());
-            throw new conflictscan.PuzzleConflictError('Failed to generate enough density');
+            if (this.statKeeper) {
+                this.statKeeper.add('failureDensity', this.puzzle.density());
+            }
+            throw new conflictscan.PuzzleConflictError('Failed to generate enough density: ['+this.puzzle.density()+'] out of ['+gd+']');
         }
     };
 
@@ -389,30 +400,35 @@
      * Turn my empty Puzzle object into a real puzzle!
      */
     Generator.prototype.generate = function(a, b) {
-        var t0 = new Date().getTime();
-
-        if (a >= 0 && a <= 1) {
-            this.generateByDensity(a, b);
-        } else {
-            this.generateByWordCount(a);
+        if (this.statKeeper) {
+            this.statKeeper.startPuzzle(this.puzzle, a, b);
         }
+        try {
 
-        // only fill with letters that are in our words.
-        var rr = this.rng;
-        var glyphset = this.puzzle.words.reduce(function(s, t) {
-            return s.concat(t.split(''));
-        }, []);
-        glyphset = d3.set(glyphset).values(); // uniq
-        //console.log(glyphset.length, glyphset.join(''));
-        var fpick = function() {
-            return Random.pick(rr, glyphset);
-        };
-        this.puzzle.grid.fillJunk(fpick);
+            if (a >= 0 && a <= 1) {
+                this.generateByDensity(a, b);
+            } else {
+                this.generateByWordCount(a);
+            }
 
-        this.scanConflicts(fpick);
-        var t1 = new Date().getTime();
-        this.genstats.genTime = t1 - t0;
-        return this.genstats.genTime;
+            // only fill with letters that are in our words.
+            var rr = this.rng;
+            var glyphset = this.puzzle.words.reduce(function(s, t) {
+                return s.concat(t.split(''));
+            }, []);
+            glyphset = d3.set(glyphset).values(); // uniq
+            //console.log(glyphset.length, glyphset.join(''));
+            var fpick = function() {
+                return Random.pick(rr, glyphset);
+            };
+            this.puzzle.grid.fillJunk(fpick);
+
+            this.scanConflicts(fpick);
+        } finally {
+            if (this.statKeeper) {
+                this.statKeeper.finishPuzzle();
+            }
+        }
     };
 
     // ------------------------------------------------------------------
@@ -438,6 +454,9 @@
                 return gw;
             }
         }
+        if (this.statKeeper) {
+            this.statKeeper.add('failureApply', word);
+        }
         throw new conflictscan.PuzzleConflictError('applyAnswer: Couldn\'t fit ['+word+']!');
     };
 
@@ -446,6 +465,7 @@
 
     module.exports = {
         SliceShuffler: SliceShuffler,
+        GenStatKeeper: GenStatKeeper,
         Generator: Generator
     };
 }());

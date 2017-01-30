@@ -107,14 +107,17 @@ describe('Test puzgen', function(){
 
     describe('constructing with pre-set words', function() {
         it('puts the words in the grid and turns them into answers', function() {
-            var puz = new puzzle.Puzzle(7, -215423, []);
+            var puz = new puzzle.Puzzle(7, -215423);
+            puz.applyWords([]);
             expect(puz.answers.length).toBe(0);
 
-            puz = new puzzle.Puzzle(7, -215423, ['FOO']);
+            puz = new puzzle.Puzzle(7, -215423);
+            puz.applyWords(['FOO']);
             expect(puz.answers.length).toBe(1);
             expect(puz.answers[0].word).toBe('FOO');
 
-            puz = new puzzle.Puzzle(7, -215423, ['GUNK', 'GOOP', 'GRIZ']);
+            puz = new puzzle.Puzzle(7, -215423);
+            puz.applyWords(['GUNK', 'GOOP', 'GRIZ']);
             expect(puz.answers.length).toBe(3);
             expect(puz.answers[0].word).toBe('GUNK');
             expect(puz.answers[1].word).toBe('GOOP');
@@ -122,8 +125,10 @@ describe('Test puzgen', function(){
         });
 
         it('generates additional words that fit around the given words', function() {
-            puz = new puzzle.Puzzle(7, -215424, ['GUNK', 'GOOP', 'GRIZ']);
-            puz.generate(5);
+            var puz = new puzzle.Puzzle(7, -215424);
+            puz.applyWords(['GUNK', 'GOOP', 'GRIZ']);
+            var gen = new puzgen.Generator(puz);
+            gen.generate(5);
             expect(puz.answers.length).toBe(5);
             expect(puz.answers[0].word).toBe('GUNK');
             expect(puz.answers[1].word).toBe('GOOP');
@@ -134,42 +139,44 @@ describe('Test puzgen', function(){
         });
 
         it('does nothing if you generate() fewer words than you fed in', function() {
-            puz = new puzzle.Puzzle(7, -215423, ['GUNK', 'GOOP', 'GRIZ']);
-            puz.generate(2);
+            var puz = new puzzle.Puzzle(7, -215423);
+            puz.applyWords(['GUNK', 'GOOP', 'GRIZ']);
+            var gen = new puzgen.Generator(puz);
+            gen.generate(2);
             expect(puz.answers.length).toBe(3);
         });
 
-        it('increases grid size if there isn\'t room for the given words', function() {
-            puz = new puzzle.Puzzle(4, -215423, ['GUNK', 'GOOP', 'GRIZ', 'TWIZZLE' ]);
-            expect(puz.size).toBe(7);
+        it('fails if a word is too long for the grid', function() {
+            expect(()=>{
+                puz = new puzzle.Puzzle(4, -215423);
+                puz.applyWords(['GUNK', 'GOOP', 'GRIZ', 'TWIZZLE' ]);
+                expect(puz.size).toBe(7);
+            }).toThrowError(puzzle.PuzzleConflictError);
         });
 
-        it('freaks out when it can\'t fit a word', function() {
+        it('fails if it can\'t fit a word due to crowding', function() {
             expect(()=>{
-                return new puzzle.Puzzle(7, -215423,
-                    ['GUNK', 'GOOP', 'GRIZ', 'SPOONY', 'TWIZZLE', 'FIDDLE', 'HANKER']);
+                var puz = new puzzle.Puzzle(7, -215423);
+                puz.applyWords(['GUNK', 'GOOP', 'GRIZ', 'SPOONY', 'TWIZZLE', 'FIDDLE', 'HANKER']);
             }).toThrowError(puzzle.PuzzleConflictError);
         });
     });
 
     describe('generate by density', function() {
         it('keeps adding words until a set percentage of the grid is occupied', function() {
-            puz = new puzzle.Puzzle(7, -215428);
-            puz.generate(0.40);
+            var puz = puzzle.makeFromParameters(7, 0.40, null, -215428);
             expect(puz.density()).toBeGreaterThan(0.40);
             expect(puz.density()).toBeLessThan(0.50);
             expect(puz.answers.length).toBe(5);
 
-            puz = new puzzle.Puzzle(7, -215428);
-            puz.generate(0.70);
+            var puz = puzzle.makeFromParameters(7, 0.70, null, -215428);
             expect(puz.density()).toBeGreaterThan(0.70);
             expect(puz.density()).toBeLessThan(0.80);
             expect(puz.answers.length).toBe(9);
         });
 
         it('doesn\'t freak when 0 density is passed', function() {
-            puz = new puzzle.Puzzle(7, -215428);
-            puz.generate(0);
+            var puz = puzzle.makeFromParameters(7, 0, null, -215428);
             expect(puz.density()).toBeGreaterThan(0);
             expect(puz.answers.length).toBe(1);
         });
@@ -178,21 +185,52 @@ describe('Test puzgen', function(){
     describe('generate by word length factor', function() {
         it('sets min/max word length as a function of grid size', function() {
             var seed = 1485726966758;
-            puz = new puzzle.Puzzle(7, seed);
-            puz.generate(0.67, 0.0);
+            var puz = puzzle.makeFromParameters(7, 0.67, 0.0, seed);
             expect(puz.words.reduce((a,b)=>{return Math.min(a, b.length);}, 99)).toBe(4);
             expect(puz.words.reduce((a,b)=>{return Math.max(a, b.length);}, 0)).toBe(4);
 
-            puz = new puzzle.Puzzle(7, seed);
-            puz.generate(0.67, 0.5);
+            puz = puzzle.makeFromParameters(7, 0.67, 0.5, seed);
             expect(puz.words.reduce((a,b)=>{return Math.min(a, b.length);}, 99)).toBe(4);
             expect(puz.words.reduce((a,b)=>{return Math.max(a, b.length);}, 0)).toBe(7);
 
-            puz = new puzzle.Puzzle(7, seed);
-            puz.generate(0.67, 1.0);
+            puz = puzzle.makeFromParameters(7, 0.67, 1.0, seed);
             expect(puz.words.reduce((a,b)=>{return Math.min(a, b.length);}, 99)).toBe(7);
             expect(puz.words.reduce((a,b)=>{return Math.max(a, b.length);}, 0)).toBe(7);
         });
     });
 
+    describe('GenStatKeeper', function() {
+        it('tracks error stats for a Generator', function() {
+            var puz = new puzzle.Puzzle(6, 35134);
+            var gen = new puzgen.Generator(puz);
+            gen.statKeeper = new puzgen.GenStatKeeper();
+            gen.generate(.60, .40);
+            expect(gen.statKeeper.params).toEqual([{
+                size:6, seed:35134, a:0.6, b:0.4
+            }]);
+            expect(gen.statKeeper.times.length).toBe(1); // we don't really care what the time was.
+            expect(gen.statKeeper.stats.rackNoGap.length).toBe(13);
+        });
+
+        it('accumulates stats across multiple runs/failures', function() {
+            var stk = new puzgen.GenStatKeeper();
+            var puz = new puzzle.Puzzle(6, 35134);
+            var gen = new puzgen.Generator(puz);
+            gen.statKeeper = stk;
+            gen.generate(.60, .40);
+
+            puz = new puzzle.Puzzle(8, -12657);
+            gen = new puzgen.Generator(puz);
+            gen.statKeeper = stk;
+            gen.generate(6);
+
+            expect(gen.statKeeper.params).toEqual([
+                { size:6, seed:35134, a:0.6, b:0.4 },
+                { size:8, seed:-12657, a:6, b:undefined }
+            ]);
+            expect(gen.statKeeper.times.length).toBe(2); // we don't really care what the time was.
+            expect(gen.statKeeper.stats.rackNoGap.length).toBe(14);
+        });
+
+    });
 });

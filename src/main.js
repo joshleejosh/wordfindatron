@@ -4,6 +4,7 @@
     var url = require('url');
     var cookies = require('browser-cookies');
     var util = require('./util');
+    var consts = require('./consts');
     var data = require('./model/data');
     var puzzle = require('./model/puzzle');
     var view = require('./view/view');
@@ -48,7 +49,7 @@
             view.displayPuzzle(p, wordfindatronMain, puzzleForWords);
         } else {
             view.msgClear();
-            view.msgFailure('Couldn\'t create a puzzle?!');
+            view.msgFailure(consts.MSG_NEW_FAIL);
         }
     }
 

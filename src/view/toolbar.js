@@ -159,7 +159,7 @@
             'tbSize', 'labTbSize',
             'Size', 'Set the size of the grid',
             'small', 'large',
-            ''+consts.MIN_GRID_SIZE, ''+consts.MAX_GRID_SIZE, '2', ''+consts.DEFAULT_GRID_SIZE);
+            ''+consts.MIN_GRID_SIZE, ''+consts.MAX_GRID_SIZE, ''+consts.GRID_SIZE_STEP, ''+consts.DEFAULT_GRID_SIZE);
         mkoptionrow(opts,
             'tbDensity', 'labTbDensity',
             'Words', 'Set how full the grid gets',

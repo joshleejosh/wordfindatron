@@ -1,0 +1,86 @@
+#!/usr/bin/env node
+
+/*
+ * I am a test script for measurement and debugging.
+ * See tests/ for proper unit tests.
+ * See bin/wordfindatron for quick and easy puzzle-makin'.
+ */
+
+var ss = require('simple-statistics');
+var consts = require('../src/consts');
+var data = require('../src/model/data');
+var puzzle = require('../src/model/puzzle');
+var ARROWS = '→↘↓↙←↖↑↗';
+
+// ================================================================ //
+
+function printPuzzle(p) {
+    //console.log(p.answers.map(function (a) { return a.word; }).join(' '));
+    console.log(p.density(), p.answers.length);
+    //console.log(p.answers.map(function (a) { return arrows[a.direction]; }).join(' '));
+    //var s = p.serialize();
+    //console.log(p.size, p.answers.length, s.indexOf('-'), s.indexOf('_'), p.seed);
+    //console.log(p.grid.toString());
+    p.generator.statKeeper.report();
+    console.log('');
+}
+
+function main(np, ns, gs, de, wl, sd) {
+    var acc = {
+        failure: [],
+        wcount: [],
+        density: [],
+        time: []
+    }
+
+    for (var i=0; i<np; i++) {
+        var ta = new Date().getTime();
+        var p = puzzle.makeFromParameters(gs, de, wl, sd);
+        var tb = new Date().getTime();
+        if (p) {
+            printPuzzle(p);
+        } else {
+            console.log('catastrophic!');
+        }
+        if (p) {
+            acc.failure.push(p.generator.statKeeper.params.length - 1);
+            acc.wcount.push(p.answers.length);
+            acc.density.push(p.density());
+            acc.time.push((tb-ta));
+        } else {
+            acc.failure.push(consts.MAX_CONFLICT_RETRIES);
+            acc.wcount.push(0);
+            acc.density.push(0);
+            acc.time.push((tb-ta));
+        }
+
+        var words = p.answers.map(function(a) { return a.word; });
+        for (var j=0; j<ns; j++) {
+            ta = new Date().getTime();
+            var q = puzzle.makeFromWords(gs, sd, words);
+            tb = new Date().getTime();
+            if (q) {
+                printPuzzle(q);
+            } else {
+                console.log('catastrophic!');
+            }
+        }
+
+    }
+
+    var f = function(lab, a) {
+        return lab + '\t' + ss.mean(a) + '\t' +
+            ss.median(a) + '\t' +
+            ss.interquartileRange(a) + '\t' +
+            ss.medianAbsoluteDeviation(a);
+    };
+    console.log(f('fail', acc.failure));
+    console.log(f('wdct', acc.wcount));
+    console.log(f('dens', acc.density));
+    console.log(f('time', acc.time));
+}
+
+data.load(null, function() {
+    main(20, 0, 20, 0.6);
+});
+
