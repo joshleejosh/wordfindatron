@@ -35,7 +35,9 @@
                 break;
             case 'e':
             case 'E':
-                callbacks.onEdit();
+                if (consts.CHEAT) {
+                    callbacks.onEdit();
+                }
                 break;
             case 'c': // Cheat
             case 'C':

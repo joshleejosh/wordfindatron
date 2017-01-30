@@ -148,9 +148,9 @@
         viewutil.makeToolbarButton(theToolbar, null, 'tbShuffle', 'random', 'Make a new grid with the same words');
         viewutil.makeToolbarButton(theToolbar, null, 'tbNew', 'eject', 'Make a new puzzle from scratch');
         viewutil.makeToolbarButton(theToolbar, null, 'tbShowAdv', 'sliders', 'See more options for new puzzles');
-        viewutil.makeToolbarSeparator(theToolbar, 'tbSep');
+        //viewutil.makeToolbarSeparator(theToolbar, 'tbSep');
         viewutil.makeToolbarButton(theToolbar, null, 'tbHelp', 'question-circle', 'About WORDFINDATRON');
-        viewutil.makeToolbarButton(theToolbar, null, 'tbEdit', 'edit', 'Make your own puzzle!').classed('button-reverse', true);
+        //viewutil.makeToolbarButton(theToolbar, null, 'tbEdit', 'edit', 'Make your own puzzle!').classed('button-reverse', true);
 
         var tba = theToolbar.append('div').attr('id', 'tbadvanced');
         tba.append('h3').html('Options for new puzzles (<i class="fa fa-eject"></i>)');
@@ -176,7 +176,7 @@
         theToolbar.select('#tbNew').on('click', callbacks.onNew);
         theToolbar.select('#tbShowAdv').on('click', onShowAdv);
         theToolbar.select('#tbHelp').on('click', callbacks.onHelp);
-        theToolbar.select('#tbEdit').on('click', callbacks.onEdit);
+        //theToolbar.select('#tbEdit').on('click', callbacks.onEdit);
     }
 
     function init(callbacks) {
@@ -233,7 +233,6 @@
 
     // if we've wrapped lines, then move some buttons down into the advanced menu.
     function reparentButtons(t) {
-        var bEdit = theToolbar.select('#tbEdit');
         var bNew = theToolbar.select('#tbNew');
         var bShuffle = theToolbar.select('#tbShuffle');
         var bCheat = theToolbar.select('#tbSolve');
@@ -242,15 +241,11 @@
         if (t) {
             // move some buttons into the advanced submenu to save width.
             var tbAdvanced = theToolbar.select('#tbadvanced');
-            reparent(bEdit, tbAdvanced, tbAdvanced.select('h3'));
-            reparent(sep, tbAdvanced, bEdit);
-            reparent(bNew, tbAdvanced, sep);
+            reparent(bNew, tbAdvanced, tbAdvanced.select('h3'));
             reparent(bShuffle, tbAdvanced, bNew);
             reparent(bCheat, tbAdvanced, bShuffle);
         } else {
             // move buttons up onto the main toolbar.
-            reparent(bEdit, theToolbar, theToolbar.select('#tbadvanced'));
-            reparent(sep, theToolbar, theToolbar.select('#tbHelp'));
             reparent(bNew, theToolbar, theToolbar.select('#tbShowAdv'));
             reparent(bShuffle, theToolbar, bNew);
             reparent(bCheat, theToolbar, bShuffle);
@@ -260,7 +255,7 @@
     function resize() {
         reparentButtons(false);
         var bb0 = theToolbar.select('#tbUndo').node().getBoundingClientRect();
-        var bb1 = theToolbar.select('#tbEdit').node().getBoundingClientRect();
+        var bb1 = theToolbar.select('#tbHelp').node().getBoundingClientRect();
         reparentButtons(bb1.top > bb0.top);
 
         theToolbar.select('#options').style('width', viewutil.metrics.table.size + 'px');
