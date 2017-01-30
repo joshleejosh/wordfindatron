@@ -9,30 +9,7 @@
     var grid = require('./grid');
     var conflictscan = require('./conflictscan');
 
-    var thePuzzle, genstats, tmpWordlists;
-    var minWordLen = consts.MIN_MIN_WORDLEN;
-    var maxWordLen = consts.MAX_MAX_WORDLEN;
-
     // ==================================================================
-
-    /*
-     * Build array of slices to pick from
-     */
-    function shuffleSlices(rng, size) {
-        var sa = [];
-        for (var d=0; d<8; d++) {
-            var a = 0, b = size;
-            if (d%2 === 1) {
-                a = minWordLen - 1;
-                b = (size*2) - minWordLen;
-            }
-            for (var s=a; s<b; s++) {
-                sa.push([d, s]);
-            }
-        }
-        util.shuffle(rng, sa);
-        return sa;
-    }
 
     /* Find the largest span of spaces in a string */
     function largestGap(s) {
@@ -55,8 +32,70 @@
 
     // ==================================================================
 
-    function init() {
-        genstats = {
+    /*
+     * Maintains a shuffled deck of directions+slices.
+     */
+    function SliceShuffler(gen) {
+        this.generator = gen;
+        this.rng = this.generator.rng;
+        this.gridSize = this.generator.puzzle.size;
+        this.minLen = this.generator.minWordLen;
+
+        // build and shuffle once
+        {
+            var dmin = this.minLen - 1;
+            var dmax = (this.gridSize * 2) - this.minLen;
+            this.length = (4 * this.gridSize) + (4 * (dmax - dmin));
+            this.directions = [];
+            this.slices = [];
+            this.direction = 0;
+            this.slice = dmin;
+            this.nextSlice();
+        }
+
+        return this;
+    }
+
+    SliceShuffler.prototype.nextDirection = function() {
+        if (this.directions.length === 0) {
+            this.directions = util.range(8);
+            util.shuffle(this.rng, this.directions);
+        }
+        this.direction = this.directions.pop();
+
+        // initialize the slice array so that we're in a valid state.
+        var dmin = 0, dmax = this.gridSize;
+        if (this.direction%2 === 1) {
+            dmin = this.minLen - 1;
+            dmax = (this.gridSize * 2) - this.minLen;
+        }
+        this.slices = util.range(dmin, dmax);
+        util.shuffle(this.rng, this.slices);
+        this.slice = this.slices.pop();
+        return this.direction;
+    };
+
+    SliceShuffler.prototype.nextSlice = function() {
+        if (this.slices.length === 0) {
+            this.nextDirection();
+            // nextDirection has to pop the first new slice for us to maintain
+            // a valid state, so we're ready to go.
+        } else {
+            this.slice = this.slices.pop();
+        }
+        return this.slice;
+    };
+
+    // ==================================================================
+
+    function Generator(p) {
+        this.puzzle = p;
+        this.rng = Random.engines.mt19937();
+        this.rng.seed(this.puzzle.seed);
+        this.minWordLen = consts.MIN_MIN_WORDLEN;
+        this.maxWordLen = Math.min(this.puzzle.size, consts.MAX_MAX_WORDLEN);
+        this.shuffler = new SliceShuffler(this);
+        this.genstats = {
             rackNoGap: [],
             rackNoFit: [],
             sliceNoFit: [],
@@ -64,41 +103,40 @@
             failure: [],
             genTime: 0
         };
-        tmpWordlists = {};
-        // copy wordlists so we can prune as we go
-        for (var i=minWordLen; i<=maxWordLen; i++) {
+        this.tmpWordlists = {};
+    }
+
+    // make local copies of wordlists so we can prune as we go
+    Generator.prototype.copyWordlists = function() {
+        for (var i=this.minWordLen; i<=this.maxWordLen; i++) {
             var original = data.getWordlist(i);
-            tmpWordlists[i] = original.slice();
+            this.tmpWordlists[i] = original.slice();
         }
-    }
+    };
 
-    function teardown() {
-        tmpWordlists = {};
-    }
-
-    // ==================================================================
+    // ------------------------------------------------------------------
     // Puzzle analysis
 
     /*
      * Do an exhaustive search for duplicate or blacklisted words.
      */
-    function scanConflicts(fpick) {
+    Generator.prototype.scanConflicts = function(fpick) {
         // when we find and fix bad words, we have to do another scan to make
         // sure we didn't replace them with other bad words.
         for (var rescans=0; rescans<=consts.MAX_CONFLICT_RETRIES; rescans++) {
-            var conflicts = conflictscan.scan(thePuzzle, fpick);
+            var conflicts = conflictscan.scan(this.puzzle, fpick);
             if (conflicts.length === 0) {
                 return;
             }
-            genstats.conflicts.push(conflicts);
+            this.genstats.conflicts.push(conflicts);
         }
         throw new conflictscan.PuzzleConflictError('Too many conflict retries');
-    }
+    };
 
     /*
      */
-    function reportStats() {
-        util.log(thePuzzle.params);
+    Generator.prototype.reportStats = function() {
+        util.log(this.puzzle.params);
         var addLetters = function(fo, fs) {
             var tot = 0;
             for (var fi=0; fi<fs.length; fi++) {
@@ -112,20 +150,21 @@
         };
 
         var letterDist = {}, letterCount = 0;
-        for (var i=0; i<thePuzzle.words.length; i++) {
-            letterCount += thePuzzle.words[i].length;
-            addLetters(letterDist, thePuzzle.words[i]);
+        for (var i=0; i<this.puzzle.words.length; i++) {
+            letterCount += this.puzzle.words[i].length;
+            addLetters(letterDist, this.puzzle.words[i]);
         }
-        var maxletters = (thePuzzle.size * thePuzzle.size);
-        var density = thePuzzle.density();
+        var maxletters = (this.puzzle.size * this.puzzle.size);
+        var density = this.puzzle.density();
         var maxdensity = letterCount / maxletters * 100;
-        util.log('' + thePuzzle.answers.length + ' words, ' +
+        util.log('' + this.puzzle.answers.length + ' words, ' +
                  'density ' + density.toFixed(4) + '% ' +
                  '(out of possible ' + maxdensity.toFixed(4)+ '%)');
 
         var s = '';
+        var that = this;
         var f = function(k) {
-            return k + ':' + genstats[k].length + ' ';
+            return k + ':' + that.genstats[k].length + ' ';
         };
         s += f('rackNoGap');
         s += f('rackNoFit');
@@ -136,7 +175,7 @@
 
         /*{
             var d = {};
-            var dtot = addLetters(d, thePuzzle.grid.toString());
+            var dtot = addLetters(d, this.puzzle.grid.toString());
             for (var c='A'; c<='Z'; c=String.fromCharCode(c.charCodeAt(0) + 1)) {
                 s = '' + c + '\t' +
                     d[c] + '\t' +
@@ -146,20 +185,20 @@
                 util.log(s);
             }
         }*/
-    }
+    };
 
-    // ==================================================================
+    // ------------------------------------------------------------------
     // Puzzle generation
 
     /*
      * Try to lay the given word into the rack string, working around existing characters.
      */
-    function fitWord(rng, word, rack) {
+    Generator.prototype.fitWord = function(word, rack) {
         if (!word || !rack) {
             return -1;
         }
         var offsets = util.range(0, rack.length - word.length + 1);
-        util.shuffle(rng, offsets);
+        util.shuffle(this.rng, offsets);
         for (var i=0; i<offsets.length; i++) {
             var offset = offsets[i];
             var wi = 0, ti = offset;
@@ -176,14 +215,14 @@
             }
         }
         return -1;
-    }
+    };
 
     /*
      * find a word that fits into the rack string, working around any existing letters.
      */
-    function findFittingWord(rack, wordlen) {
+    Generator.prototype.findFittingWord = function(rack, wordlen) {
         var tlen = rack.length;
-        if (tlen < minWordLen) {
+        if (tlen < this.minWordLen) {
             util.log('findFittingWord: Bad rack ['+rack+']');
             return null;
         }
@@ -195,9 +234,9 @@
         var candidates = [];
         // ASSUMPTION: wordlist has been pre-stripped of blacklist words,
         // so we don't need to check against it while generating.
-        for (var i=0; i<tmpWordlists[wordlen].length; i++) {
-            var w = tmpWordlists[wordlen][i];
-            var f = fitWord(thePuzzle.rng, w, rack);
+        for (var i=0; i<this.tmpWordlists[wordlen].length; i++) {
+            var w = this.tmpWordlists[wordlen][i];
+            var f = this.fitWord(w, rack);
             if (f !== -1) {
                 candidates.push([w, f]);
             }
@@ -207,141 +246,160 @@
             return null;
         }
 
-        var pair = Random.pick(thePuzzle.rng, candidates);
-        //console.log(wordlen, tmpWordlists[wordlen].length, candidates.length, pair[0]);
+        var pair = Random.pick(this.rng, candidates);
+        //console.log(wordlen, this.tmpWordlists[wordlen].length, candidates.length, pair[0]);
         return pair;
-    }
+    };
 
     /*
      * Find a word that fits into this puzzle and add it.
      */
-    function generateWord(direction, slicei) {
-        var rack = thePuzzle.grid.cutSlice(direction, slicei);
+    Generator.prototype.generateWord = function(direction, slicei) {
+        var rack = this.puzzle.grid.cutSlice(direction, slicei);
         // does this rack have a contiguous empty space large enough for a word
-        // without excessive overlap? if not, we shouldn't bother trying to cram a word into it.
-        if (largestGap(rack) < minWordLen-1) {
-            genstats.rackNoGap.push([direction, slicei, rack]);
-            return;
+        // without excessive overlap? if not, we shouldn't bother trying to
+        // cram a word into it.
+        if (largestGap(rack) < this.minWordLen-1) {
+            this.genstats.rackNoGap.push([direction, slicei, rack]);
+            return null;
         }
 
+        // try fitting words of various lengths in random order.
         var wordlens = util.range(
-            Math.min(minWordLen, rack.length),
-            Math.min(maxWordLen, rack.length) + 1
+            Math.min(this.minWordLen, rack.length),
+            Math.min(this.maxWordLen, rack.length) + 1
         );
-        util.shuffle(thePuzzle.rng, wordlens);
+        util.shuffle(this.rng, wordlens);
 
-        var i, p;
+        var i, w;
         for (i=0; i<wordlens.length; i++) {
-            p = findFittingWord(rack, wordlens[i]);
-            if (p) {
+            w = this.findFittingWord(rack, wordlens[i]);
+            if (w) {
                 break;
             }
         }
 
-        if (p) {
-            var gw = new grid.GridWord(thePuzzle.grid.size, p[0], direction, slicei, p[1]);
-            thePuzzle.addAnswer(gw);
+        if (w) {
+            var gw = new grid.GridWord(this.puzzle.grid.size, w[0], direction, slicei, w[1]);
+            this.puzzle.addAnswer(gw);
 
-            // scrub the word out of the wordlist to avoid later duplicates or overlaps.
-            // include substrings in the scrub.
-            for (var len=minWordLen; len<=maxWordLen; len++) {
-                var wl = tmpWordlists[len];
+            // scrub the word out of the wordlist to avoid later duplicates or
+            // overlaps. include substrings in the scrub.
+            for (var len=this.minWordLen; len<=this.maxWordLen; len++) {
+                var wl = this.tmpWordlists[len];
                 for (i=wl.length-1; i>=0; i--) {
-                    if ((len === p[0].length && wl[i] === p[0]) || // the word itself is in the list
-                        (p[0].length < len && wl[i].lastIndexOf(p[0]) !== -1) ||
-                        (len < p[0].length && p[0].lastIndexOf(wl[i]) !== -1)
+                    if ((len === w[0].length && wl[i] === w[0]) || // the word itself is in the list
+                        (w[0].length < len && wl[i].lastIndexOf(w[0]) !== -1) ||
+                        (len < w[0].length && w[0].lastIndexOf(wl[i]) !== -1)
                     ) {
-                        tmpWordlists[len].splice(i, 1);
+                        this.tmpWordlists[len].splice(i, 1);
                     }
                 }
             }
 
         } else {
-            genstats.rackNoFit.push([direction, slicei, rack]);
+            this.genstats.rackNoFit.push([direction, slicei, rack]);
         }
-    }
+        return w;
+    };
 
-    function generateByWordCount(puz, nwords) {
-        minWordLen = consts.MIN_MIN_WORDLEN;
-        maxWordLen = Math.min(puz.size, consts.MAX_MAX_WORDLEN);
-        init();
+    // ------------------------------------------------------------------
+    // Main generator logic
 
-        for (var i=0; thePuzzle.answers.length<nwords && i<consts.MAX_CONFLICT_RETRIES; i++) {
-            var slices = shuffleSlices(thePuzzle.rng, thePuzzle.size);
+    /*
+     * Generate until the puzzle contains the given number of words.
+     */
+    Generator.prototype.generateByWordCount = function(nwords) {
+        this.copyWordlists();
+
+        for (var i=0; this.puzzle.answers.length<nwords && i<consts.MAX_CONFLICT_RETRIES; i++) {
             var j;
-            for (j=0; thePuzzle.answers.length<nwords && j<slices.length; j++) {
-                var direction = slices[j][0], slicei = slices[j][1];
-                generateWord(direction, slicei);
+            for (j=0; this.puzzle.answers.length<nwords && j<this.shuffler.length; j++) {
+                var direction = this.shuffler.direction,
+                    slicei = this.shuffler.slice;
+                var w = this.generateWord(direction, slicei);
+                if (w) {
+                    this.shuffler.nextDirection();
+                } else {
+                    this.shuffler.nextSlice();
+                }
             }
-            if (j >= slices.length) {
-                genstats.sliceNoFit.push(j);
-                //util.log('generate: ran through all slices but didn\'t find room for a word.');
+            if (j >= this.shuffler.length) {
+                this.genstats.sliceNoFit.push(j);
             }
         }
 
-        if (thePuzzle.answers.length < nwords) {
-            genstats.failure.push(thePuzzle.answers.length);
+        if (this.puzzle.answers.length < nwords) {
+            this.genstats.failure.push(this.puzzle.answers.length);
             throw new conflictscan.PuzzleConflictError('Failed to generate enough words');
         }
-    }
+    };
 
-    function generateByDensity(puz, gd, wlf) {
+    /*
+     * Generate words until the total density of the puzzle exceeds gd.
+     * Pick longer or shorter words based on wlf.
+     */
+    Generator.prototype.generateByDensity = function(gd, wlf) {
         // scale min and max word lengths based on the given factor
         // 0 = only short words
         // .5 = any length
         // 1 = only long words
         if (typeof wlf !== 'undefined') {
             wlf = util.clamp(wlf, 0, 1);
-            var ceil = Math.min(thePuzzle.size, consts.MAX_MAX_WORDLEN);
+            var ceil = Math.min(this.puzzle.size, consts.MAX_MAX_WORDLEN);
             if (wlf < 0.5) {
                 // lock min at floor, scale max
-                minWordLen = 4;
-                maxWordLen = Math.round(util.scale(wlf, 0.0, 0.5, minWordLen, ceil));
+                this.minWordLen = 4;
+                this.maxWordLen = Math.round(util.scale(wlf, 0.0, 0.5, this.minWordLen, ceil));
             } else {
                 // lock max at ceiling, scale min
-                maxWordLen = ceil;
-                minWordLen = Math.round(util.scale(wlf, 0.5, 1.0, 4, ceil));
+                this.maxWordLen = ceil;
+                this.minWordLen = Math.round(util.scale(wlf, 0.5, 1.0, 4, ceil));
             }
         }
-        init();
+        this.copyWordlists();
 
-        for (var i=0; thePuzzle.density()<=gd && i<consts.MAX_CONFLICT_RETRIES; i++) {
-            var slices = shuffleSlices(thePuzzle.rng, thePuzzle.size);
+        for (var i=0; this.puzzle.density()<=gd && i<consts.MAX_CONFLICT_RETRIES; i++) {
             var j;
-            for (j=0; thePuzzle.density()<=gd && j<slices.length; j++) {
-                var direction = slices[j][0], slicei = slices[j][1];
-                generateWord(direction, slicei);
+            for (j=0; this.puzzle.density()<=gd && j<this.shuffler.length; j++) {
+                var direction = this.shuffler.direction,
+                    slicei = this.shuffler.slice;
+                var w = this.generateWord(direction, slicei);
+                if (w) {
+                    this.shuffler.nextDirection();
+                } else {
+                    this.shuffler.nextSlice();
+                }
             }
-            if (j >= slices.length) {
-                genstats.sliceNoFit.push(j);
-                //util.log('generate: ran through all slices but didn\'t find room for a word.');
+            if (j >= this.shuffler.length) {
+                this.genstats.sliceNoFit.push(j);
             }
         }
 
-        if (thePuzzle.density() < gd) {
-            genstats.failure.push(thePuzzle.density());
+        if (this.puzzle.density() < gd) {
+            this.genstats.failure.push(this.puzzle.density());
             throw new conflictscan.PuzzleConflictError('Failed to generate enough density');
         }
-    }
+    };
 
-    // ==================================================================
+    // ------------------------------------------------------------------
+    // Main entry point
 
     /*
-     * Make a puzzle!
+     * Turn my empty Puzzle object into a real puzzle!
      */
-    function generate(puzzle, a, b) {
+    Generator.prototype.generate = function(a, b) {
         var t0 = new Date().getTime();
-        thePuzzle = puzzle;
 
         if (a >= 0 && a <= 1) {
-            generateByDensity(puzzle, a, b);
+            this.generateByDensity(a, b);
         } else {
-            generateByWordCount(puzzle, a);
+            this.generateByWordCount(a);
         }
 
         // only fill with letters that are in our words.
-        var rr = thePuzzle.rng;
-        var glyphset = thePuzzle.words.reduce(function(s,t) {
+        var rr = this.rng;
+        var glyphset = this.puzzle.words.reduce(function(s, t) {
             return s.concat(t.split(''));
         }, []);
         glyphset = d3.set(glyphset).values(); // uniq
@@ -349,43 +407,45 @@
         var fpick = function() {
             return Random.pick(rr, glyphset);
         };
-        thePuzzle.grid.fillJunk(fpick);
+        this.puzzle.grid.fillJunk(fpick);
 
-        scanConflicts(fpick);
-        //thePuzzle.shuffleAnswers();
-        teardown();
+        this.scanConflicts(fpick);
         var t1 = new Date().getTime();
-        genstats.genTime = t1 - t0;
-        return genstats.genTime;
-    }
+        this.genstats.genTime = t1 - t0;
+        return this.genstats.genTime;
+    };
 
-    // ==================================================================
+    // ------------------------------------------------------------------
+    // Alternate entry point (for pre-generated words)
 
     /*
-     * Find a place for the given word in the grid and make it an answer..
+     * Find a place for the given word in the grid and make it an answer.
      */
-    function makeAnswer(puzzle, word) {
-        var sa = shuffleSlices(puzzle.rng, puzzle.size);
-        for (var i=0; i<sa.length; i++) {
-            var direction = sa[i][0], slicei = sa[i][1];
-            var rack = puzzle.grid.cutSlice(direction, slicei);
-            var offset = fitWord(puzzle.rng, word, rack);
-            if (offset !== -1) {
-                var gw = new grid.GridWord(puzzle.size, word, direction, slicei, offset);
-                puzzle.addAnswer(gw);
+    Generator.prototype.applyAnswer = function(word) {
+        for (var i=0; i<this.shuffler.length; i++) {
+            var direction = this.shuffler.direction,
+                slicei = this.shuffler.slice;
+            var rack = this.puzzle.grid.cutSlice(direction, slicei);
+            var offset = this.fitWord(word, rack);
+            if (offset === -1) {
+                this.shuffler.nextSlice();
+            } else {
+                var gw = new grid.GridWord(this.puzzle.size, word, direction, slicei, offset);
+                this.puzzle.addAnswer(gw);
+                // prime the shuffler so that the next answer tries to go in a
+                // different direction. parallel words should be a last resort.
+                this.shuffler.nextDirection();
                 return gw;
             }
         }
-        throw new conflictscan.PuzzleConflictError('makeAnswer: Couldn\'t fit ['+word+']!');
-    }
+        throw new conflictscan.PuzzleConflictError('applyAnswer: Couldn\'t fit ['+word+']!');
+    };
+
 
     // ==================================================================
 
     module.exports = {
-        makeAnswer: makeAnswer,
-        fitWord: fitWord,
-        generate: generate,
-        reportStats: reportStats
+        SliceShuffler: SliceShuffler,
+        Generator: Generator
     };
-
 }());

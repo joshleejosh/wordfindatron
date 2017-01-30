@@ -200,8 +200,8 @@ describe('Test Puzzle', function(){
         });
 
         it('outputs url-friendly base64 strings', function (done) {
-            puz = new puzzle.Puzzle(14, 1485201046610);
-            puz.generate(.5, .5);
+            puz = new puzzle.Puzzle(14, 1485747095517);
+            puz.generate(0.5, 0.5);
             var s = puz.serialize();
 
             // serialized string should use '-' and '_' for its last two values;

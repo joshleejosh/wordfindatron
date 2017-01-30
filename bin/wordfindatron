@@ -24,29 +24,39 @@ if (process.argv.length > 5) {
 }
 
 var nPuzzles = 1;
+if (seed !== 0) {
+    nPuzzles = 1;
+}
+var nShuffles = 0;
+var arrows = '→↘↓↙←↖↑↗';
+
+function printPuzzle(p) {
+    console.log(p.answerGrid().toString());
+    console.log(p.answers.map(function (a) { return a.word; }).join(' '));
+    //console.log(p.answers.map(function (a) { return arrows[a.direction]; }).join(' '));
+    //var s = p.serialize();
+    //console.log(p.size, p.answers.length, s.indexOf('-'), s.indexOf('_'), p.seed);
+    console.log(p.grid.toString());
+    p.generator.reportStats();
+}
 
 data.load(null, function() {
-    var times = [];
     for (var i=0; i<nPuzzles; i++) {
-        var timea = new Date().getTime();
         var p = puzzle.makeFromParameters(gridSize, density, wordlen, seed);
-        var timeb = new Date().getTime();
-        times.push((timeb - timea));
-
         if (p) {
-            console.log(p.answerGrid().toString());
-            console.log(p.answers.map(function (a) { return a.word; }).join(' '));
-            //console.log(p.size, p.answers.length, s.indexOf('-'), s.indexOf('_'), p.seed);
-            console.log(p.grid.toString());
-            p.reportStats();
+            printPuzzle(p);
         } else {
             console.log('catastrophic!');
         }
-    }
 
-    if (times.length) {
-        var avgtime = times.reduce((a,b)=>a+b) / times.length;
-        console.log('['+times.length+'] puzzles, avg time ['+avgtime+']');
+        for (var j=0; j<nShuffles; j++) {
+            var q = puzzle.makeFromWords(gridSize, seed, p.answers.map(function(a) { return a.word; }));
+            if (q) {
+                printPuzzle(q);
+            } else {
+                console.log('catastrophic!');
+            }
+        }
     }
 });
 

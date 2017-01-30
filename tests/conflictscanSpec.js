@@ -28,6 +28,8 @@ describe('Test conflictscan', function(){
              * Palindrome GBG should pass in both directions
              */
             var puz = new puzzle.Puzzle(6, 54321);
+            var rng = Random.engines.mt19937();
+            rng.seed(54321);
             var g = new grid.Grid(6).fromString('REGGIWKHIJKLENOPQRFTUVGXGZABCDEFGHIJ');
             puz.setGrid(g);
             puz.addAnswer(new grid.GridWord(6, g.readWord(3,7,1,3), 3, 7, 1));
@@ -38,7 +40,7 @@ describe('Test conflictscan', function(){
             expect(puz.answers[1]).toMatchGridWord(6, 2, 2, 'UO',    2, 3, 2, 2);
             expect(puz.answers[2]).toMatchGridWord(1, 4, 0, 'KNUBI', 0, 1, 4, 5);
             expect(puz.answers[3]).toMatchGridWord(4, 5, 3, 'GFE',   2, 5, 0, 5);
-            conflictscan.scan(puz, function() { return Random.pick(puz.rng, consts.ALPHABET); });
+            conflictscan.scan(puz, function() { return Random.pick(rng, consts.ALPHABET); });
             expect(puz.grid.toString()).toBe('SAWKMX\nKHIJKL\nONOPQR\nUTUVGX\nEZABCD\nEFGHIJ\n')
             done();
         });

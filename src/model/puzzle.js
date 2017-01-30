@@ -3,7 +3,6 @@
 (function () {
     'use strict';
 
-    var Random = require('random-js');
     var bstream = require('./bstream');
     var consts = require('../consts');
     var util = require('../util');
@@ -32,6 +31,7 @@
                 }
             }
         }
+        this.size = size;
 
         if (!seedv) {
             seedv = new Date().getTime();
@@ -39,17 +39,17 @@
         if (typeof seedv !== 'number') {
             throw new TypeError('bad seed ['+seedv+']');
         }
+        this.setSeed(seedv);
 
         this.answers = [];
         this.words = [];
-        this.size = size;
         this.grid = new grid.Grid(this.size);
-        this.setSeed(seedv);
         this.params = '' + this.seed;
 
         if (initWords) {
+            var gen = new puzgen.Generator(this);
             for (var i=0; i<initWords.length; i++) {
-                puzgen.makeAnswer(this, initWords[i]);
+                gen.applyAnswer(initWords[i]);
             }
         }
 
@@ -80,8 +80,6 @@
 
     Puzzle.prototype.setSeed = function(newseed) {
         this.seed = newseed;
-        this.rng = Random.engines.mt19937();
-        this.rng.seed(this.seed);
     };
 
     Puzzle.prototype.setGrid = function(g) {
@@ -102,13 +100,6 @@
         this.grid.placeWord(a);
         this.answers.push(a);
         this.words.push(a.word);
-    };
-
-    Puzzle.prototype.shuffleAnswers = function() {
-        Random.shuffle(this.rng, this.answers);
-        this.words = this.answers.map(function(a) {
-            return a.word;
-        });
     };
 
     Puzzle.prototype.isAnswer = function(word, di, si, of, wl) {
@@ -158,15 +149,12 @@
         return fillcount / (ag.size * ag.size);
     };
 
-    Puzzle.prototype.reportStats = function() {
-        return puzgen.reportStats();
-    };
-
     Puzzle.prototype.generate = function(a, b) {
-        this.params = '' + this.seed + ' ' +
+        this.params = '' + this.size + ' ' + this.seed + ' ' +
             ((typeof a === 'undefined')?'':a) + ' ' +
             ((typeof b === 'undefined')?'':b);
-        return puzgen.generate(this, a, b);
+        this.generator = new puzgen.Generator(this);
+        return this.generator.generate(a, b);
     };
 
     // ==================================================================
