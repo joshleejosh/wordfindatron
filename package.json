@@ -1,6 +1,6 @@
 {
   "name": "wordfindatron",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "devDependencies": {
     "browserify": "^13.3.0",
     "eslint": "^3.13.1",
