@@ -109,7 +109,6 @@
         var targetRatio = 0.500;
         var gridsize = Math.max(maxlen, Math.sqrt(lettersum / targetRatio));
         var rv = Math.floor(util.clamp(gridsize, consts.MIN_GRID_SIZE, consts.MAX_GRID_SIZE));
-        //console.log(maxlen, lettersum, gridsize, rv);
         return rv;
     }
 

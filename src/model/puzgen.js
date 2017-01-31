@@ -91,8 +91,7 @@
     function GenStatKeeper() {
         this.params = [];
         this.times = [];
-        this.stats = {
-        };
+        this.stats = { };
     }
 
     GenStatKeeper.prototype.startPuzzle = function(p, a, b) {
@@ -247,7 +246,6 @@
         }
 
         var pair = Random.pick(this.rng, candidates);
-        //console.log(wordlen, this.tmpWordlists[wordlen].length, candidates.length, pair[0]);
         return pair;
     };
 
@@ -417,7 +415,6 @@
                 return s.concat(t.split(''));
             }, []);
             glyphset = d3.set(glyphset).values(); // uniq
-            //console.log(glyphset.length, glyphset.join(''));
             var fpick = function() {
                 return Random.pick(rr, glyphset);
             };

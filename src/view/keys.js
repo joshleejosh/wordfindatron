@@ -35,13 +35,13 @@
                 break;
             case 'e':
             case 'E':
-                if (consts.CHEAT) {
+                if (consts.DEBUG) {
                     callbacks.onEdit();
                 }
                 break;
             case 'c': // Cheat
             case 'C':
-                if (consts.CHEAT) {
+                if (consts.DEBUG) {
                     callbacks.onSolve();
                 }
                 break;

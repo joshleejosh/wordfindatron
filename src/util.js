@@ -4,13 +4,16 @@
     'use strict';
 
     var Random = require('random-js');
+    var consts = require('./consts');
 
     function log() {
         var s = '';
-        for (var i=0; i<arguments.length; i++) {
-            s += '[' + arguments[i] + '] ';
+        if (consts.VERBOSITY > 0) {
+            for (var i=0; i<arguments.length; i++) {
+                s += '[' + arguments[i] + '] ';
+            }
+            console.log(s);
         }
-        console.log(s);
         return s;
     }
 

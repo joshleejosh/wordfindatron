@@ -40,9 +40,9 @@ $(JS): $(JSFILES)
 $(GENERATEDJS):
 	@echo "[$(DEBUG)]"
 	@if [ -z "$(DEBUG)" ]; then \
-		echo "exports.CHEAT=false;" > $(GENERATEDJS); \
+		echo "exports.DEBUG=false;\nexports.VERBOSITY=0;" > $(GENERATEDJS); \
 	else \
-		echo "exports.CHEAT=true;" > $(GENERATEDJS); \
+		echo "exports.DEBUG=true;\nexports.VERBOSITY=1;" > $(GENERATEDJS); \
 	fi
 
 $(CSS): css/*.scss

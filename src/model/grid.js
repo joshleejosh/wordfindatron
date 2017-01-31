@@ -246,7 +246,6 @@
     Grid.prototype.coordsToSlice = function(x0, y0, x1, y1) {
         var dy = y1 - y0;
         var dx = x1 - x0;
-        //console.log(x0, y0, x1, y1, dy, dx);
         if ((dy===0 && dx===0) || (dy!==0 && dx!==0 && Math.abs(dy)!==Math.abs(dx))) {
             throw new RangeError('Grid.coordsToSlice: ['+x0+','+y0+'] ['+x1+','+y1+'] => bad delta ['+dx+','+dy+']');
         }

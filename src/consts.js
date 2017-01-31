@@ -5,9 +5,9 @@
         Math.TAU = Math.PI * 2;
     }
 
-    exports.CHEAT = require('./_generated').CHEAT;
-    exports.ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    exports.ALPHABET64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+    var generated = require('./_generated');
+    exports.DEBUG = generated.DEBUG;
+    exports.VERBOSITY = generated.VERBOSITY;
 
     exports.MAX_CONFLICT_RETRIES = 100;
 
@@ -20,13 +20,19 @@
     exports.MIN_GRID_SIZE = 8;
     exports.MAX_GRID_SIZE = 20;
     exports.GRID_SIZE_STEP = 4;
+
     exports.MIN_MIN_WORDLEN = 4;
     exports.MAX_MAX_WORDLEN = 9;
+
     exports.MIN_DENSITY = 0.300;
     exports.MAX_DENSITY = 0.600;
     exports.DENSITY_STEP = 0.100;
+
     exports.DEFAULT_GRID_SIZE = 12;
     exports.DEFAULT_DENSITY = 0.400;
+
+    exports.ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    exports.ALPHABET64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
     exports.MSG_SHUFFLE_FAIL = 'Sorry, I had a problem shuffling this puzzle. You can either try <i class="fa fa-random"></i> again and see if it shakes loose, or make a different puzzle with <i class="fa fa-eject"></i>.';
 

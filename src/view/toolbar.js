@@ -140,17 +140,16 @@
         viewutil.makeToolbarButton(theToolbar, null, 'tbUndo', 'backward', 'Erase your last circle');
         viewutil.makeToolbarButton(theToolbar, null, 'tbReset', 'fast-backward', 'Erase all circles');
         viewutil.makeToolbarButton(theToolbar, null, 'tbHint', 'lightbulb-o', 'Get a hint');
-
-        if (consts.CHEAT) {
-            viewutil.makeToolbarButton(theToolbar, null, 'tbSolve', 'birthday-cake', 'Cheat, you cheater');
-        }
-
         viewutil.makeToolbarButton(theToolbar, null, 'tbShuffle', 'random', 'Make a new grid with the same words');
         viewutil.makeToolbarButton(theToolbar, null, 'tbNew', 'eject', 'Make a new puzzle from scratch');
         viewutil.makeToolbarButton(theToolbar, null, 'tbShowAdv', 'sliders', 'See more options for new puzzles');
-        //viewutil.makeToolbarSeparator(theToolbar, 'tbSep');
+
+        if (consts.DEBUG) {
+            viewutil.makeToolbarButton(theToolbar, null, 'tbSolve', 'birthday-cake', 'Cheat, you cheater').classed('button-reverse', true);
+            viewutil.makeToolbarButton(theToolbar, null, 'tbEdit', 'edit', 'Make your own puzzle!').classed('button-reverse', true);
+        }
+
         viewutil.makeToolbarButton(theToolbar, null, 'tbHelp', 'question-circle', 'About WORDFINDATRON');
-        //viewutil.makeToolbarButton(theToolbar, null, 'tbEdit', 'edit', 'Make your own puzzle!').classed('button-reverse', true);
 
         var tba = theToolbar.append('div').attr('id', 'tbadvanced');
         tba.append('h3').html('Options for new puzzles (<i class="fa fa-eject"></i>)');
@@ -171,12 +170,14 @@
         theToolbar.select('#tbUndo').on('click', callbacks.onUndo);
         theToolbar.select('#tbReset').on('click', callbacks.onReset);
         theToolbar.select('#tbHint').on('click', callbacks.onHint);
-        theToolbar.select('#tbSolve').on('click', callbacks.onSolve);
         theToolbar.select('#tbShuffle').on('click', callbacks.onShuffle);
         theToolbar.select('#tbNew').on('click', callbacks.onNew);
         theToolbar.select('#tbShowAdv').on('click', onShowAdv);
         theToolbar.select('#tbHelp').on('click', callbacks.onHelp);
-        //theToolbar.select('#tbEdit').on('click', callbacks.onEdit);
+        if (consts.DEBUG) {
+            theToolbar.select('#tbSolve').on('click', callbacks.onSolve);
+            theToolbar.select('#tbEdit').on('click', callbacks.onEdit);
+        }
     }
 
     function init(callbacks) {
@@ -235,19 +236,23 @@
     function reparentButtons(t) {
         var bNew = theToolbar.select('#tbNew');
         var bShuffle = theToolbar.select('#tbShuffle');
+        var bHelp = theToolbar.select('#tbHelp');
         var bCheat = theToolbar.select('#tbSolve');
+        var bEdit = theToolbar.select('#tbEdit');
 
         if (t) {
             // move some buttons into the advanced submenu to save width.
             var tbAdvanced = theToolbar.select('#tbadvanced');
             reparent(bNew, tbAdvanced, tbAdvanced.select('h3'));
             reparent(bShuffle, tbAdvanced, bNew);
-            reparent(bCheat, tbAdvanced, bShuffle);
+            reparent(bEdit, tbAdvanced, bShuffle);
+            reparent(bCheat, tbAdvanced, bEdit);
         } else {
             // move buttons up onto the main toolbar.
             reparent(bNew, theToolbar, theToolbar.select('#tbShowAdv'));
             reparent(bShuffle, theToolbar, bNew);
-            reparent(bCheat, theToolbar, bShuffle);
+            reparent(bEdit, theToolbar, bHelp);
+            reparent(bCheat, theToolbar, bEdit);
         }
     }
 
