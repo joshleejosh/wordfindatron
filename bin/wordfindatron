@@ -29,7 +29,11 @@ function printPuzzle(p) {
     console.log(p.grid.toString());
 }
 
-data.load(null, function() {
+data.load(false, function(err) {
+    if (err) {
+        console.log(err.message);
+        throw err;
+    }
     var p = puzzle.makeFromParameters(gridSize, density, wordlen, seed);
     if (p) {
         printPuzzle(p);

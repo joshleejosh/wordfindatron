@@ -64,7 +64,11 @@
 
     view.msgClear();
     view.msgWrite('Loading&hellip;');
-    data.load(view, function() {
+    data.load(true, function(err) {
+        if (err) {
+            view.msgFailure(err.message);
+            return;
+        }
         var query = url.parse(window.location.href, true).query;
         wordfindatronMain(query);
     });

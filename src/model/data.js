@@ -14,13 +14,6 @@
         return blacklist;
     }
 
-    function bailout(m, v) {
-        if (v) {
-            v.msgWrite(m);
-        }
-        throw Error(m);
-    }
-
     function buildWordlists(clob) {
         var curlist = wordlist;
         var lines = clob.split('\n');
@@ -51,41 +44,32 @@
                 curlist.push(line);
             }
         }
-
-        /*
-        for (i=0; i<wordlist.length; i++) {
-            console.log(i, wordlist[i].length, wordlist[i][0]);
-        }
-        console.log('B', blacklist.length);
-        */
     }
 
-    function load(view, callback) {
+    function load(doRemote, callback) {
         if (wordlist && blacklist) {
             return callback();
         }
         wordlist = [];
         blacklist = [];
 
-        if (view) {
+        if (doRemote) {
             // ajax request
             d3.text('wordlists.txt', function(clob) {
                 if (clob) {
                     buildWordlists(clob);
                     return callback();
                 }
-                bailout('Couldn\'t load wordlist', view);
-                return null;
+                return callback(new Error('Couldn\'t load wordlist'));
             });
         } else {
             // local file load
             var fs = require('fs');
             fs.readFile('wordlists.txt', 'utf8', function(err, clob) {
-                if (err) {
-                    throw err;
+                if (!err) {
+                    buildWordlists(clob);
                 }
-                buildWordlists(clob);
-                return callback();
+                return callback(err);
             });
         }
         return null;
