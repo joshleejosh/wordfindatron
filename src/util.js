@@ -36,7 +36,7 @@
     }
 
     function scale(i, imin, imax, omin, omax) {
-        if (omin === omax) {
+        if (imin === imax) {
             return omin;
         }
         return (((i - imin) / (imax - imin)) * (omax - omin)) + omin;

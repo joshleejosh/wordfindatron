@@ -84,6 +84,10 @@ describe('Test Util', function(){
             expect(util.scale(-149, -191, -107, 113, 71)).toBe(92);
             expect(util.scale(-191, -191, -107, 113, 71)).toBe(113);
         });
+        it('doesn\'t freak when min/max are equal', function() {
+            expect(util.scale(-107, -107, -107, 71, 113)).toBe(71);
+            expect(util.scale(-107, -191, -107, 71, 71)).toBe(71);
+        });
     });
 
     describe('snapAngle', function() {

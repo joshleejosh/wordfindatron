@@ -185,7 +185,7 @@ describe('Test Puzzle', function(){
 
             var c = puz.serialize();
 
-            var quz = puzzle.deserialize(c);
+            var quz = puzzle.makeFromSerialized(c);
             expect(quz).not.toBe(puz);
             expect(quz.size).toBe(6);
             expect(quz.seed).toBe(Number.MAX_SAFE_INTEGER);

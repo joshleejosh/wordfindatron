@@ -144,6 +144,13 @@ describe('Test puzgen', function(){
             var gen = new puzgen.Generator(puz);
             gen.generate(2);
             expect(puz.answers.length).toBe(3);
+
+            // the factory function should do the same thing
+            var quz = puzzle.makeFromWords(7, -215423, ['GUNK', 'GOOP', 'GRIZ']);
+            expect(quz.size).toBe(puz.size);
+            expect(quz.seed).toBe(puz.seed);
+            expect(quz.grid.toString()).toBe(puz.grid.toString());
+            expect(quz.words).toEqual(puz.words);
         });
 
         it('fails if a word is too long for the grid', function() {
@@ -159,6 +166,10 @@ describe('Test puzgen', function(){
                 var puz = new puzzle.Puzzle(7, -215423);
                 puz.applyWords(['GUNK', 'GOOP', 'GRIZ', 'SPOONY', 'TWIZZLE', 'FIDDLE', 'HANKER']);
             }).toThrowError(puzzle.PuzzleConflictError);
+
+            // the factory function swallows the error and returns null
+            var puz = puzzle.makeFromWords(7, -215423, ['GUNK', 'GOOP', 'GRIZ', 'SPOONY', 'TWIZZLE', 'FIDDLE', 'HANKER']);
+            expect(puz).toBeNull();
         });
     });
 
@@ -179,6 +190,11 @@ describe('Test puzgen', function(){
             var puz = puzzle.makeFromParameters(7, 0, null, -215428);
             expect(puz.density()).toBeGreaterThan(0);
             expect(puz.answers.length).toBe(1);
+        });
+
+        it('fails cleanly on impossible parameters', function() {
+            var puz = puzzle.makeFromParameters(7, 1.0, 1.0, 98623);
+            expect(puz).toBeNull();
         });
     });
 
