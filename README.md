@@ -1,4 +1,6 @@
-WORDFINDATRON - little word-find puzzles on demand.
+# WORDFINDATRON
+Little word-find puzzles on demand.
+http://floor.is/lava/wordfindatron
 
 
 ## Release Notes
