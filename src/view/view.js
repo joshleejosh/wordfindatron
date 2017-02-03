@@ -90,6 +90,16 @@
         return null;
     }
 
+    // TODO: why aren't Ring objects bound as data to their selections?
+    function ringForSelection(s) {
+        for (var i=0; i<rings.length; i++) {
+            if (rings[i].id == s.attr('id')) {
+                return rings[i];
+            }
+        }
+        return null;
+    }
+
     function popRing(tween) {
         if (rings.length === 0) {
             return;
@@ -113,7 +123,7 @@
             return;
         }
         doingVictory = true;
-        disableInput();
+        enableInput();
         d3.selectAll('.ring').style('z-index', -3);
 
         var listwords = wordlist.getListWords();
@@ -129,12 +139,26 @@
             };
         };
 
+        // flash each word and its corresponding ring.
         for (var wordi=0; wordi<listwords.length; wordi++) {
             listwords[wordi].doVictory(wordi, consts.FADE_TIME);
             var r = ringForAnswer(listwords[wordi].answer);
             r.doVictory(wordi, consts.FADE_TIME, ftable, ffLast(wordi));
         }
+
+        // fade out letters and rings that aren't part of the solution.
         theTable.fadeUnsolved(listwords.length, rng, consts.FADE_TIME);
+        d3.selectAll('.ring')
+            .filter(function (d) {
+                return !d3.select(this).classed('ringsolved');
+            })
+            .each(function (d, i) {
+                var r = ringForSelection(d3.select(this));
+                if (r) {
+                    r.fadeUnsolved(i, consts.FADE_TIME);
+                }
+            })
+        ;
     }
 
     function cancelVictory() {

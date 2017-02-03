@@ -87,6 +87,7 @@
             cancelDrag(tween);
             return null;
         }
+        dragRing.setID();
         dragRing.selection.style('z-index', '-1');
         var rv = dragRing;
         dragRing = null;

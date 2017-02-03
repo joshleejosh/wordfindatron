@@ -7,10 +7,10 @@
 	padding: 0;
 	border-style: solid;
 	border-width: $ringThickness;
-	border-color: $cRing;
+	border-color: $cDisabled;
 	@include border-radius(2em);
 	background-color: transparent;
-	color: $cBgSolved; // HACK: use text color to hide the alt state color for code to peek at (since we never have any text in a ring)
+	color: $cBgSolved;
 	height: $wRing;
 	width: $wRing;
 	top: 0;

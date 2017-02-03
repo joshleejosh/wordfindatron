@@ -71,16 +71,16 @@
         }
         var word = this.selection.select('input').property('value');
 
-        if (data.getBlacklist().indexOf(word) !== -1) {
-            this.setValid(false, 'Keep it clean.');
-            return false;
-        }
         if (word.length < this.minlen) {
             this.setValid(false, 'Need '+this.minlen+' or more letters.');
             return false;
         }
         if (word.length > this.maxlen) {
             this.setValid(false, 'Need ' + this.maxlen + ' or fewer letters.');
+            return false;
+        }
+        if (data.getBlacklist().indexOf(word) !== -1) {
+            this.setValid(false, 'Keep it clean.');
             return false;
         }
 

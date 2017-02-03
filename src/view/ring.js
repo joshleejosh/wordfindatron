@@ -14,6 +14,18 @@
         this.answer = null;
     }
 
+    Ring.prototype.setID = function() {
+        this.id = 'r';
+        if (this.startCell) {
+            this.id += this.startCell.y + '.' + this.startCell.x;
+        }
+        this.id += '_'
+        if (this.endCell) {
+            this.id += this.endCell.y + '.' + this.endCell.x;
+        }
+        this.selection.attr('id', this.id);
+    }
+
     Ring.prototype.getAnchor = function() {
         var sp = this.startCell.getPagePosition();
         var cx = (sp.x + (metrics.cell.size / 2));
@@ -150,9 +162,6 @@
 
     Ring.prototype.mark = function(answer, tween, t) {
         this.answer = (t)?answer:null;
-        if (t && this.answer) {
-            this.selection.attr('id', 'ring_'+answer.word);
-        }
         if (this.selection.classed('ringsolved') === t) {
             return;
         }
@@ -198,6 +207,16 @@
                 }
                 return null;
             })
+        ;
+    };
+
+    Ring.prototype.fadeUnsolved = function(i, fadet, onStart, onEnd) {
+        fadet = viewutil.fadeTime(fadet);
+        this.selection.transition('ring.victory')
+            .duration(fadet)
+            .delay(i * fadet)
+            .ease(d3.easeSinOut)
+            .style('border-color', 'transparent')
         ;
     };
 
